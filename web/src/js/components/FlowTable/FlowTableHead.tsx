@@ -73,14 +73,14 @@ export default React.memo(function FlowTableHead({
         const abort = new AbortController();
         const { signal } = abort;
 
+        // Columns that ship narrower than the minimum, such as the TLS marker, keep their own width as the floor instead of being widened to one they never had.
+        const minWidth = Math.min(MIN_COLUMN_WIDTH, startWidth);
+
         // Pointers sample faster than the display refreshes, so coalesce moves into one update per frame.
         let frame = 0,
             clientX = startX;
         const currentWidth = () => ({
-            [colName]: Math.max(
-                MIN_COLUMN_WIDTH,
-                startWidth + clientX - startX,
-            ),
+            [colName]: Math.max(minWidth, startWidth + clientX - startX),
         });
         const apply = () => {
             frame = 0;
@@ -91,7 +91,8 @@ export default React.memo(function FlowTableHead({
             abort.abort();
             document.body.classList.remove("resizing-columns");
             // The final width goes through the end callback rather than onResize, so persistence and re-measurement see it instead of the frame before.
-            onResizeEnd(currentWidth());
+            // A click that never moved leaves the widths pinned at pointerdown untouched.
+            onResizeEnd(clientX === startX ? {} : currentWidth());
         };
         document.addEventListener(
             "pointermove",
