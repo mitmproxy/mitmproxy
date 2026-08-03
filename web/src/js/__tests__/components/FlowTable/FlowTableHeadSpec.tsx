@@ -126,3 +126,56 @@ test("FlowTableHead leaves the actions column to the browser", () => {
     fireEvent.click(screen.getByText("Actions"));
     expect(store.getState().flows.sort.column).toBe("path");
 });
+test("FlowTableHead does not resize a column the pointer never dragged", () => {
+    const store = TStore();
+    const onResizeEnd = jest.fn();
+    const { container } = render(
+        <Provider store={store}>
+            <table>
+                <thead>
+                    <FlowTableHead
+                        onResize={jest.fn()}
+                        onResizeEnd={onResizeEnd}
+                    />
+                </thead>
+            </table>
+        </Provider>,
+    );
+
+    const handle = container.querySelector(
+        ".col-tls .col-resize-handle",
+    ) as HTMLElement;
+    firePointer(handle, "pointerdown", 40);
+    firePointer(document, "pointerup", 40);
+
+    expect(onResizeEnd).toHaveBeenCalledWith({});
+});
+
+test("FlowTableHead keeps a column narrower than the minimum at its own width", async () => {
+    // The TLS column ships at 10px, below the 20px a drag is otherwise floored at.
+    const offsetWidth = stubColumnWidth(10);
+    const store = TStore();
+    const onResize = jest.fn();
+    const { container } = render(
+        <Provider store={store}>
+            <table>
+                <thead>
+                    <FlowTableHead
+                        onResize={onResize}
+                        onResizeEnd={jest.fn()}
+                    />
+                </thead>
+            </table>
+        </Provider>,
+    );
+
+    const handle = container.querySelector(
+        ".col-tls .col-resize-handle",
+    ) as HTMLElement;
+    firePointer(handle, "pointerdown", 40);
+    firePointer(document, "pointermove", 20);
+    await nextFrame();
+
+    expect(onResize).toHaveBeenLastCalledWith({ tls: 10 });
+    offsetWidth.mockRestore();
+});
