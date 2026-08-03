@@ -78,6 +78,7 @@ export default React.memo(function FlowTableHead({
 
         // Pointers sample faster than the display refreshes, so coalesce moves into one update per frame.
         let frame = 0,
+            moved = false,
             clientX = startX;
         const currentWidth = () => ({
             [colName]: Math.max(minWidth, startWidth + clientX - startX),
@@ -92,12 +93,13 @@ export default React.memo(function FlowTableHead({
             document.body.classList.remove("resizing-columns");
             // The final width goes through the end callback rather than onResize, so persistence and re-measurement see it instead of the frame before.
             // A click that never moved leaves the widths pinned at pointerdown untouched.
-            onResizeEnd(clientX === startX ? {} : currentWidth());
+            onResizeEnd(moved ? currentWidth() : {});
         };
         document.addEventListener(
             "pointermove",
             (ev: PointerEvent) => {
                 clientX = ev.clientX;
+                moved = true;
                 if (!frame) frame = requestAnimationFrame(apply);
             },
             { signal },
