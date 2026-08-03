@@ -2,15 +2,64 @@ import urwid
 
 from mitmproxy.tools.console import signals
 
+Markup = list[tuple[str | None, str]]
+
+
+def highlight_matches(
+    text: str, attrs: list[tuple[str | None, int]], search_term: str
+) -> Markup:
+    """
+    Rebuild the markup of a line so that every occurrence of search_term uses the
+    "focusfield" attribute while the rest keeps its original syntax highlighting.
+    """
+    matches = []
+    pos = text.find(search_term) if search_term else -1
+    while pos != -1:
+        matches.append((pos, pos + len(search_term)))
+        pos = text.find(search_term, pos + len(search_term))
+
+    # Attributes are run length encoded, turn them into absolute ranges.
+    runs = []
+    pos = 0
+    for attr, length in attrs:
+        runs.append((pos, pos + length, attr))
+        pos += length
+
+    boundaries = {0, len(text)}
+    for start, end in matches:
+        boundaries.update((start, end))
+    for start, end, _ in runs:
+        boundaries.update((start, end))
+
+    markup: Markup = []
+    cuts = sorted(boundaries)
+    for start, end in zip(cuts, cuts[1:]):
+        if any(m_start <= start < m_end for m_start, m_end in matches):
+            attr = "focusfield"
+        else:
+            attr = next(
+                (a for r_start, r_end, a in runs if r_start <= start < r_end), None
+            )
+        markup.append((attr, text[start:end]))
+    return markup
+
 
 class Highlight(urwid.AttrMap):
-    def __init__(self, t):
-        urwid.AttrMap.__init__(
-            self,
-            urwid.Text(t.text),
-            "focusfield",
-        )
+    def __init__(self, t, search_term: str | None):
+        text, attrs = t.get_text()
+        markup = highlight_matches(text, attrs, search_term or "")
+        urwid.AttrMap.__init__(self, urwid.Text(markup), None)
         self.backup = t
+
+
+class SearchState:
+    """
+    The last search term is shared between all Searchable instances: the flow view
+    rebuilds its widgets whenever the focused flow changes, and an instance-local
+    term would make `n`/`N` stop working after any such rebuild.
+    """
+
+    last_search: str | None = None
 
 
 class Searchable(urwid.ListBox):
@@ -20,7 +69,14 @@ class Searchable(urwid.ListBox):
         self.search_offset = 0
         self.current_highlight = None
         self.search_term = None
-        self.last_search = None
+
+    @property
+    def last_search(self) -> str | None:
+        return SearchState.last_search
+
+    @last_search.setter
+    def last_search(self, text: str | None) -> None:
+        SearchState.last_search = text
 
     def keypress(self, size, key: str):
         if key == "/":
@@ -52,7 +108,7 @@ class Searchable(urwid.ListBox):
         if offset is None:
             self.current_highlight = None
         else:
-            self.body[offset] = Highlight(self.body[offset])
+            self.body[offset] = Highlight(self.body[offset], self.search_term)
             self.current_highlight = offset
 
     def get_text(self, w):
