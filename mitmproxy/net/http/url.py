@@ -143,14 +143,22 @@ def unquote(s: str) -> str:
 def hostport(scheme: AnyStr, host: AnyStr, port: int) -> AnyStr:
     """
     Returns the host component, with a port specification if needed.
+
+    IPv6 literals are always wrapped in square brackets as required by RFC 3986 §3.2.2.
     """
+    # IPv6 addresses contain colons and must be bracketed in URIs (RFC 3986 §3.2.2).
+    if isinstance(host, bytes):
+        host_in_uri: AnyStr = (b"[" + host + b"]") if (host and b":" in host) else host
+    else:
+        host_in_uri = f"[{host}]" if (host and ":" in host) else host
+
     if default_port(scheme) == port:
-        return host
+        return host_in_uri
     else:
         if isinstance(host, bytes):
-            return b"%s:%d" % (host, port)
+            return b"%s:%d" % (host_in_uri, port)
         else:
-            return "%s:%d" % (host, port)
+            return f"{host_in_uri}:{port}"
 
 
 def default_port(scheme: AnyStr) -> int | None:
