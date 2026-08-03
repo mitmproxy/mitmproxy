@@ -69,6 +69,10 @@ body.resizing-columns {
         .th-content {
             display: block;
             min-height: 23px;
+            // A label wider than its column, such as the one on the collapsed actions column, would otherwise spill past the table and scroll it sideways.
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
         }
 
         .sort-indicator {
