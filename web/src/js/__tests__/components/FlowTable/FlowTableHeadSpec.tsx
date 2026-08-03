@@ -127,6 +127,7 @@ test("FlowTableHead leaves the actions column to the browser", () => {
     expect(store.getState().flows.sort.column).toBe("path");
 });
 test("FlowTableHead does not resize a column the pointer never dragged", () => {
+    const offsetWidth = stubColumnWidth(10);
     const store = TStore();
     const onResizeEnd = jest.fn();
     const { container } = render(
@@ -149,6 +150,38 @@ test("FlowTableHead does not resize a column the pointer never dragged", () => {
     firePointer(document, "pointerup", 40);
 
     expect(onResizeEnd).toHaveBeenCalledWith({});
+    offsetWidth.mockRestore();
+});
+
+test("FlowTableHead reports the width a drag returning to its origin ended on", async () => {
+    const offsetWidth = stubColumnWidth(70);
+    const store = TStore();
+    const onResizeEnd = jest.fn();
+    const { container } = render(
+        <Provider store={store}>
+            <table>
+                <thead>
+                    <FlowTableHead
+                        onResize={jest.fn()}
+                        onResizeEnd={onResizeEnd}
+                    />
+                </thead>
+            </table>
+        </Provider>,
+    );
+
+    const handle = container.querySelector(
+        ".col-size .col-resize-handle",
+    ) as HTMLElement;
+    firePointer(handle, "pointerdown", 100);
+    firePointer(document, "pointermove", 160);
+    await nextFrame();
+    // Back to the pixel it started from, which is a drag that happened, not a click.
+    firePointer(document, "pointermove", 100);
+    firePointer(document, "pointerup", 100);
+
+    expect(onResizeEnd).toHaveBeenCalledWith({ size: 70 });
+    offsetWidth.mockRestore();
 });
 
 test("FlowTableHead keeps a column narrower than the minimum at its own width", async () => {
@@ -177,5 +210,7 @@ test("FlowTableHead keeps a column narrower than the minimum at its own width", 
     await nextFrame();
 
     expect(onResize).toHaveBeenLastCalledWith({ tls: 10 });
+    // The drag is still live otherwise, and its document listeners would outlive the test.
+    firePointer(document, "pointerup", 20);
     offsetWidth.mockRestore();
 });
