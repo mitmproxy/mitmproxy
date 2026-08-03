@@ -229,8 +229,14 @@ body.resizing-columns {
         text-align: right;
     }
 
-    .col-quickactions {
+    // Collapsed until it is the column taking the slack.
+    // As with the filler, the width may only sit on the col.
+    col.col-quickactions {
         width: 0;
+    }
+
+    // Only the cells: the icon sizing and the right-to-left flow are for the buttons, not for the header label.
+    td.col-quickactions {
         direction: rtl;
         * {
             direction: ltr;
@@ -240,11 +246,11 @@ body.resizing-columns {
         font-size: 20px;
     }
 
-    tr:hover .col-quickactions {
+    tr:hover td.col-quickactions {
         overflow: visible;
     }
 
-    .col-quickactions > div {
+    td.col-quickactions > div {
         height: 32px;
         background-color: inherit;
         display: inline-flex;
@@ -263,5 +269,10 @@ body.resizing-columns {
                 background-color: rgba(0, 0, 0, 5%);
             }
         }
+    }
+
+    // A gutter that keeps the last resize handle clear of the scrollbar for as long as the actions column is collapsed.
+    col.col-filler {
+        width: 12px;
     }
 }

@@ -107,8 +107,13 @@ exports[`FlowTableHead Component 1`] = `
         >
           <span
             class="th-content"
-          />
+          >
+            Actions
+          </span>
         </th>
+        <th
+          class="col-filler"
+        />
       </tr>
     </thead>
   </table>

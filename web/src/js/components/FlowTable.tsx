@@ -190,15 +190,11 @@ export class PureFlowTable extends React.Component<
             .filter(isValidColumnName)
             .concat("quickactions");
 
-        // Letting `quickactions` take the space the others leave over keeps the rows spanning the full width without the browser redistributing a width the user dragged.
-        // It can only do that once every other column is pinned; until then `path` is the flexible one.
-        const allPinned = orderedColumns.every(
+        // One column has to stay flexible and take the space the others leave over, or the browser spreads that space over the widths the user dragged.
+        // `path` does it until the user has pinned every other column, and `quickactions` from then on: an absorber to the left of the drag would slide the boundary out from under the cursor.
+        const quickactionsAbsorbSlack = orderedColumns.every(
             (col) => col === "quickactions" || columnWidths[col],
         );
-        const colWidths: Record<string, number | string | undefined> = {
-            ...columnWidths,
-            quickactions: allPinned ? "auto" : undefined,
-        };
 
         return (
             <div
@@ -212,9 +208,16 @@ export class PureFlowTable extends React.Component<
                             <col
                                 key={colName}
                                 className={`col-${colName}`}
-                                style={{ width: colWidths[colName] }}
+                                style={{
+                                    width:
+                                        colName === "quickactions" &&
+                                        quickactionsAbsorbSlack
+                                            ? "auto"
+                                            : columnWidths[colName],
+                                }}
                             />
                         ))}
+                        <col className="col-filler" />
                     </colgroup>
                     <thead
                         ref={this.head}

@@ -64,7 +64,7 @@ test("FlowTableHead resize handle reports a new width and does not sort", async 
 
     fireEvent.pointerDown(handle, { clientX: 100 });
 
-    // Every column but quickactions is pinned before the drag starts.
+    // Every column is pinned before the drag starts, bar the quickactions column that takes the slack.
     expect(onResize).toHaveBeenCalledTimes(1);
     expect(Object.keys(onResize.mock.calls[0][0])).toEqual(
         store.getState().options.web_columns,
@@ -87,4 +87,27 @@ test("FlowTableHead resize handle reports a new width and does not sort", async 
     fireEvent.pointerUp(document);
     expect(onResizeEnd).toHaveBeenCalledTimes(1);
     expect(document.body.classList).not.toContain("resizing-columns");
+});
+
+test("FlowTableHead leaves the actions column to the browser", () => {
+    const store = TStore();
+    const { container } = render(
+        <Provider store={store}>
+            <table>
+                <thead>
+                    <FlowTableHead
+                        onResize={jest.fn()}
+                        onResizeEnd={jest.fn()}
+                    />
+                </thead>
+            </table>
+        </Provider>,
+    );
+
+    // It takes the width the other columns leave over, so it has neither a width to drag nor an order to sort by.
+    const actions = container.querySelector(".col-quickactions") as HTMLElement;
+    expect(actions.querySelector(".col-resize-handle")).toBeNull();
+
+    fireEvent.click(screen.getByText("Actions"));
+    expect(store.getState().flows.sort.column).toBe("path");
 });

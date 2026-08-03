@@ -30,6 +30,21 @@ export default React.memo(function FlowTableHead({
         .filter(isValidColumnName)
         .concat("quickactions");
 
+    // The actions column holds buttons, so there is nothing to order it by.
+    const sortBy = (colName: (typeof displayColumns)[number]) =>
+        colName === "quickactions"
+            ? undefined
+            : () =>
+                  dispatch(
+                      setSort({
+                          column:
+                              colName === sortColumn && sortDesc
+                                  ? undefined
+                                  : colName,
+                          desc: colName !== sortColumn ? false : !sortDesc,
+                      }),
+                  );
+
     const startResize = (colName: string) => (e: React.PointerEvent) => {
         // Don't let the resize gesture trigger a column sort.
         e.preventDefault();
@@ -38,13 +53,14 @@ export default React.memo(function FlowTableHead({
         const handle = e.currentTarget as HTMLElement;
 
         // Fixed table layout hands the space the sized columns leave over to every column without a width of its own, so setting one width on its own shifts the rest too.
-        // Pinning them all keeps the handle under the cursor; the trailing `quickactions` is left out and takes the slack instead.
+        // Pinning them all keeps the handle under the cursor; `quickactions` is left out and takes the slack instead.
+        const cells = handle.closest("tr")!.children;
         const widths = Object.fromEntries(
-            [...handle.closest("tr")!.children]
-                .slice(0, -1)
-                .map((cell, i): [string, number] => [
-                    displayColumns[i],
-                    (cell as HTMLElement).offsetWidth,
+            displayColumns
+                .filter((col) => col !== "quickactions")
+                .map((col, i): [string, number] => [
+                    col,
+                    (cells[i] as HTMLElement).offsetWidth,
                 ]),
         );
         onResize(widths);
@@ -58,8 +74,8 @@ export default React.memo(function FlowTableHead({
         const { signal } = abort;
 
         // Pointers sample faster than the display refreshes, so coalesce moves into one update per frame.
-        let frame = 0;
-        let clientX = startX;
+        let frame = 0,
+            clientX = startX;
         const apply = () => {
             frame = 0;
             const width = startWidth + clientX - startX;
@@ -93,18 +109,7 @@ export default React.memo(function FlowTableHead({
                         sortColumn === colName && sortType,
                     )}
                     key={colName}
-                    onClick={() =>
-                        dispatch(
-                            setSort({
-                                column:
-                                    colName === sortColumn && sortDesc
-                                        ? undefined
-                                        : colName,
-                                desc:
-                                    colName !== sortColumn ? false : !sortDesc,
-                            }),
-                        )
-                    }
+                    onClick={sortBy(colName)}
                 >
                     <span className="th-content">
                         {FlowColumns[colName].headerName}
@@ -125,6 +130,7 @@ export default React.memo(function FlowTableHead({
                     )}
                 </th>
             ))}
+            <th className="col-filler" />
         </tr>
     );
 });

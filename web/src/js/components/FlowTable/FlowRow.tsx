@@ -62,6 +62,8 @@ export default React.memo(function FlowRow({
             {displayColumns.map((Column) => (
                 <Column key={Column.name} flow={flow} rowNumber={rowNumber} />
             ))}
+            {/* Empty, but without a cell the row stops painting its background where the filler column starts. */}
+            <td className="col-filler" />
         </tr>
     );
 });
