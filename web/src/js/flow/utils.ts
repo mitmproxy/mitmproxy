@@ -197,42 +197,56 @@ export const canReplay = (flow: Flow): boolean => {
 export const canRevert = (flow: Flow): boolean => flow.modified;
 export const canResumeOrKill = (flow: Flow): boolean => flow.intercepted;
 
-export const getIcon = (flow: Flow): string => {
+export type ResourceType =
+    | "plain"
+    | "html"
+    | "js"
+    | "css"
+    | "image"
+    | "not-modified"
+    | "redirect"
+    | "websocket"
+    | "tcp"
+    | "udp"
+    | "dns"
+    | "quic";
+
+export const getResourceType = (flow: Flow): ResourceType => {
     if (flow.type !== "http") {
         if (flow.client_conn.tls_version === "QUICv1") {
-            return `resource-icon-quic`;
+            return "quic";
         }
-        return `resource-icon-${flow.type}`;
+        return flow.type;
     }
     if (flow.websocket) {
-        return "resource-icon-websocket";
+        return "websocket";
     }
     if (!flow.response) {
-        return "resource-icon-plain";
+        return "plain";
     }
 
     const contentType = ResponseUtils.getContentType(flow.response) || "";
 
     if (flow.response.status_code === 304) {
-        return "resource-icon-not-modified";
+        return "not-modified";
     }
     if (300 <= flow.response.status_code && flow.response.status_code < 400) {
-        return "resource-icon-redirect";
+        return "redirect";
     }
     if (contentType.indexOf("image") >= 0) {
-        return "resource-icon-image";
+        return "image";
     }
     if (contentType.indexOf("javascript") >= 0) {
-        return "resource-icon-js";
+        return "js";
     }
     if (contentType.indexOf("css") >= 0) {
-        return "resource-icon-css";
+        return "css";
     }
     if (contentType.indexOf("html") >= 0) {
-        return "resource-icon-document";
+        return "html";
     }
 
-    return "resource-icon-plain";
+    return "plain";
 };
 
 export const mainPath = (flow: Flow): string => {
@@ -303,7 +317,7 @@ export const getVersion = (flow: Flow): string => {
 
 export const sortFunctions = {
     tls: (flow: Flow) => flow.type === "http" && flow.request.scheme,
-    icon: getIcon,
+    icon: getResourceType,
     index: () => 0, // this is broken right now - ideally we switch to uuid7s on the backend and use that.
     path: mainPath,
     method: getMethod,
