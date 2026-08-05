@@ -76,12 +76,23 @@ export default React.memo(function FlowTableHead({
         // Columns that ship narrower than the minimum, such as the TLS marker, keep their own width as the floor instead of being widened to one they never had.
         const minWidth = Math.min(MIN_COLUMN_WIDTH, startWidth);
 
+        // A column may grow to fill the visible table but not beyond it, or the boundary ends up somewhere the cursor cannot reach to drag it back.
+        // A width restored from a wider window is its own ceiling, mirroring the floor above; a viewport that measures nothing constrains nothing.
+        const viewport = handle.closest(".flow-table");
+        const maxWidth = Math.max(
+            viewport?.clientWidth || Infinity,
+            startWidth,
+        );
+
         // Pointers sample faster than the display refreshes, so coalesce moves into one update per frame.
         let frame = 0,
             moved = false,
             clientX = startX;
         const currentWidth = () => ({
-            [colName]: Math.max(minWidth, startWidth + clientX - startX),
+            [colName]: Math.min(
+                maxWidth,
+                Math.max(minWidth, startWidth + clientX - startX),
+            ),
         });
         const apply = () => {
             frame = 0;
