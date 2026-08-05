@@ -35,8 +35,34 @@
 
 .nav-tabs-lg {
     > a {
-        padding: 3px 14px;
+        padding: 4px 14px;
         margin: 0 2px -1px;
+        border-radius: 4px 4px 0 0;
+        transition:
+            color 120ms ease,
+            background-color 120ms ease,
+            border-color 120ms ease;
+
+        &:hover,
+        &:focus {
+            background-color: var(--mitmweb-bg-alt);
+        }
+
+        &.active {
+            background-color: var(--mitmweb-bg);
+            border-bottom-color: var(--mitmweb-bg);
+        }
+
+        &.special {
+            border-color: var(--mitmweb-accent);
+            border-bottom-color: var(--mitmweb-accent);
+
+            &:hover,
+            &:focus {
+                background-color: var(--mitmweb-accent-active);
+                border-color: var(--mitmweb-accent-active);
+            }
+        }
     }
 }
 
