@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- mitmweb: Replace the flow table's raster resource type icons with SVG icons so they follow the active theme.
+  ([#8337](https://github.com/mitmproxy/mitmproxy/pull/8337), @sleeyax)
 - Bracket IPv6 target literals in the `CONNECT` request and `Host` header sent
   to an upstream proxy (`--mode upstream`), producing a valid `[2001:db8::1]:443`
   authority per RFC 3986 instead of the malformed `2001:db8::1:443`.
@@ -16,6 +18,14 @@
 - Remove the unused `msgpack` dependency. The msgpack contentview is
   implemented in Rust and shipped with `mitmproxy_rs` since mitmproxy 12.
   ([#8319](https://github.com/mitmproxy/mitmproxy/pull/8319), @lukehsiao)
+- mitmweb: Fix the flow table header of the sorted column keeping a light background and hiding its sort chevron under the dark theme.
+  ([#8336](https://github.com/mitmproxy/mitmproxy/pull/8336), @sleeyax)
+- mitmweb: Add a dark theme, selectable via the new `web_theme` option (`system`, `dark`, or `light`).
+  `system` follows the operating system's color-scheme preference.
+  ([#8317](https://github.com/mitmproxy/mitmproxy/pull/8317), @sleeyax)
+- mitmweb: Show colored status-code badges and method badges in the flow table, and add hover
+  tooltips to the TLS, replay, intercept, and error indicators.
+  ([#8335](https://github.com/mitmproxy/mitmproxy/pull/8335), @sleeyax)
 - mitmweb: Honor the `view_order_reversed` option for live flows. New flows are
   now placed at the top of the table when the option is set, instead of always
   being appended at the bottom.
@@ -34,6 +44,8 @@
   ([#8295](https://github.com/mitmproxy/mitmproxy/pull/8295), @tbodt)
 - Correctly read the SNI hostname from fragmented QUIC client hellos.
   ([#8296](https://github.com/mitmproxy/mitmproxy/pull/8296), @tbodt)
+- mitmweb: Fix for modified reason phrase not being sent
+  ([#8333](https://github.com/mitmproxy/mitmproxy/pull/8333), @grusski)
 - mitmweb: Validate flow filters on the backend and remove the duplicate frontend flow-filter parser.
   ([#8331](https://github.com/mitmproxy/mitmproxy/pull/8331), @lups2000)
 

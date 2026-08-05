@@ -1,0 +1,47 @@
+.badge {
+    display: inline-flex;
+    align-items: center;
+    // Middle rather than baseline, so badges line up across columns despite differing font sizes.
+    vertical-align: middle;
+    height: 18px;
+    // A transparent border keeps outlined and filled badges the same size.
+    border: 1px solid transparent;
+    border-radius: 4px;
+    line-height: 1;
+}
+
+.status-badge {
+    padding: 0 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--mitmweb-neutral-soft-fg);
+    background-color: var(--mitmweb-neutral-soft-bg);
+
+    &.status-1xx {
+        color: var(--mitmweb-info-soft-fg);
+        background-color: var(--mitmweb-info-soft-bg);
+    }
+    &.status-2xx {
+        color: var(--mitmweb-success-soft-fg);
+        background-color: var(--mitmweb-success-soft-bg);
+    }
+    &.status-3xx {
+        color: var(--mitmweb-warning-soft-fg);
+        background-color: var(--mitmweb-warning-soft-bg);
+    }
+    &.status-4xx,
+    &.status-5xx {
+        color: var(--mitmweb-danger-soft-fg);
+        background-color: var(--mitmweb-danger-soft-bg);
+    }
+}
+
+.method-badge {
+    padding: 0 4px;
+    border-color: var(--mitmweb-border);
+    font-family: @font-family-monospace;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    color: var(--mitmweb-fg-muted);
+}

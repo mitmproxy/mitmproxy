@@ -101,22 +101,47 @@ exports[`FlowTable Component should render correctly 1`] = `
         />
         <tr
           class="selected highlighted has-request has-response"
+          style="height: 32px;"
         >
           <td
             class="col-tls col-tls-https"
+            title="TLS encrypted"
           />
           <td
             class="col-icon"
+            title="websocket"
           >
-            <div
-              class="resource-icon resource-icon-websocket"
-            />
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-arrow-left-right icon icon-swap"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M8 3 4 7l4 4"
+              />
+              <path
+                d="M4 7h16"
+              />
+              <path
+                d="m16 21 4-4-4-4"
+              />
+              <path
+                d="M20 17H4"
+              />
+            </svg>
           </td>
           <td
             class="col-path"
           >
             <svg
-              aria-hidden="true"
               class="lucide lucide-triangle-alert icon icon-warning float-right"
               fill="none"
               height="16"
@@ -137,6 +162,9 @@ exports[`FlowTable Component should render correctly 1`] = `
               <path
                 d="M12 17h.01"
               />
+              <title>
+                error
+              </title>
             </svg>
             <span
               class="marker float-right"
@@ -146,13 +174,20 @@ exports[`FlowTable Component should render correctly 1`] = `
           <td
             class="col-method"
           >
-            WSS
+            <span
+              class="badge method-badge"
+            >
+              WSS
+            </span>
           </td>
           <td
             class="col-status"
-            style="color: darkgreen;"
           >
-            200
+            <span
+              class="badge status-badge status-2xx"
+            >
+              200
+            </span>
           </td>
           <td
             class="col-size"
@@ -170,22 +205,56 @@ exports[`FlowTable Component should render correctly 1`] = `
         </tr>
         <tr
           class=""
+          style="height: 32px;"
         >
           <td
             class="col-tls col-tls-https"
+            title="TLS encrypted"
           />
           <td
             class="col-icon"
+            title="tcp"
           >
-            <div
-              class="resource-icon resource-icon-tcp"
-            />
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-cable icon icon-cable"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M17 19a1 1 0 0 1-1-1v-2a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a1 1 0 0 1-1 1z"
+              />
+              <path
+                d="M17 21v-2"
+              />
+              <path
+                d="M19 14V6.5a1 1 0 0 0-7 0v11a1 1 0 0 1-7 0V10"
+              />
+              <path
+                d="M21 21v-2"
+              />
+              <path
+                d="M3 5V3"
+              />
+              <path
+                d="M4 10a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2a2 2 0 0 1-2 2z"
+              />
+              <path
+                d="M7 5V3"
+              />
+            </svg>
           </td>
           <td
             class="col-path"
           >
             <svg
-              aria-hidden="true"
               class="lucide lucide-triangle-alert icon icon-warning float-right"
               fill="none"
               height="16"
@@ -206,6 +275,9 @@ exports[`FlowTable Component should render correctly 1`] = `
               <path
                 d="M12 17h.01"
               />
+              <title>
+                error
+              </title>
             </svg>
             <span
               class="marker float-right"
@@ -215,7 +287,11 @@ exports[`FlowTable Component should render correctly 1`] = `
           <td
             class="col-method"
           >
-            TCP
+            <span
+              class="badge method-badge"
+            >
+              TCP
+            </span>
           </td>
           <td
             class="col-status"
@@ -347,22 +423,47 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
           />
           <tr
             class="selected highlighted has-request has-response"
+            style="height: 32px;"
           >
             <td
               class="col-tls col-tls-https"
+              title="TLS encrypted"
             />
             <td
               class="col-icon"
+              title="websocket"
             >
-              <div
-                class="resource-icon resource-icon-websocket"
-              />
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-arrow-left-right icon icon-swap"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M8 3 4 7l4 4"
+                />
+                <path
+                  d="M4 7h16"
+                />
+                <path
+                  d="m16 21 4-4-4-4"
+                />
+                <path
+                  d="M20 17H4"
+                />
+              </svg>
             </td>
             <td
               class="col-path"
             >
               <svg
-                aria-hidden="true"
                 class="lucide lucide-triangle-alert icon icon-warning float-right"
                 fill="none"
                 height="16"
@@ -383,6 +484,9 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
                 <path
                   d="M12 17h.01"
                 />
+                <title>
+                  error
+                </title>
               </svg>
               <span
                 class="marker float-right"
@@ -392,13 +496,20 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
             <td
               class="col-method"
             >
-              WSS
+              <span
+                class="badge method-badge"
+              >
+                WSS
+              </span>
             </td>
             <td
               class="col-status"
-              style="color: darkgreen;"
             >
-              200
+              <span
+                class="badge status-badge status-2xx"
+              >
+                200
+              </span>
             </td>
             <td
               class="col-size"
@@ -416,22 +527,56 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
           </tr>
           <tr
             class=""
+            style="height: 32px;"
           >
             <td
               class="col-tls col-tls-https"
+              title="TLS encrypted"
             />
             <td
               class="col-icon"
+              title="tcp"
             >
-              <div
-                class="resource-icon resource-icon-tcp"
-              />
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-cable icon icon-cable"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M17 19a1 1 0 0 1-1-1v-2a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a1 1 0 0 1-1 1z"
+                />
+                <path
+                  d="M17 21v-2"
+                />
+                <path
+                  d="M19 14V6.5a1 1 0 0 0-7 0v11a1 1 0 0 1-7 0V10"
+                />
+                <path
+                  d="M21 21v-2"
+                />
+                <path
+                  d="M3 5V3"
+                />
+                <path
+                  d="M4 10a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2a2 2 0 0 1-2 2z"
+                />
+                <path
+                  d="M7 5V3"
+                />
+              </svg>
             </td>
             <td
               class="col-path"
             >
               <svg
-                aria-hidden="true"
                 class="lucide lucide-triangle-alert icon icon-warning float-right"
                 fill="none"
                 height="16"
@@ -452,6 +597,9 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
                 <path
                   d="M12 17h.01"
                 />
+                <title>
+                  error
+                </title>
               </svg>
               <span
                 class="marker float-right"
@@ -461,7 +609,11 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
             <td
               class="col-method"
             >
-              TCP
+              <span
+                class="badge method-badge"
+              >
+                TCP
+              </span>
             </td>
             <td
               class="col-status"
@@ -594,22 +746,46 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
           />
           <tr
             class=""
+            style="height: 32px;"
           >
             <td
               class="col-tls col-tls-https"
+              title="TLS encrypted"
             />
             <td
               class="col-icon"
+              title="dns"
             >
-              <div
-                class="resource-icon resource-icon-dns"
-              />
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-globe icon icon-globe"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                />
+                <path
+                  d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"
+                />
+                <path
+                  d="M2 12h20"
+                />
+              </svg>
             </td>
             <td
               class="col-path"
             >
               <svg
-                aria-hidden="true"
                 class="lucide lucide-triangle-alert icon icon-warning float-right"
                 fill="none"
                 height="16"
@@ -630,6 +806,9 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
                 <path
                   d="M12 17h.01"
                 />
+                <title>
+                  error
+                </title>
               </svg>
               <span
                 class="marker float-right"
@@ -639,13 +818,20 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
             <td
               class="col-method"
             >
-              QUERY
+              <span
+                class="badge method-badge"
+              >
+                QUERY
+              </span>
             </td>
             <td
               class="col-status"
-              style="color: darkgreen;"
             >
-              NOERROR
+              <span
+                class="badge status-badge status-other"
+              >
+                NOERROR
+              </span>
             </td>
             <td
               class="col-size"
@@ -663,22 +849,41 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
           </tr>
           <tr
             class="selected"
+            style="height: 32px;"
           >
             <td
               class="col-tls col-tls-https"
+              title="TLS encrypted"
             />
             <td
               class="col-icon"
+              title="udp"
             >
-              <div
-                class="resource-icon resource-icon-udp"
-              />
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-send icon icon-send"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"
+                />
+                <path
+                  d="m21.854 2.147-10.94 10.939"
+                />
+              </svg>
             </td>
             <td
               class="col-path"
             >
               <svg
-                aria-hidden="true"
                 class="lucide lucide-triangle-alert icon icon-warning float-right"
                 fill="none"
                 height="16"
@@ -699,6 +904,9 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
                 <path
                   d="M12 17h.01"
                 />
+                <title>
+                  error
+                </title>
               </svg>
               <span
                 class="marker float-right"
@@ -708,7 +916,11 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
             <td
               class="col-method"
             >
-              UDP
+              <span
+                class="badge method-badge"
+              >
+                UDP
+              </span>
             </td>
             <td
               class="col-status"

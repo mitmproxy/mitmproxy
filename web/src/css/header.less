@@ -1,8 +1,8 @@
 @screen-xs-max: 767px;
-@label-info-bg: #5bc0de;
-@label-success-bg: #5cb85c;
-@label-danger-bg: #d9534f;
-@label-warning-bg: #f0ad4e;
+@label-info-bg: var(--mitmweb-info);
+@label-success-bg: var(--mitmweb-success);
+@label-danger-bg: var(--mitmweb-danger);
+@label-warning-bg: var(--mitmweb-warning);
 
 .connection-label-base() {
     display: inline;
@@ -21,8 +21,8 @@
 
 header {
     padding-top: 6px;
-    background-color: white;
-    @separator-color: lighten(grey, 15%);
+    background-color: var(--mitmweb-bg);
+    @separator-color: var(--mitmweb-border-strong);
     > div:not(:empty) {
         display: block;
         margin: 0;
@@ -93,10 +93,16 @@ header {
     input[type="checkbox"] {
         margin: 0;
     }
+    .theme-select {
+        font-size: 1.2rem;
+        padding: 1px 2px;
+        border: 1px solid var(--mitmweb-border);
+        border-radius: 3px;
+    }
 }
 
 .menu-legend {
-    color: #777;
+    color: var(--mitmweb-fg-muted);
     height: @menu-legend-height;
     text-align: center;
     font-size: 12px;
@@ -107,7 +113,7 @@ header {
     @space: 10px;
     margin-left: -(@menu-group-hmargin + 1px);
     content: " ";
-    border-left: solid 1px lighten(grey, 40%);
+    border-left: solid 1px var(--mitmweb-border-lighter);
     margin-top: @space;
     height: @menu-height - @space*2;
     position: absolute;
@@ -159,27 +165,27 @@ header {
             }
 
             a {
-                color: #337ab7;
+                color: var(--mitmweb-accent);
             }
 
             a:hover,
             a:focus {
-                color: #23527c;
+                color: var(--mitmweb-accent-hover);
             }
 
             tbody tr + tr {
-                border-top: 1px solid #ddd;
+                border-top: 1px solid var(--mitmweb-border-light);
             }
 
             tbody tr:first-child {
-                border-top: 1px solid #ddd;
+                border-top: 1px solid var(--mitmweb-border-light);
             }
         }
 
         tr {
             cursor: pointer;
             &:hover {
-                background-color: hsla(209, 52%, 84%, 0.5) !important;
+                background-color: var(--mitmweb-highlight) !important;
             }
         }
     }

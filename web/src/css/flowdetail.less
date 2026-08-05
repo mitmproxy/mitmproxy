@@ -5,7 +5,7 @@
     flex-direction: column;
 
     nav {
-        background-color: #f2f2f2;
+        background-color: var(--mitmweb-bg-alt);
     }
 
     section {
@@ -14,7 +14,7 @@
         padding: 5px 12px 10px;
 
         > footer {
-            box-shadow: 0 0 3px gray;
+            box-shadow: 0 0 3px var(--mitmweb-shadow);
             padding: 2px;
             margin: 0;
             height: 23px;
@@ -25,7 +25,7 @@
         margin-top: 2px;
         padding-left: 10px;
         padding-right: 7px;
-        color: grey;
+        color: var(--mitmweb-fg-muted);
         font-size: 15px;
         border: none;
         background: transparent;
@@ -34,13 +34,13 @@
     }
 
     .close-button:hover {
-        color: black;
+        color: var(--mitmweb-fg-strong);
     }
 
     .first-line {
         font-family: @font-family-monospace;
-        background-color: #428bca;
-        color: white;
+        background-color: var(--mitmweb-first-line-bg);
+        color: var(--mitmweb-first-line-fg);
         margin: 0 -8px 2px;
         padding: 4px 8px;
         border-radius: 5px;
@@ -71,7 +71,7 @@
 
     hr {
         border: 0;
-        border-top: 1px solid #eee;
+        border-top: 1px solid var(--mitmweb-border-lighter);
         margin: 0;
     }
 }
@@ -128,7 +128,7 @@
     word-break: break-all;
 
     tr:not(:first-child) td {
-        border-top: 1px solid #f7f7f7;
+        border-top: 1px solid var(--mitmweb-border-lighter);
     }
 
     td {
@@ -163,12 +163,12 @@
     }
 
     .inline-input {
-        background-color: white;
+        background-color: var(--mitmweb-bg);
     }
 
     .kv-add-row {
         opacity: 0;
-        color: #666;
+        color: var(--mitmweb-fg-muted);
         position: absolute;
         bottom: 4px;
         right: 4px;

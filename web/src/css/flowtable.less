@@ -20,8 +20,8 @@
     }
 
     thead tr {
-        background-color: #f2f2f2;
-        border-bottom: solid #bebebe 1px;
+        background-color: var(--mitmweb-bg-alt);
+        border-bottom: solid var(--mitmweb-border) 1px;
         line-height: 23px;
     }
 
@@ -36,7 +36,7 @@
 
         &.sort-asc,
         &.sort-desc {
-            background-color: lighten(#f2f2f2, 3%);
+            background-color: var(--mitmweb-th-sorted-bg);
             padding-right: 18px;
         }
 
@@ -51,7 +51,11 @@
             top: 4px;
             width: 14px;
             height: 14px;
-            background-color: fadeout(lighten(#f2f2f2, 3%), 20%);
+            background-color: color-mix(
+                in srgb,
+                var(--mitmweb-th-sorted-bg) 80%,
+                transparent
+            );
         }
     }
 
@@ -59,30 +63,32 @@
         cursor: pointer;
 
         & {
-            background-color: hsl(0, 0%, 100%);
+            background-color: var(--mitmweb-bg);
             &:nth-child(even) {
-                background-color: hsl(0, 0%, 95%);
+                background-color: var(--mitmweb-bg-alt);
             }
         }
 
         &.highlighted {
-            background-color: hsl(48, 100%, 80%);
+            background-color: var(--mitmweb-row-highlight);
             &:nth-child(even) {
-                background-color: hsl(48, 100%, 75%);
+                background-color: var(--mitmweb-row-highlight-alt);
             }
         }
 
         &.selected {
-            background-color: hsl(209, 51%, 92%) !important;
+            background-color: var(--mitmweb-row-selected) !important;
             &:nth-child(even) {
-                background-color: hsl(209, 51%, 86%) !important;
+                background-color: var(--mitmweb-row-selected-alt) !important;
             }
         }
 
         &.selected.highlighted {
-            background-color: hsl(209, 96%, 74%) !important;
+            background-color: var(--mitmweb-row-selected-highlight) !important;
             &:nth-child(even) {
-                background-color: hsl(209, 96%, 68%) !important;
+                background-color: var(
+                    --mitmweb-row-selected-highlight-alt
+                ) !important;
             }
         }
     }
@@ -129,7 +135,13 @@
     }
 
     .col-icon {
-        width: 32px;
+        width: 24px;
+        color: var(--mitmweb-fg-muted);
+
+        .icon {
+            display: block;
+            margin: 0 auto;
+        }
     }
 
     .col-path {
@@ -164,7 +176,7 @@
     }
 
     .col-status {
-        width: 50px;
+        width: 80px;
     }
 
     .col-size {
