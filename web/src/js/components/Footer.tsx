@@ -2,6 +2,7 @@ import * as React from "react";
 import { formatSize } from "../utils";
 import HideInStatic from "../components/common/HideInStatic";
 import { useAppSelector } from "../ducks";
+import Badge from "./common/Badge";
 
 export default function Footer() {
     const version = useAppSelector((state) => state.backendState.version);
@@ -32,63 +33,92 @@ export default function Footer() {
     return (
         <footer>
             {mode && (mode.length !== 1 || mode[0] !== "regular") && (
-                <span className="label label-success">{mode.join(",")}</span>
+                <Badge className="footer-badge footer-badge-success">
+                    {mode.join(",")}
+                </Badge>
             )}
             {intercept && (
-                <span className="label label-success">
+                <Badge className="footer-badge footer-badge-success">
                     Intercept: {intercept}
-                </span>
+                </Badge>
             )}
             {ssl_insecure && (
-                <span className="label label-danger">ssl_insecure</span>
+                <Badge className="footer-badge footer-badge-danger">
+                    ssl_insecure
+                </Badge>
             )}
-            {showhost && <span className="label label-success">showhost</span>}
+            {showhost && (
+                <Badge className="footer-badge footer-badge-success">
+                    showhost
+                </Badge>
+            )}
             {!upstream_cert && (
-                <span className="label label-success">no-upstream-cert</span>
+                <Badge className="footer-badge footer-badge-success">
+                    no-upstream-cert
+                </Badge>
             )}
-            {!rawtcp && <span className="label label-success">no-raw-tcp</span>}
-            {!http2 && <span className="label label-success">no-http2</span>}
+            {!rawtcp && (
+                <Badge className="footer-badge footer-badge-success">
+                    no-raw-tcp
+                </Badge>
+            )}
+            {!http2 && (
+                <Badge className="footer-badge footer-badge-success">
+                    no-http2
+                </Badge>
+            )}
             {!websocket && (
-                <span className="label label-success">no-websocket</span>
+                <Badge className="footer-badge footer-badge-success">
+                    no-websocket
+                </Badge>
             )}
             {anticache && (
-                <span className="label label-success">anticache</span>
+                <Badge className="footer-badge footer-badge-success">
+                    anticache
+                </Badge>
             )}
-            {anticomp && <span className="label label-success">anticomp</span>}
+            {anticomp && (
+                <Badge className="footer-badge footer-badge-success">
+                    anticomp
+                </Badge>
+            )}
             {stickyauth && (
-                <span className="label label-success">
+                <Badge className="footer-badge footer-badge-success">
                     stickyauth: {stickyauth}
-                </span>
+                </Badge>
             )}
             {stickycookie && (
-                <span className="label label-success">
+                <Badge className="footer-badge footer-badge-success">
                     stickycookie: {stickycookie}
-                </span>
+                </Badge>
             )}
             {stream_large_bodies && (
-                <span className="label label-success">
+                <Badge className="footer-badge footer-badge-success">
                     stream: {formatSize(stream_large_bodies)}
-                </span>
+                </Badge>
             )}
             {totalFlowsLength > 0 && (
-                <span className="label label-default">
+                <Badge className="footer-badge footer-badge-neutral">
                     {selectedFlowsLength} of {totalFlowsLength} flows selected
-                </span>
+                </Badge>
             )}
-            <div className="float-right">
+            <div className="footer-meta">
                 <HideInStatic>
                     {server && (
-                        <span
-                            className="label label-primary"
+                        <Badge
+                            className="footer-badge footer-badge-info"
                             title="HTTP Proxy Server Address"
                         >
                             {listen_host || "*"}:{listen_port || 8080}
-                        </span>
+                        </Badge>
                     )}
                 </HideInStatic>
-                <span className="label label-default" title="Mitmproxy Version">
+                <Badge
+                    className="footer-badge footer-badge-neutral"
+                    title="Mitmproxy Version"
+                >
                     mitmproxy {version}
-                </span>
+                </Badge>
             </div>
         </footer>
     );
