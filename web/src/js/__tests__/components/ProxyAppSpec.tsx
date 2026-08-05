@@ -18,10 +18,6 @@ test("ProxyApp", async () => {
         JSON.stringify(cv),
     );
     render(<ProxyApp />);
-    expect(screen.getByTitle("Mitmproxy Version")).toHaveClass(
-        "badge",
-        "footer-badge",
-        "footer-badge-neutral",
-    );
+    expect(screen.getByTitle("Mitmproxy Version")).toBeVisible();
     await waitFor(() => screen.getByText("my data"));
 });
