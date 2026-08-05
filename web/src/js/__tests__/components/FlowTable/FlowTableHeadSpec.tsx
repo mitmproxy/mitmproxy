@@ -24,6 +24,9 @@ const firePointer = (
 const stubColumnWidth = (px: number) =>
     jest.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(px);
 
+const stubViewportWidth = (px: number) =>
+    jest.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(px);
+
 test("FlowTableHead Component", async () => {
     const store = TStore();
     const noop = jest.fn();
@@ -235,5 +238,79 @@ test("FlowTableHead keeps a column narrower than the minimum at its own width", 
     expect(onResize).toHaveBeenLastCalledWith({ tls: 10 });
     // The drag is still live otherwise, and its document listeners would outlive the test.
     firePointer(document, "pointerup", 20);
+    offsetWidth.mockRestore();
+});
+
+test("FlowTableHead stops a column at the width of the visible table", async () => {
+    const offsetWidth = stubColumnWidth(70);
+    const clientWidth = stubViewportWidth(300);
+    const store = TStore();
+    const onResize = jest.fn();
+    const onResizeEnd = jest.fn();
+    const { container } = render(
+        <Provider store={store}>
+            <div className="flow-table">
+                <table>
+                    <thead>
+                        <FlowTableHead
+                            onResize={onResize}
+                            onResizeEnd={onResizeEnd}
+                        />
+                    </thead>
+                </table>
+            </div>
+        </Provider>,
+    );
+
+    const handle = container.querySelector(
+        ".col-size .col-resize-handle",
+    ) as HTMLElement;
+    firePointer(handle, "pointerdown", 100);
+    firePointer(document, "pointermove", 2000);
+    await nextFrame();
+
+    expect(onResize).toHaveBeenLastCalledWith({ size: 300 });
+
+    firePointer(document, "pointerup", 2000);
+    expect(onResizeEnd).toHaveBeenCalledWith({ size: 300 });
+    clientWidth.mockRestore();
+    offsetWidth.mockRestore();
+});
+
+test("FlowTableHead lets a column wider than the visible table only shrink", async () => {
+    const offsetWidth = stubColumnWidth(500);
+    const clientWidth = stubViewportWidth(300);
+    const store = TStore();
+    const onResize = jest.fn();
+    const { container } = render(
+        <Provider store={store}>
+            <div className="flow-table">
+                <table>
+                    <thead>
+                        <FlowTableHead
+                            onResize={onResize}
+                            onResizeEnd={jest.fn()}
+                        />
+                    </thead>
+                </table>
+            </div>
+        </Provider>,
+    );
+
+    const handle = container.querySelector(
+        ".col-size .col-resize-handle",
+    ) as HTMLElement;
+    firePointer(handle, "pointerdown", 100);
+    // A width restored from a wider window is not snapped down to the ceiling, but must not grow past it either.
+    firePointer(document, "pointermove", 200);
+    await nextFrame();
+    expect(onResize).toHaveBeenLastCalledWith({ size: 500 });
+
+    firePointer(document, "pointermove", 40);
+    await nextFrame();
+    expect(onResize).toHaveBeenLastCalledWith({ size: 440 });
+
+    firePointer(document, "pointerup", 40);
+    clientWidth.mockRestore();
     offsetWidth.mockRestore();
 });
