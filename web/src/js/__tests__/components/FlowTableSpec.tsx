@@ -3,6 +3,8 @@ import FlowTable, { PureFlowTable } from "../../components/FlowTable";
 
 import { act, fireEvent, render } from "../test-utils";
 import { FLOWS_REMOVE, select } from "../../ducks/flows";
+import { TStore, testState } from "../ducks/tutils";
+import { resetColumnWidths } from "../../ducks/ui/columnWidths";
 
 window.addEventListener = jest.fn();
 
@@ -86,13 +88,16 @@ describe("FlowTable Component", () => {
         spy.mockRestore();
     });
 
-    it("restores persisted column widths", () => {
-        localStorage.setItem(
-            COLUMN_WIDTHS_KEY,
-            JSON.stringify({ size: 123, time: 45 }),
-        );
-
-        const { container } = render(<FlowTable />);
+    it("renders the column widths held in the store", () => {
+        const { container } = render(<FlowTable />, {
+            store: TStore({
+                ...testState,
+                ui: {
+                    ...testState.ui,
+                    columnWidths: { size: 123, time: 45 },
+                },
+            }),
+        });
 
         expect(colWidth(container, "size")).toBe("123px");
         expect(colWidth(container, "time")).toBe("45px");
@@ -100,12 +105,23 @@ describe("FlowTable Component", () => {
         expect(colWidth(container, "path")).toBe("");
     });
 
-    it("starts from unsized columns when the persisted widths cannot be read", () => {
-        localStorage.setItem(COLUMN_WIDTHS_KEY, "}{");
+    it("drops the pinned widths when they are reset", () => {
+        const { container, store } = render(<FlowTable />, {
+            store: TStore({
+                ...testState,
+                ui: {
+                    ...testState.ui,
+                    columnWidths: { size: 123, time: 45 },
+                },
+            }),
+        });
 
-        const { container } = render(<FlowTable />);
+        act(() => {
+            store.dispatch(resetColumnWidths());
+        });
 
         expect(colWidth(container, "size")).toBe("");
+        expect(colWidth(container, "time")).toBe("");
     });
 
     it("applies and persists the width a resize drag ends on", async () => {
