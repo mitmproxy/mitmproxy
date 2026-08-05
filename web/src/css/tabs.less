@@ -43,25 +43,18 @@
             background-color 120ms ease,
             border-color 120ms ease;
 
-        &:hover,
-        &:focus {
+        &:not(.active):not(.special):hover,
+        &:not(.active):not(.special):focus {
             background-color: var(--mitmweb-bg-alt);
+            border-bottom-color: var(--mitmweb-border-strong);
         }
 
         &.active {
             background-color: var(--mitmweb-bg);
-            border-bottom-color: var(--mitmweb-bg);
         }
 
-        &.special {
-            border-color: var(--mitmweb-accent);
-            border-bottom-color: var(--mitmweb-accent);
-
-            &:hover,
-            &:focus {
-                background-color: var(--mitmweb-accent-active);
-                border-color: var(--mitmweb-accent-active);
-            }
+        &.special:focus {
+            background-color: var(--mitmweb-accent-active);
         }
     }
 }
