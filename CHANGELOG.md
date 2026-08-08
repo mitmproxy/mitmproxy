@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Replace deprecated pyparsing APIs with their snake_case equivalents to avoid
+  `PyparsingDeprecationWarning` during command and flow-filter parsing.
+  ([#8344](https://github.com/mitmproxy/mitmproxy/pull/8344), @Dnsayhey)
 - mitmweb: Replace the flow table's raster resource type icons with SVG icons so they follow the active theme.
   ([#8337](https://github.com/mitmproxy/mitmproxy/pull/8337), @sleeyax)
 - Bracket IPv6 target literals in the `CONNECT` request and `Host` header sent
