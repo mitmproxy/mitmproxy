@@ -100,6 +100,27 @@ describe("Flowcolumns Components", () => {
         testIconColumn(noResponseFlow);
     });
 
+    it("should pick the icon matching the resource type", () => {
+        const tflow = { ...TFlow(), websocket: undefined };
+        tflow.response.status_code = 302;
+        const { container } = render(
+            <table>
+                <tbody>
+                    <tr>
+                        <FlowColumns.icon flow={tflow} rowNumber={0} />
+                    </tr>
+                </tbody>
+            </table>,
+        );
+        expect(container.querySelector(".col-icon")).toHaveAttribute(
+            "title",
+            "redirect",
+        );
+        expect(container.querySelector(".col-icon svg")).toHaveClass(
+            "icon-redirect",
+        );
+    });
+
     it("should render pathColumn", () => {
         let tflow = TFlow();
         testFlowColumn(<FlowColumns.path flow={tflow} rowNumber={0} />);
