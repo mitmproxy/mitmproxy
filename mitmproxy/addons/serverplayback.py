@@ -291,9 +291,7 @@ class ServerPlayback:
             or ctx.options.server_replay_extra == "kill"
         ):
             logging.warning(
-                "server_playback: killed non-replay request {}".format(
-                    f.request.url
-                )
+                "server_playback: killed non-replay request {}".format(f.request.url)
             )
             f.kill()
         elif ctx.options.server_replay_extra != "forward":

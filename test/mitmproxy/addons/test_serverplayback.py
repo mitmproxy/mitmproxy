@@ -419,7 +419,9 @@ async def test_server_playback_404(option, status):
         assert f.response.status_code == status
 
 
-@pytest.mark.parametrize("option,status", [("204", 204), ("400", 400), ("404", 404), ("500", 500)])
+@pytest.mark.parametrize(
+    "option,status", [("204", 204), ("400", 400), ("404", 404), ("500", 500)]
+)
 async def test_server_playback_extra_after_exhaustion(option, status):
     """
     The non-reusable replay map empties after the final saved flow is consumed.
