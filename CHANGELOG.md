@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Add vim-style `:q` and `:q!` command aliases as shortcuts for
+  `console.view.pop` and `console.exit` in the console command prompt.
 - Replace deprecated pyparsing APIs with their snake_case equivalents to avoid
   `PyparsingDeprecationWarning` during command and flow-filter parsing.
   ([#8344](https://github.com/mitmproxy/mitmproxy/pull/8344), @Dnsayhey)
