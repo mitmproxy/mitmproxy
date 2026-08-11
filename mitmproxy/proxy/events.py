@@ -16,6 +16,8 @@ from mitmproxy import flow
 from mitmproxy.connection import Connection
 from mitmproxy.proxy import commands
 
+R = TypeVar("R")
+
 
 class Event:
     """
@@ -77,7 +79,8 @@ class CommandCompleted(Event):
         return super().__new__(cls)
 
     def __init_subclass__(cls, **kwargs):
-        command_cls = typing.get_type_hints(cls).get("command", None)
+        command_annotation = typing.get_type_hints(cls).get("command", None)
+        command_cls = typing.get_origin(command_annotation) or command_annotation
         valid_command_subclass = (
             isinstance(command_cls, type)
             and issubclass(command_cls, commands.Command)
@@ -114,6 +117,12 @@ class OpenConnectionCompleted(CommandCompleted):
 class HookCompleted(CommandCompleted):
     command: commands.StartHook
     reply: None = None
+
+
+@dataclass(repr=False)
+class AwaitCompleted(CommandCompleted, Generic[R]):
+    command: commands.Await[R]
+    reply: tuple[R, None] | tuple[None, Exception]
 
 
 T = TypeVar("T")

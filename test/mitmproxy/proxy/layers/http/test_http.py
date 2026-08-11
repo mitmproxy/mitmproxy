@@ -7,6 +7,7 @@ from mitmproxy.connection import ConnectionState
 from mitmproxy.connection import Server
 from mitmproxy.http import HTTPFlow
 from mitmproxy.http import Response
+from mitmproxy.proxy import commands
 from mitmproxy.proxy import layer
 from mitmproxy.proxy.commands import CloseConnection
 from mitmproxy.proxy.commands import Log
@@ -22,8 +23,10 @@ from mitmproxy.proxy.layers.tcp import TcpMessageInjected
 from mitmproxy.proxy.layers.tcp import TcpStartHook
 from mitmproxy.proxy.layers.websocket import WebsocketStartHook
 from mitmproxy.proxy.mode_specs import ProxyMode
+from mitmproxy.script import run_in_thread
 from mitmproxy.tcp import TCPFlow
 from mitmproxy.tcp import TCPMessage
+from mitmproxy.test import tflow
 from test.mitmproxy.proxy.tutils import BytesMatching
 from test.mitmproxy.proxy.tutils import Placeholder
 from test.mitmproxy.proxy.tutils import Playbook
@@ -531,6 +534,123 @@ def test_stream_modify(tctx):
         >> reply()
         << SendData(tctx.client, b"0\r\n\r\n")
     )
+
+
+async def run_message_stream(generator):
+    emitted = []
+    blocking = []
+    reply_value = None
+
+    while True:
+        try:
+            command = generator.send(reply_value)
+        except StopIteration:
+            return emitted, blocking
+
+        reply_value = None
+        if isinstance(command, commands.Await):
+            blocking.append(command)
+            try:
+                result = await command.awaitable
+            except Exception as error:
+                reply_value = (None, error)
+            else:
+                reply_value = (result, None)
+        else:
+            emitted.append(command)
+
+
+@pytest.mark.parametrize("direction", ["request", "response"])
+@pytest.mark.parametrize(
+    "style",
+    [
+        "sync_bytes",
+        "sync_list",
+        "threaded_bytes",
+        "threaded_list",
+        "threaded_generator",
+        "async_bytes",
+        "async_list",
+        "async_generator",
+    ],
+)
+async def test_message_stream_transformers(tctx, direction, style):
+    if style == "sync_bytes":
+
+        def transform(chunk):
+            return b"[" + chunk + b"]"
+
+    elif style == "sync_list":
+
+        def transform(chunk):
+            return [b"[", chunk, b"]"]
+
+    elif style == "threaded_bytes":
+
+        @run_in_thread
+        def transform(chunk):
+            return b"[" + chunk + b"]"
+
+    elif style == "threaded_list":
+
+        @run_in_thread
+        def transform(chunk):
+            return [b"[", chunk, b"]"]
+
+    elif style == "threaded_generator":
+
+        @run_in_thread
+        def transform(chunk):
+            yield b"["
+            yield chunk
+            yield b"]"
+
+    elif style == "async_bytes":
+
+        async def transform(chunk):
+            return b"[" + chunk + b"]"
+
+    elif style == "async_list":
+
+        async def transform(chunk):
+            return [b"[", chunk, b"]"]
+
+    else:
+
+        async def transform(chunk):
+            yield b"["
+            yield chunk
+            yield b"]"
+
+    stream = http.HttpStream(tctx, 1)
+    stream.flow = tflow.tflow(resp=True)
+    message = getattr(stream.flow, direction)
+    assert message is not None
+    message.stream = transform
+    tctx.options.store_streamed_bodies = True
+
+    if direction == "request":
+        generator = stream.read_request_stream(b"body")
+        expected_connection = tctx.server
+    else:
+        generator = stream.read_response_stream(b"body")
+        expected_connection = tctx.client
+
+    emitted, blocking = await run_message_stream(generator)
+
+    expected_chunks = [b"[body]"] if style.endswith("bytes") else [b"[", b"body", b"]"]
+    assert [command.event.data for command in emitted] == expected_chunks
+    assert all(command.connection is expected_connection for command in emitted)
+    if style.startswith(("threaded", "async")):
+        assert blocking
+        assert all(isinstance(command, commands.Await) for command in blocking)
+    else:
+        assert not blocking
+
+    body = (
+        stream.request_body_buf if direction == "request" else stream.response_body_buf
+    )
+    assert bytes(body) == b"[body]"
 
 
 @pytest.mark.parametrize("why", ["body_size=0", "body_size=3", "addon"])
