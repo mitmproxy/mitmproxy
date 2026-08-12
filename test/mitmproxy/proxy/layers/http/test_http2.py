@@ -142,6 +142,8 @@ def test_simple(tctx):
         )
     )
     assert flow().request.url == "http://example.com/"
+    assert flow().request.http_version == "HTTP/2"
+    assert flow().response.http_version == "HTTP/2"
     assert flow().response.text == "Hello, World!"
 
 

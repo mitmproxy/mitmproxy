@@ -453,7 +453,7 @@ class Http2Server(Http2Connection):
                 scheme=scheme,
                 authority=authority,
                 path=path,
-                http_version=b"HTTP/2.0",
+                http_version=b"HTTP/2",
                 headers=headers,
                 content=None,
                 trailers=None,
@@ -593,7 +593,7 @@ class Http2Client(Http2Connection):
                 return True
 
             response = http.Response(
-                http_version=b"HTTP/2.0",
+                http_version=b"HTTP/2",
                 status_code=status_code,
                 reason=b"",
                 headers=headers,

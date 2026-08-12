@@ -216,7 +216,7 @@ class TestRequestCore:
         assert h1.host_header == "header.example.com"
 
         h2 = h1.copy()
-        h2.http_version = "HTTP/2.0"
+        h2.http_version = "HTTP/2"
         assert h2.host_header == "authority.example.com"
 
         h2_host_only = h2.copy()
@@ -235,7 +235,7 @@ class TestRequestCore:
         assert "host" not in h1.headers
         assert not h1.authority
 
-        h2 = treq(http_version=b"HTTP/2.0")
+        h2 = treq(http_version=b"HTTP/2")
         h2.host_header = "example.org"
         assert "host" not in h2.headers
         assert h2.authority == "example.org"
@@ -977,6 +977,7 @@ class TestMessage:
         _test_decoded_attr(tresp(), "http_version")
         assert tresp(http_version=b"HTTP/1.0").is_http10
         assert tresp(http_version=b"HTTP/1.1").is_http11
+        assert tresp(http_version=b"HTTP/2").is_http2
         assert tresp(http_version=b"HTTP/2.0").is_http2
 
 
