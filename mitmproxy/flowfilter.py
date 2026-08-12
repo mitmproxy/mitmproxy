@@ -747,11 +747,15 @@ def _make():
     # which has a horrible performance with len(pyparsing.pyparsing_unicode.printables) == 1114060
     unicode_words = pp.CharsNotIn("()~'\"" + pp.ParserElement.DEFAULT_WHITE_CHARS)
     unicode_words.skipWhitespace = True
-    regex = (
-        unicode_words
-        | pp.QuotedString('"', esc_char="\\")
-        | pp.QuotedString("'", esc_char="\\")
-    )
+    def quoted_regex(quote: str):
+        def unquote(toks):
+            return re.sub(r"\\([\\'\"])", r"\1", toks[0][1:-1])
+
+        return pp.QuotedString(
+            quote, esc_char="\\", unquote_results=False
+        ).set_parse_action(unquote)
+
+    regex = unicode_words | quoted_regex('"') | quoted_regex("'")
     for cls in filter_rex:
         f = pp.Literal(f"~{cls.code}") + pp.WordEnd() + regex.copy()
         f.set_parse_action(cls.make)
