@@ -747,6 +747,7 @@ def _make():
     # which has a horrible performance with len(pyparsing.pyparsing_unicode.printables) == 1114060
     unicode_words = pp.CharsNotIn("()~'\"" + pp.ParserElement.DEFAULT_WHITE_CHARS)
     unicode_words.skipWhitespace = True
+
     def quoted_regex(quote: str):
         def unquote(toks):
             return re.sub(r"\\([\\'\"])", r"\1", toks[0][1:-1])

@@ -8,6 +8,7 @@
 ## Unreleased: mitmproxy next
 
 - Preserve backslashes in quoted flow-filter regular expressions.
+  ([#8373](https://github.com/mitmproxy/mitmproxy/pull/8373), @tospakX)
 - Replace deprecated pyparsing APIs with their snake_case equivalents to avoid
   `PyparsingDeprecationWarning` during command and flow-filter parsing.
   ([#8344](https://github.com/mitmproxy/mitmproxy/pull/8344), @Dnsayhey)
