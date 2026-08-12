@@ -7,6 +7,11 @@
 
 ## Unreleased: mitmproxy next
 
+- `mitmproxy.test.taddons.context.configure()` now calls `configure()` on
+  addons obtained via `context.script()`, which are registered but not part
+  of the addon chain and previously never received the `options.changed`
+  broadcast that normally triggers it for chained addons.
+  ([#3402](https://github.com/mitmproxy/mitmproxy/issues/3402), @citizen204)
 - Replace deprecated pyparsing APIs with their snake_case equivalents to avoid
   `PyparsingDeprecationWarning` during command and flow-filter parsing.
   ([#8344](https://github.com/mitmproxy/mitmproxy/pull/8344), @Dnsayhey)
