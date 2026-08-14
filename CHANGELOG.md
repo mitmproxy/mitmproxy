@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Report HTTP/2 messages as `HTTP/2` instead of `HTTP/2.0`.
+  ([#8371](https://github.com/mitmproxy/mitmproxy/pull/8371), @tospakX)
 - Replace deprecated pyparsing APIs with their snake_case equivalents to avoid
   `PyparsingDeprecationWarning` during command and flow-filter parsing.
   ([#8344](https://github.com/mitmproxy/mitmproxy/pull/8344), @Dnsayhey)

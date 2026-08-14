@@ -99,7 +99,7 @@ function ResponseLine({ flow }: ResponseLineProps) {
                 isValid={(code) => /^\d+$/.test(code)}
                 selectAllOnClick={true}
             />
-            {flow.response.http_version !== "HTTP/2.0" && (
+            {!flow.response.http_version.startsWith("HTTP/2") && (
                 <>
                     &nbsp;
                     <ValueEditor

@@ -51,6 +51,7 @@ class WSGIApp(ASGIApp):
 HTTP_VERSION_MAP = {
     "HTTP/1.0": "1.0",
     "HTTP/1.1": "1.1",
+    "HTTP/2": "2",
     "HTTP/2.0": "2",
 }
 

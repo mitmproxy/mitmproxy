@@ -61,8 +61,8 @@ method to do so:
 Proxy server listening at http://*:8080
 127.0.0.1:57089: client connect
 127.0.0.1:57089: server connect example.com:443 (93.184.216.34:443)
-127.0.0.1:57089: GET https://example.com/ HTTP/2.0
-     << HTTP/2.0 200 OK 1.23k
+127.0.0.1:57089: GET https://example.com/ HTTP/2
+     << HTTP/2 200 OK 1.23k
 127.0.0.1:57089: client disconnect
 127.0.0.1:57089: server disconnect example.com:443 (93.184.216.34:443)
 ^C

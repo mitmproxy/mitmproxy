@@ -282,7 +282,7 @@ class Message(serializable.Serializable):
 
     @property
     def is_http2(self) -> bool:
-        return self.data.http_version == b"HTTP/2.0"
+        return self.data.http_version in (b"HTTP/2", b"HTTP/2.0")
 
     @property
     def is_http3(self) -> bool:
@@ -727,7 +727,7 @@ class Request(Message):
         The request's host/authority header.
 
         This property maps to either ``request.headers["Host"]`` or
-        ``request.authority``, depending on whether it's HTTP/1.x or HTTP/2.0.
+        ``request.authority``, depending on whether it's HTTP/1.x or HTTP/2.
 
         *See also:* `Request.authority`,`Request.host`, `Request.pretty_host`
         """
