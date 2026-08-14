@@ -42,6 +42,7 @@ from mitmproxy.net.free_port import get_free_port
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import layers
 from mitmproxy.proxy import mode_specs
+from mitmproxy.proxy import proxy_protocol
 from mitmproxy.proxy import server
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layer import Layer
@@ -190,9 +191,30 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
         if writer is None:
             assert isinstance(reader, mitmproxy_rs.Stream)
             writer = reader
+
+        proxy_header: proxy_protocol.ProxyHeader | None = None
+        if ctx.options.proxy_protocol:
+            if not isinstance(reader, asyncio.StreamReader):
+                logger.warning(
+                    "proxy_protocol is not supported on this listener, closing connection."
+                )
+                writer.close()
+                return
+            try:
+                proxy_header = await proxy_protocol.read_proxy_header(reader)
+            except proxy_protocol.ProxyProtocolError as e:
+                logger.warning(
+                    f"Rejecting connection, invalid PROXY protocol header: {e}"
+                )
+                writer.close()
+                return
+
         handler = ProxyConnectionHandler(
             ctx.master, reader, writer, ctx.options, self.mode
         )
+        if proxy_header is not None and proxy_header.source_addr is not None:
+            handler.layer.context.client.peername = proxy_header.source_addr
+            handler.log_prefix = f"{human.format_address(proxy_header.source_addr)}: "
         handler.layer = self.make_top_layer(handler.layer.context)
         if isinstance(self.mode, mode_specs.TransparentMode):
             assert isinstance(writer, asyncio.StreamWriter)

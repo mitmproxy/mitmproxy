@@ -245,5 +245,20 @@ class Options(optmanager.OptManager):
             Timeout in seconds for inactive TCP connections. Connections will be closed after this period of inactivity.
             """,
         )
+        self.add_option(
+            "proxy_protocol",
+            bool,
+            False,
+            """
+            Expect incoming connections to start with a PROXY protocol (v1 or v2) header,
+            as sent by upstream load balancers/proxies (e.g. AWS NLB, HAProxy, Envoy) that
+            support it. The original client address from the header replaces the immediate
+            peer's address for logging and in addons.
+
+            Only enable this on listeners that are exclusively reachable through a trusted
+            upstream proxy: the header is client-supplied data and lets anyone who can reach
+            the listener directly spoof their apparent source address.
+            """,
+        )
 
         self.update(**kwargs)
