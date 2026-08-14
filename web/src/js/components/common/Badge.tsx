@@ -4,8 +4,13 @@ import classnames from "classnames";
 type BadgeProps = {
     className?: string;
     children: React.ReactNode;
+    title?: string;
 };
 
-export default function Badge({ className, children }: BadgeProps) {
-    return <span className={classnames("badge", className)}>{children}</span>;
+export default function Badge({ className, children, title }: BadgeProps) {
+    return (
+        <span className={classnames("badge", className)} title={title}>
+            {children}
+        </span>
+    );
 }
