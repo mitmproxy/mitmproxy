@@ -8,6 +8,8 @@ import { useAppDispatch, useAppSelector } from "../../ducks";
 import { isValidColumnName } from "../../flow/utils";
 
 const MIN_COLUMN_WIDTH = 20;
+// Cells are measured via scrollWidth, which hugs the content exactly; a small margin keeps it from looking clipped.
+const AUTO_FIT_PADDING = 8;
 
 type FlowTableHeadProps = {
     onResize: (widths: Record<string, number>) => void;
@@ -119,6 +121,46 @@ export default React.memo(function FlowTableHead({
         document.addEventListener("pointercancel", onUp, { signal });
     };
 
+    const autoFit = (colName: string) => (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const handle = e.currentTarget as HTMLElement;
+        const th = handle.closest("th")!;
+
+        // Same pinning as a drag: fixing only the double-clicked column would shift the rest under fixed table layout.
+        const cells = handle.closest("tr")!.children;
+        const widths = Object.fromEntries(
+            displayColumns
+                .filter((col) => col !== "quickactions")
+                .map((col, i): [string, number] => [
+                    col,
+                    (cells[i] as HTMLElement).offsetWidth,
+                ]),
+        );
+
+        // The virtual scroller only mounts the rows currently in view, so the fit is over what's on screen, not the whole flow list.
+        const table = handle.closest("table")!;
+        const cellWidths = Array.from(
+            table.querySelectorAll<HTMLElement>(`tbody td.col-${colName}`),
+        ).map((td) => td.scrollWidth);
+        const labelWidth = th.querySelector(".th-content")?.scrollWidth ?? 0;
+        if (cellWidths.length === 0 && labelWidth === 0) return;
+
+        const minWidth = Math.min(MIN_COLUMN_WIDTH, widths[colName]);
+        const viewport = handle.closest(".flow-table");
+        const maxWidth = Math.max(
+            viewport?.clientWidth || Infinity,
+            widths[colName],
+        );
+        const fitWidth = Math.min(
+            maxWidth,
+            Math.max(minWidth, labelWidth, ...cellWidths) + AUTO_FIT_PADDING,
+        );
+
+        onResizeEnd({ ...widths, [colName]: fitWidth });
+    };
+
     return (
         <tr>
             {displayColumns.map((colName) => (
@@ -143,7 +185,9 @@ export default React.memo(function FlowTableHead({
                     {colName !== "quickactions" && (
                         <span
                             className="col-resize-handle"
+                            title="Double-click to fit the column to its content"
                             onPointerDown={startResize(colName)}
+                            onDoubleClick={autoFit(colName)}
                             onClick={(e) => e.stopPropagation()}
                         />
                     )}

@@ -13,6 +13,7 @@ exports[`FlowTableHead Component 1`] = `
           />
           <span
             class="col-resize-handle"
+            title="Double-click to fit the column to its content"
           />
         </th>
         <th
@@ -23,6 +24,7 @@ exports[`FlowTableHead Component 1`] = `
           />
           <span
             class="col-resize-handle"
+            title="Double-click to fit the column to its content"
           />
         </th>
         <th
@@ -52,6 +54,7 @@ exports[`FlowTableHead Component 1`] = `
           </svg>
           <span
             class="col-resize-handle"
+            title="Double-click to fit the column to its content"
           />
         </th>
         <th
@@ -64,6 +67,7 @@ exports[`FlowTableHead Component 1`] = `
           </span>
           <span
             class="col-resize-handle"
+            title="Double-click to fit the column to its content"
           />
         </th>
         <th
@@ -76,6 +80,7 @@ exports[`FlowTableHead Component 1`] = `
           </span>
           <span
             class="col-resize-handle"
+            title="Double-click to fit the column to its content"
           />
         </th>
         <th
@@ -88,6 +93,7 @@ exports[`FlowTableHead Component 1`] = `
           </span>
           <span
             class="col-resize-handle"
+            title="Double-click to fit the column to its content"
           />
         </th>
         <th
@@ -100,6 +106,7 @@ exports[`FlowTableHead Component 1`] = `
           </span>
           <span
             class="col-resize-handle"
+            title="Double-click to fit the column to its content"
           />
         </th>
         <th
