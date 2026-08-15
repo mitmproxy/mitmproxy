@@ -247,17 +247,22 @@ class Options(optmanager.OptManager):
         )
         self.add_option(
             "proxy_protocol",
-            bool,
-            False,
+            Sequence[str],
+            [],
             """
-            Expect incoming connections to start with a PROXY protocol (v1 or v2) header,
-            as sent by upstream load balancers/proxies (e.g. AWS NLB, HAProxy, Envoy) that
-            support it. The original client address from the header replaces the immediate
-            peer's address for logging and in addons.
+            Listen ports on which incoming connections are expected to start with a PROXY
+            protocol (v1 or v2) header, as sent by upstream load balancers/proxies (e.g. AWS
+            NLB, HAProxy, Envoy) that support it. The original client address from the header
+            replaces the immediate peer's address for logging and in addons.
 
-            Only enable this on listeners that are exclusively reachable through a trusted
-            upstream proxy: the header is client-supplied data and lets anyone who can reach
-            the listener directly spoof their apparent source address.
+            This is scoped per listen port (not global) because "is this listener behind a
+            PROXY-protocol load balancer" is a property of that one socket: mitmproxy can run
+            several modes at once, and most modes (WireGuard, local capture, transparent
+            TUN, ...) never receive such a header at all.
+
+            Only list ports that are exclusively reachable through a trusted upstream proxy:
+            the header is client-supplied data and lets anyone who can reach the listener
+            directly spoof their apparent source address.
             """,
         )
 
