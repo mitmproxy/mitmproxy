@@ -2,8 +2,15 @@ import * as React from "react";
 import OptionMenu from "../../../components/Header/OptionMenu";
 import { fireEvent, render, screen, waitFor } from "../../test-utils";
 import { enableFetchMocks } from "jest-fetch-mock";
+import { TStore, testState } from "../../ducks/tutils";
 
 enableFetchMocks();
+
+const withColumnWidths = () =>
+    TStore({
+        ...testState,
+        ui: { ...testState.ui, columnWidths: { size: 70 } },
+    });
 
 describe("OptionMenu Component", () => {
     it("should render correctly", () => {
@@ -28,5 +35,19 @@ describe("OptionMenu Component", () => {
                 }),
             ),
         );
+    });
+
+    it("resets the flow table column widths", () => {
+        const { store } = render(<OptionMenu />, { store: withColumnWidths() });
+
+        fireEvent.click(screen.getByText("Reset Widths"));
+
+        expect(store.getState().ui.columnWidths).toEqual({});
+    });
+
+    it("has nothing to reset until a column is resized", () => {
+        render(<OptionMenu />);
+
+        expect(screen.getByText("Reset Widths").closest("button")).toBeDisabled();
     });
 });

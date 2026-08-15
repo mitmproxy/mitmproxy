@@ -5,7 +5,6 @@ import Button from "../common/Button";
 import { update as updateOptions } from "../../ducks/options";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { FilterName, setFilter, setHighlight } from "../../ducks/ui/filter";
-import { resetColumnWidths } from "../../ducks/ui/columnWidths";
 
 FlowListMenu.title = "Flow List";
 
@@ -27,32 +26,7 @@ export default function FlowListMenu() {
                 </div>
                 <div className="menu-legend">Intercept</div>
             </div>
-
-            <div className="menu-group">
-                <div className="menu-content">
-                    <ResetColumnWidths />
-                </div>
-                <div className="menu-legend">Columns</div>
-            </div>
         </div>
-    );
-}
-
-export function ResetColumnWidths() {
-    const dispatch = useAppDispatch();
-    const resized = useAppSelector(
-        (state) => Object.keys(state.ui.columnWidths).length > 0,
-    );
-    return (
-        <Button
-            className="btn-sm"
-            title="Restore the flow table columns to their default widths"
-            icon="revert"
-            disabled={!resized}
-            onClick={() => dispatch(resetColumnWidths())}
-        >
-            Reset Widths
-        </Button>
     );
 }
 
