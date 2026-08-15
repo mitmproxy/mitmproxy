@@ -671,6 +671,42 @@ exports[`Header 2`] = `
                 </select>
               </label>
             </div>
+            <div
+              class="column-visibility"
+            >
+              <button
+                class="btn-sm btn btn-default"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-columns3 lucide-columns-3 icon icon-columns"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect
+                    height="18"
+                    rx="2"
+                    width="18"
+                    x="3"
+                    y="3"
+                  />
+                  <path
+                    d="M9 3v18"
+                  />
+                  <path
+                    d="M15 3v18"
+                  />
+                </svg>
+                 Columns
+              </button>
+            </div>
             <button
               class="btn-sm btn btn-default"
               disabled=""
@@ -1168,6 +1204,42 @@ exports[`Header 3`] = `
                   </option>
                 </select>
               </label>
+            </div>
+            <div
+              class="column-visibility"
+            >
+              <button
+                class="btn-sm btn btn-default"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-columns3 lucide-columns-3 icon icon-columns"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect
+                    height="18"
+                    rx="2"
+                    width="18"
+                    x="3"
+                    y="3"
+                  />
+                  <path
+                    d="M9 3v18"
+                  />
+                  <path
+                    d="M15 3v18"
+                  />
+                </svg>
+                 Columns
+              </button>
             </div>
             <button
               class="btn-sm btn btn-default"
