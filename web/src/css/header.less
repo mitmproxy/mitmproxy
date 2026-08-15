@@ -49,7 +49,8 @@ header {
         display: inline-block;
     }
     > .btn,
-    > a > .btn {
+    > a > .btn,
+    > .column-visibility > .btn {
         height: @menu-height - @menu-legend-height;
         text-align: center;
         margin: 0 1px;
@@ -64,7 +65,8 @@ header {
         }
     }
 
-    > .btn.btn-sm {
+    > .btn.btn-sm,
+    > .column-visibility > .btn.btn-sm {
         height: ((@menu-height - @menu-legend-height) / 3);
         padding: 0 5px;
         .icon {
@@ -99,6 +101,12 @@ header {
         border: 1px solid var(--mitmweb-border);
         border-radius: 3px;
     }
+}
+
+// Takes a row of its own so the dropdown sits above the reset button rather than beside it.
+.column-visibility {
+    position: relative;
+    display: block;
 }
 
 .menu-legend {

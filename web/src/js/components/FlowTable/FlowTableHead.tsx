@@ -7,7 +7,19 @@ import { setSort } from "../../ducks/flows";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { isValidColumnName } from "../../flow/utils";
 
-export default React.memo(function FlowTableHead() {
+const MIN_COLUMN_WIDTH = 20;
+// Cells are measured via scrollWidth, which hugs the content exactly; a small margin keeps it from looking clipped.
+const AUTO_FIT_PADDING = 8;
+
+type FlowTableHeadProps = {
+    onResize: (widths: Record<string, number>) => void;
+    onResizeEnd: (widths: Record<string, number>) => void;
+};
+
+export default React.memo(function FlowTableHead({
+    onResize,
+    onResizeEnd,
+}: FlowTableHeadProps) {
     const dispatch = useAppDispatch();
     const sortDesc = useAppSelector((state) => state.flows.sort.desc);
     const sortColumn = useAppSelector((state) => state.flows.sort.column);
@@ -20,6 +32,135 @@ export default React.memo(function FlowTableHead() {
         .filter(isValidColumnName)
         .concat("quickactions");
 
+    // The actions column holds buttons, so there is nothing to order it by.
+    const sortBy = (colName: (typeof displayColumns)[number]) =>
+        colName === "quickactions"
+            ? undefined
+            : () =>
+                  dispatch(
+                      setSort({
+                          column:
+                              colName === sortColumn && sortDesc
+                                  ? undefined
+                                  : colName,
+                          desc: colName !== sortColumn ? false : !sortDesc,
+                      }),
+                  );
+
+    const startResize = (colName: string) => (e: React.PointerEvent) => {
+        // Don't let the resize gesture trigger a column sort.
+        e.preventDefault();
+        e.stopPropagation();
+
+        const handle = e.currentTarget as HTMLElement;
+
+        // Fixed table layout hands the space the sized columns leave over to every column without a width of its own, so setting one width on its own shifts the rest too.
+        // Pinning them all keeps the handle under the cursor; `quickactions` is left out and takes the slack instead.
+        const cells = handle.closest("tr")!.children;
+        const widths = Object.fromEntries(
+            displayColumns
+                .filter((col) => col !== "quickactions")
+                .map((col, i): [string, number] => [
+                    col,
+                    (cells[i] as HTMLElement).offsetWidth,
+                ]),
+        );
+        onResize(widths);
+
+        handle.setPointerCapture(e.pointerId);
+        document.body.classList.add("resizing-columns");
+
+        const startX = e.clientX;
+        const startWidth = widths[colName];
+        const abort = new AbortController();
+        const { signal } = abort;
+
+        // Columns that ship narrower than the minimum, such as the TLS marker, keep their own width as the floor instead of being widened to one they never had.
+        const minWidth = Math.min(MIN_COLUMN_WIDTH, startWidth);
+
+        // A column may grow to fill the visible table but not beyond it, or the boundary ends up somewhere the cursor cannot reach to drag it back.
+        // A width restored from a wider window is its own ceiling, mirroring the floor above; a viewport that measures nothing constrains nothing.
+        const viewport = handle.closest(".flow-table");
+        const maxWidth = Math.max(
+            viewport?.clientWidth || Infinity,
+            startWidth,
+        );
+
+        // Pointers sample faster than the display refreshes, so coalesce moves into one update per frame.
+        let frame = 0,
+            moved = false,
+            clientX = startX;
+        const currentWidth = () => ({
+            [colName]: Math.min(
+                maxWidth,
+                Math.max(minWidth, startWidth + clientX - startX),
+            ),
+        });
+        const apply = () => {
+            frame = 0;
+            onResize(currentWidth());
+        };
+        const onUp = () => {
+            cancelAnimationFrame(frame);
+            abort.abort();
+            document.body.classList.remove("resizing-columns");
+            // The final width goes through the end callback rather than onResize, so persistence and re-measurement see it instead of the frame before.
+            // A click that never moved leaves the widths pinned at pointerdown untouched.
+            onResizeEnd(moved ? currentWidth() : {});
+        };
+        document.addEventListener(
+            "pointermove",
+            (ev: PointerEvent) => {
+                clientX = ev.clientX;
+                moved = true;
+                if (!frame) frame = requestAnimationFrame(apply);
+            },
+            { signal },
+        );
+        document.addEventListener("pointerup", onUp, { signal });
+        document.addEventListener("pointercancel", onUp, { signal });
+    };
+
+    const autoFit = (colName: string) => (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const handle = e.currentTarget as HTMLElement;
+        const th = handle.closest("th")!;
+
+        // Same pinning as a drag: fixing only the double-clicked column would shift the rest under fixed table layout.
+        const cells = handle.closest("tr")!.children;
+        const widths = Object.fromEntries(
+            displayColumns
+                .filter((col) => col !== "quickactions")
+                .map((col, i): [string, number] => [
+                    col,
+                    (cells[i] as HTMLElement).offsetWidth,
+                ]),
+        );
+
+        // The virtual scroller only mounts the rows currently in view, so the fit is over what's on screen, not the whole flow list.
+        const table = handle.closest("table")!;
+        const cellWidths = Array.from(
+            table.querySelectorAll<HTMLElement>(`tbody td.col-${colName}`),
+        ).map((td) => td.scrollWidth);
+        const labelWidth = th.querySelector(".th-content")?.scrollWidth ?? 0;
+        if (cellWidths.length === 0 && labelWidth === 0) return;
+
+        const minWidth = Math.min(MIN_COLUMN_WIDTH, widths[colName]);
+        const viewport = handle.closest(".flow-table");
+        const maxWidth = Math.max(
+            viewport?.clientWidth || Infinity,
+            widths[colName],
+        );
+        const fitWidth = Math.min(
+            maxWidth,
+            Math.max(minWidth, labelWidth, ...cellWidths) + AUTO_FIT_PADDING,
+        );
+
+        onResizeEnd({ ...widths, [colName]: fitWidth });
+    };
+
     return (
         <tr>
             {displayColumns.map((colName) => (
@@ -29,18 +170,7 @@ export default React.memo(function FlowTableHead() {
                         sortColumn === colName && sortType,
                     )}
                     key={colName}
-                    onClick={() =>
-                        dispatch(
-                            setSort({
-                                column:
-                                    colName === sortColumn && sortDesc
-                                        ? undefined
-                                        : colName,
-                                desc:
-                                    colName !== sortColumn ? false : !sortDesc,
-                            }),
-                        )
-                    }
+                    onClick={sortBy(colName)}
                 >
                     <span className="th-content">
                         {FlowColumns[colName].headerName}
@@ -52,8 +182,18 @@ export default React.memo(function FlowTableHead() {
                             className="sort-indicator"
                         />
                     )}
+                    {colName !== "quickactions" && (
+                        <span
+                            className="col-resize-handle"
+                            title="Double-click to fit the column to its content"
+                            onPointerDown={startResize(colName)}
+                            onDoubleClick={autoFit(colName)}
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    )}
                 </th>
             ))}
+            <th className="col-filler" />
         </tr>
     );
 });

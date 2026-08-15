@@ -11,12 +11,20 @@ exports[`FlowTableHead Component 1`] = `
           <span
             class="th-content"
           />
+          <span
+            class="col-resize-handle"
+            title="Double-click to fit the column to its content"
+          />
         </th>
         <th
           class="col-icon"
         >
           <span
             class="th-content"
+          />
+          <span
+            class="col-resize-handle"
+            title="Double-click to fit the column to its content"
           />
         </th>
         <th
@@ -44,6 +52,10 @@ exports[`FlowTableHead Component 1`] = `
               d="m6 9 6 6 6-6"
             />
           </svg>
+          <span
+            class="col-resize-handle"
+            title="Double-click to fit the column to its content"
+          />
         </th>
         <th
           class="col-method"
@@ -53,6 +65,10 @@ exports[`FlowTableHead Component 1`] = `
           >
             Method
           </span>
+          <span
+            class="col-resize-handle"
+            title="Double-click to fit the column to its content"
+          />
         </th>
         <th
           class="col-status"
@@ -62,6 +78,10 @@ exports[`FlowTableHead Component 1`] = `
           >
             Status
           </span>
+          <span
+            class="col-resize-handle"
+            title="Double-click to fit the column to its content"
+          />
         </th>
         <th
           class="col-size"
@@ -71,6 +91,10 @@ exports[`FlowTableHead Component 1`] = `
           >
             Size
           </span>
+          <span
+            class="col-resize-handle"
+            title="Double-click to fit the column to its content"
+          />
         </th>
         <th
           class="col-time"
@@ -80,14 +104,23 @@ exports[`FlowTableHead Component 1`] = `
           >
             Time
           </span>
+          <span
+            class="col-resize-handle"
+            title="Double-click to fit the column to its content"
+          />
         </th>
         <th
           class="col-quickactions"
         >
           <span
             class="th-content"
-          />
+          >
+            Actions
+          </span>
         </th>
+        <th
+          class="col-filler"
+        />
       </tr>
     </thead>
   </table>

@@ -6,7 +6,10 @@ import { calcVScroll } from "./helpers/VirtualScroll";
 import FlowTableHead from "./FlowTable/FlowTableHead";
 import FlowRow from "./FlowTable/FlowRow";
 import type { Flow } from "../flow";
-import type { RootState } from "../ducks";
+import type { AppDispatch, RootState } from "../ducks";
+import { isValidColumnName } from "../flow/utils";
+import type { ColumnWidths } from "../ducks/ui/columnWidths";
+import { commitColumnWidths, setColumnWidths } from "../ducks/ui/columnWidths";
 
 type FlowTableProps = {
     flowView: Flow[];
@@ -17,6 +20,8 @@ type FlowTableProps = {
     firstSelectedIndex: number | undefined;
     displayColumnNames: string[];
     listIndex: Map<string, number>;
+    columnWidths: ColumnWidths;
+    dispatch: AppDispatch;
 };
 
 type FlowTableState = {
@@ -42,6 +47,16 @@ export class PureFlowTable extends React.Component<
             viewportTop: 0,
         };
         this.onViewportUpdate = this.onViewportUpdate.bind(this);
+        this.onColumnResize = this.onColumnResize.bind(this);
+        this.onColumnResizeEnd = this.onColumnResizeEnd.bind(this);
+    }
+
+    onColumnResize(widths: ColumnWidths) {
+        this.props.dispatch(setColumnWidths(widths));
+    }
+
+    onColumnResizeEnd(widths: ColumnWidths) {
+        this.props.dispatch(commitColumnWidths(widths));
     }
 
     componentDidMount() {
@@ -78,7 +93,9 @@ export class PureFlowTable extends React.Component<
         // setState condition kept re-firing.
         if (
             prevProps.flowView !== this.props.flowView ||
-            prevProps.rowHeight !== this.props.rowHeight
+            prevProps.rowHeight !== this.props.rowHeight ||
+            // Widening past the viewport adds a horizontal scrollbar, which eats into the height the virtual scroll window is derived from.
+            prevProps.columnWidths !== this.props.columnWidths
         ) {
             this.onViewportUpdate();
         }
@@ -149,7 +166,18 @@ export class PureFlowTable extends React.Component<
             displayColumnNames,
             listIndex,
             rowHeight,
+            columnWidths,
         } = this.props;
+
+        const orderedColumns = displayColumnNames
+            .filter(isValidColumnName)
+            .concat("quickactions");
+
+        // One column has to stay flexible and take the space the others leave over, or the browser spreads that space over the widths the user dragged.
+        // `path` does it until the user has pinned every other column, and `quickactions` from then on: an absorber to the left of the drag would slide the boundary out from under the cursor.
+        const quickactionsAbsorbSlack = orderedColumns.every(
+            (col) => col === "quickactions" || columnWidths[col],
+        );
 
         return (
             <div
@@ -158,11 +186,30 @@ export class PureFlowTable extends React.Component<
                 ref={this.viewport}
             >
                 <table>
+                    <colgroup>
+                        {orderedColumns.map((colName) => (
+                            <col
+                                key={colName}
+                                className={`col-${colName}`}
+                                style={{
+                                    width:
+                                        colName === "quickactions" &&
+                                        quickactionsAbsorbSlack
+                                            ? "auto"
+                                            : columnWidths[colName],
+                                }}
+                            />
+                        ))}
+                        <col className="col-filler" />
+                    </colgroup>
                     <thead
                         ref={this.head}
                         style={{ transform: `translateY(${viewportTop}px)` }}
                     >
-                        <FlowTableHead />
+                        <FlowTableHead
+                            onResize={this.onColumnResize}
+                            onResizeEnd={this.onColumnResizeEnd}
+                        />
                     </thead>
                     <tbody>
                         <tr style={{ height: vScroll.paddingTop }} />
@@ -200,4 +247,5 @@ export default connect((state: RootState) => ({
     // Pass list index so the # column shows the original flow number
     // (list position), not the view position after sort/filter.
     listIndex: state.flows._listIndex,
+    columnWidths: state.ui.columnWidths,
 }))(PureFlowTable);

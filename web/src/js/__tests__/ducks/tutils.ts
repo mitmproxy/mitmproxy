@@ -79,6 +79,7 @@ export const testState: RootState = {
             [FilterName.Search]: "~u /second | ~tcp | ~dns | ~udp",
             [FilterName.Highlight]: "~u /path",
         },
+        columnWidths: {},
     },
     options: defaultOptions,
     flows: {

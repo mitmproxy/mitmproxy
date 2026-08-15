@@ -7,10 +7,20 @@
     user-select: @val;
 }
 
+// A column drag ranges over the whole document, so the cursor and the selection blocker have to live there too rather than on the handle.
+body.resizing-columns {
+    .user-select(none);
+
+    &,
+    * {
+        cursor: col-resize !important;
+    }
+}
+
 .flow-table {
     width: 100%;
     overflow-y: scroll;
-    overflow-x: hidden;
+    overflow-x: auto;
 
     table {
         width: 100%;
@@ -40,9 +50,29 @@
             padding-right: 18px;
         }
 
+        .col-resize-handle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 6px;
+            height: 100%;
+            cursor: col-resize;
+            z-index: 1;
+            // Keep touch drags from panning the table instead of resizing.
+            touch-action: none;
+        }
+
+        .col-resize-handle:hover {
+            background-color: var(--mitmweb-col-resize-hover);
+        }
+
         .th-content {
             display: block;
             min-height: 23px;
+            // A label wider than its column, such as the one on the collapsed actions column, would otherwise spill past the table and scroll it sideways.
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
         }
 
         .sort-indicator {
@@ -203,8 +233,14 @@
         text-align: right;
     }
 
-    .col-quickactions {
+    // Collapsed until it is the column taking the slack.
+    // As with the filler, the width may only sit on the col.
+    col.col-quickactions {
         width: 0;
+    }
+
+    // Only the cells: the icon sizing and the right-to-left flow are for the buttons, not for the header label.
+    td.col-quickactions {
         direction: rtl;
         * {
             direction: ltr;
@@ -214,11 +250,11 @@
         font-size: 20px;
     }
 
-    tr:hover .col-quickactions {
+    tr:hover td.col-quickactions {
         overflow: visible;
     }
 
-    .col-quickactions > div {
+    td.col-quickactions > div {
         height: 32px;
         background-color: inherit;
         display: inline-flex;
@@ -237,5 +273,10 @@
                 background-color: rgba(0, 0, 0, 5%);
             }
         }
+    }
+
+    // A gutter that keeps the last resize handle clear of the scrollbar for as long as the actions column is collapsed.
+    col.col-filler {
+        width: 12px;
     }
 }
