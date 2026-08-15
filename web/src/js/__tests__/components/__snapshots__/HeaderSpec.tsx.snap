@@ -735,7 +735,7 @@ exports[`Header 2`] = `
                   d="M12 7v5l4 2"
                 />
               </svg>
-               Reset Widths
+               Reset Column Widths
             </button>
           </div>
           <div
@@ -1269,7 +1269,7 @@ exports[`Header 3`] = `
                   d="M12 7v5l4 2"
                 />
               </svg>
-               Reset Widths
+               Reset Column Widths
             </button>
           </div>
           <div

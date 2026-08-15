@@ -118,9 +118,7 @@ export default function OptionMenu() {
 
 function ColumnVisibility() {
     const dispatch = useAppDispatch();
-    const visibleColumns = useAppSelector(
-        (state) => state.options.web_columns,
-    );
+    const visibleColumns = useAppSelector((state) => state.options.web_columns);
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
 
@@ -193,7 +191,7 @@ export function ResetColumnWidths() {
             disabled={!resized}
             onClick={() => dispatch(resetColumnWidths())}
         >
-            Reset Widths
+            Reset Column Widths
         </Button>
     );
 }
