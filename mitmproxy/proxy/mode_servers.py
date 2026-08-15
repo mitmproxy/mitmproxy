@@ -42,6 +42,7 @@ from mitmproxy.net.free_port import get_free_port
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import layers
 from mitmproxy.proxy import mode_specs
+from mitmproxy.proxy import proxy_protocol
 from mitmproxy.proxy import server
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layer import Layer
@@ -182,6 +183,19 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
             "listen_addrs": self.listen_addrs,
         }
 
+    def _expects_proxy_protocol(self) -> bool:
+        """
+        Whether connections on this instance's listen port(s) are expected to start with a
+        PROXY protocol header. Scoped per port (rather than a single global switch) because
+        that expectation is a property of one specific listening socket, not of the whole
+        mitmproxy process: several modes can run at once, and most of them (WireGuard, local
+        capture, TUN, ...) never receive such a header.
+        """
+        configured_ports = ctx.options.proxy_protocol
+        return bool(configured_ports) and any(
+            str(addr[1]) in configured_ports for addr in self.listen_addrs
+        )
+
     async def handle_stream(
         self,
         reader: asyncio.StreamReader | mitmproxy_rs.Stream,
@@ -190,9 +204,31 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
         if writer is None:
             assert isinstance(reader, mitmproxy_rs.Stream)
             writer = reader
+
+        proxy_header: proxy_protocol.ProxyHeader | None = None
+        if self._expects_proxy_protocol():
+            if not isinstance(reader, asyncio.StreamReader):
+                logger.error(
+                    f"proxy_protocol is configured for {self.mode.description}'s listen "
+                    "port, but this mode never receives a PROXY protocol header. Remove "
+                    "this port from the proxy_protocol option. Closing connection."
+                )
+                writer.close()
+                return
+            try:
+                proxy_header = await proxy_protocol.read_proxy_header(reader)
+            except proxy_protocol.ProxyProtocolError as e:
+                logger.warning(
+                    f"Rejecting connection, invalid PROXY protocol header: {e}"
+                )
+                writer.close()
+                return
+
         handler = ProxyConnectionHandler(
             ctx.master, reader, writer, ctx.options, self.mode
         )
+        if proxy_header is not None and proxy_header.source_addr is not None:
+            handler.layer.context.client.peername = proxy_header.source_addr
         handler.layer = self.make_top_layer(handler.layer.context)
         if isinstance(self.mode, mode_specs.TransparentMode):
             assert isinstance(writer, asyncio.StreamWriter)
