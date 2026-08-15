@@ -5,6 +5,7 @@ import DocsLink from "../common/DocsLink";
 import HideInStatic from "../common/HideInStatic";
 import * as modalActions from "../../ducks/ui/modal";
 import * as optionsActions from "../../ducks/options";
+import { resetColumnWidths } from "../../ducks/ui/columnWidths";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 
 OptionMenu.title = "Options";
@@ -92,10 +93,29 @@ export default function OptionMenu() {
                 <div className="menu-group">
                     <div className="menu-content">
                         <ThemeSelect />
+                        <ResetColumnWidths />
                     </div>
                     <div className="menu-legend">Appearance</div>
                 </div>
             </HideInStatic>
         </div>
+    );
+}
+
+export function ResetColumnWidths() {
+    const dispatch = useAppDispatch();
+    const resized = useAppSelector(
+        (state) => Object.keys(state.ui.columnWidths).length > 0,
+    );
+    return (
+        <Button
+            className="btn-sm"
+            title="Restore the flow table columns to their default widths"
+            icon="revert"
+            disabled={!resized}
+            onClick={() => dispatch(resetColumnWidths())}
+        >
+            Reset Widths
+        </Button>
     );
 }
