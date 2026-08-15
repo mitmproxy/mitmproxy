@@ -125,6 +125,100 @@ async def _wait_for_connection_closes(ps: Proxyserver):
     assert not ps.connections
 
 
+async def test_done_no_active_connections(caplog_async) -> None:
+    caplog_async.set_level("INFO")
+    ps = Proxyserver()
+    with taddons.context(ps) as tctx:
+        tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
+        assert await ps.setup_servers()
+        ps.running()
+        await caplog_async.await_log("HTTP(S) proxy listening at")
+        assert ps.servers
+
+        await asyncio.wait_for(ps.done(), timeout=5)
+
+        assert not ps.servers
+        assert "Waiting up to" not in caplog_async.caplog.text
+
+
+async def test_done_drains_before_timeout(caplog_async) -> None:
+    """A connection that closes on its own before shutdown_timeout elapses
+    should let done() return promptly, without waiting the full timeout."""
+    caplog_async.set_level("INFO")
+
+    async def server_handler(
+        reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+    ):
+        assert await reader.readuntil(b"\r\n\r\n") == b"GET /hello HTTP/1.1\r\n\r\n"
+        writer.write(b"HTTP/1.1 204 No Content\r\n\r\n")
+        await writer.drain()
+
+    ps = Proxyserver()
+    nl = NextLayer()
+    with taddons.context(ps, nl) as tctx:
+        tctx.configure(ps, listen_host="127.0.0.1", listen_port=0, shutdown_timeout=30)
+        async with tcp_server(server_handler) as addr:
+            assert await ps.setup_servers()
+            ps.running()
+            await caplog_async.await_log("HTTP(S) proxy listening at")
+
+            proxy_addr = ps.listen_addrs()[0]
+            reader, writer = await asyncio.open_connection(*proxy_addr)
+            req = f"GET http://{addr[0]}:{addr[1]}/hello HTTP/1.1\r\n\r\n"
+            writer.write(req.encode())
+            await reader.readuntil(b"\r\n\r\n")
+            assert ps.active_connections() == 1
+
+            async def close_soon():
+                await asyncio.sleep(0.2)
+                writer.close()
+
+            closer = asyncio.ensure_future(close_soon())
+            # If done() actually waited out the 30s timeout, this would time out first.
+            await asyncio.wait_for(ps.done(), timeout=10)
+            await closer
+
+        assert not ps.connections
+        assert "closing forcibly" not in caplog_async.caplog.text
+
+
+async def test_done_forces_close_after_timeout(caplog_async) -> None:
+    """A connection that never closes on its own gets forcibly cancelled once
+    shutdown_timeout elapses, instead of blocking shutdown forever."""
+    caplog_async.set_level("INFO")
+
+    async def server_handler(
+        reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+    ):
+        assert await reader.readuntil(b"\r\n\r\n") == b"GET /hello HTTP/1.1\r\n\r\n"
+        writer.write(b"HTTP/1.1 204 No Content\r\n\r\n")
+        await writer.drain()
+
+    ps = Proxyserver()
+    nl = NextLayer()
+    with taddons.context(ps, nl) as tctx:
+        tctx.configure(ps, listen_host="127.0.0.1", listen_port=0, shutdown_timeout=0)
+        async with tcp_server(server_handler) as addr:
+            assert await ps.setup_servers()
+            ps.running()
+            await caplog_async.await_log("HTTP(S) proxy listening at")
+
+            proxy_addr = ps.listen_addrs()[0]
+            reader, writer = await asyncio.open_connection(*proxy_addr)
+            req = f"GET http://{addr[0]}:{addr[1]}/hello HTTP/1.1\r\n\r\n"
+            writer.write(req.encode())
+            await reader.readuntil(b"\r\n\r\n")
+            assert ps.active_connections() == 1
+
+            # Client deliberately never closes its side -- done() must not hang.
+            await asyncio.wait_for(ps.done(), timeout=5)
+
+            assert await caplog_async.await_log("closing forcibly")
+            await _wait_for_connection_closes(ps)
+
+            writer.close()
+
+
 async def test_inject() -> None:
     async def server_handler(
         reader: asyncio.StreamReader, writer: asyncio.StreamWriter

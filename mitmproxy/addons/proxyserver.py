@@ -221,9 +221,47 @@ class Proxyserver(ServerManager):
             None,
             """Set the local IP address that mitmproxy should use when connecting to upstream servers.""",
         )
+        loader.add_option(
+            "shutdown_timeout",
+            int,
+            10,
+            """
+            On shutdown (Ctrl+C or SIGTERM), stop accepting new connections immediately, then wait
+            up to this many seconds for already-open connections (in-flight requests, open
+            WebSockets) to finish on their own before closing them forcibly. Set to 0 to close
+            everything immediately without waiting.
+            """,
+        )
 
     def running(self):
         self.is_running = True
+
+    async def done(self):
+        # Stop accepting new connections right away; existing ones are untouched by this.
+        await self.servers.update([])
+
+        if not self.connections:
+            return
+
+        timeout = ctx.options.shutdown_timeout
+        logger.info(
+            f"Waiting up to {timeout}s for {len(self.connections)} active "
+            f"connection(s) to finish..."
+        )
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + timeout
+        while self.connections and loop.time() < deadline:
+            await asyncio.sleep(0.1)
+
+        if self.connections:
+            logger.warning(
+                f"{len(self.connections)} connection(s) still open after "
+                f"{timeout}s, closing forcibly."
+            )
+            for handler in list(self.connections.values()):
+                io = handler.transports.get(handler.client)
+                if io and io.handler:
+                    io.handler.cancel("shutdown timeout")
 
     def configure(self, updated) -> None:
         if "stream_large_bodies" in updated:

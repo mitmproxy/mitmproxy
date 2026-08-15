@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+- Add graceful shutdown: on Ctrl+C/SIGTERM, mitmproxy now stops accepting new
+  connections immediately and waits up to the new `shutdown_timeout` option
+  (default 10s) for already-open connections to finish before closing them
+  forcibly, instead of cancelling every in-flight connection abruptly.
 - Replace deprecated pyparsing APIs with their snake_case equivalents to avoid
   `PyparsingDeprecationWarning` during command and flow-filter parsing.
   ([#8344](https://github.com/mitmproxy/mitmproxy/pull/8344), @Dnsayhey)
