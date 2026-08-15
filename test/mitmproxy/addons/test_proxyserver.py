@@ -219,6 +219,74 @@ async def test_done_forces_close_after_timeout(caplog_async) -> None:
             writer.close()
 
 
+async def test_done_retries_connection_stuck_in_slow_hook(
+    caplog_async, monkeypatch
+) -> None:
+    """A connection whose ClientConnectedHook is still running when
+    shutdown_timeout elapses has no cancellable task yet; done() must retry
+    and catch it once the hook finishes, not give up on the first pass."""
+    caplog_async.set_level("INFO")
+    monkeypatch.setattr(Proxyserver, "_FORCE_CLOSE_RETRY_TIMEOUT", 2)
+
+    class SlowHook:
+        async def client_connected(self, client):
+            await asyncio.sleep(0.3)
+
+    ps = Proxyserver()
+    nl = NextLayer()
+    slow = SlowHook()
+    with taddons.context(ps, nl, slow) as tctx:
+        tctx.configure(ps, listen_host="127.0.0.1", listen_port=0, shutdown_timeout=0)
+        assert await ps.setup_servers()
+        ps.running()
+        await caplog_async.await_log("HTTP(S) proxy listening at")
+
+        proxy_addr = ps.listen_addrs()[0]
+        _, writer = await asyncio.open_connection(*proxy_addr)
+        await asyncio.sleep(0.05)  # connection registered, hook still running
+        assert ps.active_connections() == 1
+
+        await asyncio.wait_for(ps.done(), timeout=5)
+
+        assert not ps.connections
+        assert "could not be closed cleanly" not in caplog_async.caplog.text
+
+        writer.close()
+
+
+async def test_done_gives_up_after_retry_timeout(caplog_async, monkeypatch) -> None:
+    """A connection whose ClientConnectedHook never finishes in time has no
+    cancellable task at all; done() must give up after its retry grace period
+    instead of waiting forever, and say so clearly in the log."""
+    caplog_async.set_level("INFO")
+    monkeypatch.setattr(Proxyserver, "_FORCE_CLOSE_RETRY_TIMEOUT", 0.2)
+
+    class NeverConnects:
+        async def client_connected(self, client):
+            await asyncio.sleep(60)
+
+    ps = Proxyserver()
+    nl = NextLayer()
+    stuck = NeverConnects()
+    with taddons.context(ps, nl, stuck) as tctx:
+        tctx.configure(ps, listen_host="127.0.0.1", listen_port=0, shutdown_timeout=0)
+        assert await ps.setup_servers()
+        ps.running()
+        await caplog_async.await_log("HTTP(S) proxy listening at")
+
+        proxy_addr = ps.listen_addrs()[0]
+        _, writer = await asyncio.open_connection(*proxy_addr)
+        await asyncio.sleep(0.05)
+        assert ps.active_connections() == 1
+
+        await asyncio.wait_for(ps.done(), timeout=5)
+
+        assert await caplog_async.await_log("could not be closed cleanly")
+        assert ps.connections
+
+        writer.close()
+
+
 async def test_inject() -> None:
     async def server_handler(
         reader: asyncio.StreamReader, writer: asyncio.StreamWriter
