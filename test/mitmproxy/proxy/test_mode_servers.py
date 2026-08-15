@@ -633,3 +633,26 @@ async def test_proxy_protocol_rejects_malformed_header(caplog_async):
         assert await reader.read() == b""  # connection was closed
 
         await inst.stop()
+
+
+async def test_proxy_protocol_misconfigured_on_non_tcp_listener(caplog_async):
+    """If a user lists a port whose mode never hands us an asyncio.StreamReader
+    (e.g. they meant a different listener), reject clearly instead of hanging
+    or misbehaving."""
+    caplog_async.set_level("INFO")
+    manager = MagicMock()
+
+    with taddons.context() as tctx:
+        inst = ServerInstance.make("regular@127.0.0.1:0", manager)
+        await inst.start()
+        host, port, *_ = inst.listen_addrs[0]
+        tctx.options.proxy_protocol = [str(port)]
+
+        reader = MagicMock()
+        writer = MagicMock()
+        await inst.handle_stream(reader, writer)
+
+        assert await caplog_async.await_log("never receives a PROXY protocol header")
+        writer.close.assert_called_once()
+
+        await inst.stop()

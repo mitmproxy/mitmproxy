@@ -2,6 +2,8 @@ import asyncio
 
 import pytest
 
+from mitmproxy.proxy.proxy_protocol import parse_v1
+from mitmproxy.proxy.proxy_protocol import parse_v2_addresses
 from mitmproxy.proxy.proxy_protocol import ProxyProtocolError
 from mitmproxy.proxy.proxy_protocol import read_proxy_header
 
@@ -126,3 +128,89 @@ async def test_v2_unsupported_version():
     reader = await _reader_for(header_bytes)
     with pytest.raises(ProxyProtocolError):
         await read_proxy_header(reader)
+
+
+async def test_immediate_close():
+    """A health-check style probe that opens and closes without sending anything."""
+    reader = await _reader_for(b"")
+    with pytest.raises(ProxyProtocolError):
+        await read_proxy_header(reader)
+
+
+def test_parse_v1_rejects_line_without_proxy_prefix():
+    with pytest.raises(ProxyProtocolError):
+        parse_v1(b"GET / HTTP/1.1\r\n")
+
+
+async def test_v1_wrong_field_count():
+    reader = await _reader_for(b"PROXY TCP4 1.2.3.4 5.6.7.8\r\n")
+    with pytest.raises(ProxyProtocolError):
+        await read_proxy_header(reader)
+
+
+async def test_v2_truncated_body():
+    header_bytes = bytes(
+        [
+            *b"\r\n\r\n\x00\r\nQUIT\n",
+            0x21,  # version 2, command PROXY
+            0x11,  # family AF_INET, protocol STREAM
+            0x00,
+            0x0C,  # length = 12, but we only send 5 body bytes below
+        ]
+    )
+    reader = await _reader_for(header_bytes + bytes(5))
+    with pytest.raises(ProxyProtocolError):
+        await read_proxy_header(reader)
+
+
+async def test_v2_unsupported_command():
+    header_bytes = bytes(
+        [
+            *b"\r\n\r\n\x00\r\nQUIT\n",
+            0x22,  # version 2, command 2 (unassigned)
+            0x11,
+            0x00,
+            0x00,
+        ]
+    )
+    reader = await _reader_for(header_bytes)
+    with pytest.raises(ProxyProtocolError):
+        await read_proxy_header(reader)
+
+
+async def test_v2_tcp6():
+    header_bytes = bytes(
+        [
+            *b"\r\n\r\n\x00\r\nQUIT\n",
+            0x21,  # version 2, command PROXY
+            0x21,  # family AF_INET6, protocol STREAM
+            0x00,
+            0x24,  # length = 36 (16 + 16 + 2 + 2)
+            *([0] * 15 + [1]),  # src ::1
+            *([0] * 15 + [2]),  # dst ::2
+            0x00,
+            0x01,  # src port 1
+            0x00,
+            0x02,  # dst port 2
+        ]
+    )
+    reader = await _reader_for(header_bytes)
+    header = await read_proxy_header(reader)
+    assert header.source_addr == ("::1", 1)
+    assert header.dest_addr == ("::2", 2)
+
+
+def test_parse_v2_addresses_unspec_family():
+    header = parse_v2_addresses(0x0, b"")
+    assert header.source_addr is None
+    assert header.dest_addr is None
+
+
+def test_parse_v2_addresses_unsupported_family():
+    with pytest.raises(ProxyProtocolError):
+        parse_v2_addresses(0x3, b"")  # AF_UNIX, not supported
+
+
+def test_parse_v2_addresses_body_too_short():
+    with pytest.raises(ProxyProtocolError):
+        parse_v2_addresses(0x1, bytes(4))  # AF_INET needs 12 bytes
