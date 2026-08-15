@@ -83,7 +83,9 @@ def test_parse_client_hello():
         )
 
 
-@pytest.mark.parametrize("error", [SSL.ZeroReturnError, SSL.SysCallError, SSL.WantReadError])
+@pytest.mark.parametrize(
+    "error", [SSL.ZeroReturnError, SSL.SysCallError, SSL.WantReadError]
+)
 def test_send_data_swallows_errors_from_a_dying_connection(tctx, error):
     """
     https://github.com/mitmproxy/mitmproxy/issues/6081
