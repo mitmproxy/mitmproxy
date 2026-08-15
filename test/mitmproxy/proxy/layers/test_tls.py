@@ -83,6 +83,31 @@ def test_parse_client_hello():
         )
 
 
+@pytest.mark.parametrize("error", [SSL.ZeroReturnError, SSL.SysCallError, SSL.WantReadError])
+def test_send_data_swallows_errors_from_a_dying_connection(tctx, error):
+    """
+    https://github.com/mitmproxy/mitmproxy/issues/6081
+
+    `SSL.Connection.sendall()` can raise `WantReadError` -- not just the already-handled
+    `ZeroReturnError`/`SysCallError` -- when the underlying connection is already
+    failing/closing (e.g. right after a failed handshake) and OpenSSL wants a read before it
+    can write. This used to propagate out of `send_data()` uncaught and crash mitmproxy.
+    """
+
+    class RaisingConnection:
+        def sendall(self, data):
+            raise error()
+
+        def bio_read(self, n):
+            raise SSL.WantReadError()  # nothing more waiting to be sent
+
+    tls_layer = tls.TLSLayer(tctx, tctx.server)
+    tls_layer.tls = RaisingConnection()
+
+    # should not raise
+    assert list(tls_layer.send_data(b"hello")) == []
+
+
 class SSLTest:
     """Helper container for Python's builtin SSL object."""
 
