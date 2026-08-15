@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+- Add support for the PROXY protocol (v1/v2) on inbound connections, via the new
+  `proxy_protocol` option (a list of listen ports expected to receive such a header).
+  Lets mitmproxy sit behind a load balancer or proxy chain (e.g. AWS NLB, HAProxy,
+  Envoy) that uses PROXY protocol to preserve the original client address.
 - Replace deprecated pyparsing APIs with their snake_case equivalents to avoid
   `PyparsingDeprecationWarning` during command and flow-filter parsing.
   ([#8344](https://github.com/mitmproxy/mitmproxy/pull/8344), @Dnsayhey)
