@@ -47,6 +47,7 @@ export interface OptionsState {
     onboarding_host: string;
     protobuf_definitions: string | undefined;
     proxy_debug: boolean;
+    proxy_protocol: string[];
     proxyauth: string | undefined;
     rawtcp: boolean;
     readfile_filter: string | undefined;
@@ -155,6 +156,7 @@ export const defaultState: OptionsState = {
     onboarding_host: "mitm.it",
     protobuf_definitions: undefined,
     proxy_debug: false,
+    proxy_protocol: [],
     proxyauth: undefined,
     rawtcp: true,
     readfile_filter: undefined,
