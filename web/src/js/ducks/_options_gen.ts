@@ -70,6 +70,7 @@ export interface OptionsState {
     server_replay_use_headers: string[];
     show_ignored_hosts: boolean;
     showhost: boolean;
+    shutdown_timeout: number;
     ssl_insecure: boolean;
     ssl_verify_upstream_trusted_ca: string | undefined;
     ssl_verify_upstream_trusted_confdir: string | undefined;
@@ -178,6 +179,7 @@ export const defaultState: OptionsState = {
     server_replay_use_headers: [],
     show_ignored_hosts: false,
     showhost: false,
+    shutdown_timeout: 10,
     ssl_insecure: false,
     ssl_verify_upstream_trusted_ca: undefined,
     ssl_verify_upstream_trusted_confdir: undefined,
