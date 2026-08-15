@@ -23,6 +23,7 @@ from mitmproxy.addons import save
 from mitmproxy.addons import savehar
 from mitmproxy.addons import script
 from mitmproxy.addons import serverplayback
+from mitmproxy.addons import setup_terminal
 from mitmproxy.addons import stickyauth
 from mitmproxy.addons import stickycookie
 from mitmproxy.addons import strip_dns_https_records
@@ -47,6 +48,7 @@ def default_addons():
         disable_h2c.DisableH2C(),
         export.Export(),
         onboarding.Onboarding(),
+        setup_terminal.SetupTerminal(),
         proxyauth.ProxyAuth(),
         proxyserver.Proxyserver(),
         script.ScriptLoader(),
