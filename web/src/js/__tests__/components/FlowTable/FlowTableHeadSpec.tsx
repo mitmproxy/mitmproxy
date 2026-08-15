@@ -277,6 +277,81 @@ test("FlowTableHead stops a column at the width of the visible table", async () 
     offsetWidth.mockRestore();
 });
 
+test("FlowTableHead double-click fits a column to its widest visible cell", () => {
+    const offsetWidth = stubColumnWidth(70);
+    const store = TStore();
+    const onResizeEnd = jest.fn();
+    const { container } = render(
+        <Provider store={store}>
+            <table>
+                <thead>
+                    <FlowTableHead
+                        onResize={jest.fn()}
+                        onResizeEnd={onResizeEnd}
+                    />
+                </thead>
+                <tbody>
+                    <tr>
+                        <td className="col-size">1kb</td>
+                    </tr>
+                    <tr>
+                        <td className="col-size">123.4kb</td>
+                    </tr>
+                </tbody>
+            </table>
+        </Provider>,
+    );
+
+    const cells = container.querySelectorAll("tbody td.col-size");
+    Object.defineProperty(cells[0], "scrollWidth", {
+        value: 40,
+        configurable: true,
+    });
+    Object.defineProperty(cells[1], "scrollWidth", {
+        value: 90,
+        configurable: true,
+    });
+
+    const handle = container.querySelector(
+        ".col-size .col-resize-handle",
+    ) as HTMLElement;
+    fireEvent.doubleClick(handle);
+
+    // The widest of the two visible cells, plus the padding margin, wins - and the double-click must not sort the column either.
+    expect(onResizeEnd).toHaveBeenCalledWith(
+        expect.objectContaining({ size: 98 }),
+    );
+    expect(store.getState().flows.sort.column).toBe("path");
+    offsetWidth.mockRestore();
+});
+
+test("FlowTableHead double-click does nothing when no rows are rendered to measure", () => {
+    const offsetWidth = stubColumnWidth(70);
+    const store = TStore();
+    const onResizeEnd = jest.fn();
+    const { container } = render(
+        <Provider store={store}>
+            <table>
+                <thead>
+                    <FlowTableHead
+                        onResize={jest.fn()}
+                        onResizeEnd={onResizeEnd}
+                    />
+                </thead>
+                <tbody />
+            </table>
+        </Provider>,
+    );
+
+    const handle = container.querySelector(
+        ".col-size .col-resize-handle",
+    ) as HTMLElement;
+    fireEvent.doubleClick(handle);
+
+    expect(onResizeEnd).not.toHaveBeenCalled();
+    offsetWidth.mockRestore();
+});
+
 test("FlowTableHead lets a column wider than the visible table only shrink", async () => {
     const offsetWidth = stubColumnWidth(500);
     const clientWidth = stubViewportWidth(300);
