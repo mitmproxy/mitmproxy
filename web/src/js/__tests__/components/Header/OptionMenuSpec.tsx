@@ -40,7 +40,7 @@ describe("OptionMenu Component", () => {
     it("resets the flow table column widths", () => {
         const { store } = render(<OptionMenu />, { store: withColumnWidths() });
 
-        fireEvent.click(screen.getByText("Reset Widths"));
+        fireEvent.click(screen.getByText("Reset Column Widths"));
 
         expect(store.getState().ui.columnWidths).toEqual({});
     });
@@ -48,7 +48,9 @@ describe("OptionMenu Component", () => {
     it("has nothing to reset until a column is resized", () => {
         render(<OptionMenu />);
 
-        expect(screen.getByText("Reset Widths").closest("button")).toBeDisabled();
+        expect(
+            screen.getByText("Reset Column Widths").closest("button"),
+        ).toBeDisabled();
     });
 
     it("lists the flow table columns behind the Columns dropdown, closed by default", () => {
@@ -76,7 +78,14 @@ describe("OptionMenu Component", () => {
                 expect.objectContaining({
                     method: "PUT",
                     body: JSON.stringify({
-                        web_columns: ["tls", "icon", "path", "status", "size", "time"],
+                        web_columns: [
+                            "tls",
+                            "icon",
+                            "path",
+                            "status",
+                            "size",
+                            "time",
+                        ],
                     }),
                 }),
             ),

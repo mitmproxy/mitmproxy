@@ -313,7 +313,7 @@ exports[`OptionMenu Component should render correctly 1`] = `
               d="M12 7v5l4 2"
             />
           </svg>
-           Reset Widths
+           Reset Column Widths
         </button>
       </div>
       <div
