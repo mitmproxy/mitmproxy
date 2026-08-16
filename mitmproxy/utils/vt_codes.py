@@ -5,6 +5,9 @@ This module provides a method to detect if a given file object supports virtual 
 import os
 import sys
 from typing import IO
+from typing import Literal
+
+ColorOverride = Literal["auto", "always", "never"]
 
 if os.name == "nt":
     from ctypes import byref  # type: ignore
@@ -33,7 +36,7 @@ if os.name == "nt":
     SetConsoleMode.argtypes = [HANDLE, DWORD]
     SetConsoleMode.restype = BOOL
 
-    def ensure_supported(f: IO[str]) -> bool:
+    def _ensure_supported_native(f: IO[str]) -> bool:
         if not f.isatty():
             return False
         if f == sys.stdout:
@@ -56,5 +59,25 @@ if os.name == "nt":
 
 else:
 
-    def ensure_supported(f: IO[str]) -> bool:
+    def _ensure_supported_native(f: IO[str]) -> bool:
         return f.isatty()
+
+
+def ensure_supported(f: IO[str], override: ColorOverride = "auto") -> bool:
+    """Return whether ``f`` supports virtual terminal escape codes.
+
+    The ``override`` parameter mirrors the well-known ``--color={auto,always,never}``
+    flag from coreutils (``ls``, ``grep``):
+
+    - ``"auto"`` (default): probe the file via ``isatty()`` (and on Windows, the
+      console mode ioctl). This preserves the historical behavior.
+    - ``"always"``: unconditionally return ``True``, e.g. when piping mitmdump
+      output to a pager (``mitmdump | less -R``) and you want to keep colors.
+    - ``"never"``: unconditionally return ``False``, e.g. when redirecting to a
+      log file or running in a CI environment that mishandles ANSI codes.
+    """
+    if override == "always":
+        return True
+    if override == "never":
+        return False
+    return _ensure_supported_native(f)
