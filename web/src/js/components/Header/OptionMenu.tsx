@@ -4,9 +4,41 @@ import Button from "../common/Button";
 import DocsLink from "../common/DocsLink";
 import HideInStatic from "../common/HideInStatic";
 import * as modalActions from "../../ducks/ui/modal";
-import { useAppDispatch } from "../../ducks";
+import * as optionsActions from "../../ducks/options";
+import { useAppDispatch, useAppSelector } from "../../ducks";
 
 OptionMenu.title = "Options";
+
+function ThemeSelect() {
+    const dispatch = useAppDispatch();
+    const value = useAppSelector((state) => state.options.web_theme);
+    const choices = useAppSelector(
+        (state) => state.options_meta.web_theme?.choices,
+    ) ?? ["system", "dark", "light"];
+
+    return (
+        <div className="menu-entry">
+            <label>
+                Theme
+                <select
+                    className="theme-select"
+                    value={value}
+                    onChange={(e) =>
+                        dispatch(
+                            optionsActions.update("web_theme", e.target.value),
+                        )
+                    }
+                >
+                    {choices.map((choice) => (
+                        <option key={choice} value={choice}>
+                            {choice}
+                        </option>
+                    ))}
+                </select>
+            </label>
+        </div>
+    );
+}
 
 export default function OptionMenu() {
     const dispatch = useAppDispatch();
@@ -55,6 +87,15 @@ export default function OptionMenu() {
                 </div>
                 <div className="menu-legend">View Options</div>
             </div>
+
+            <HideInStatic>
+                <div className="menu-group">
+                    <div className="menu-content">
+                        <ThemeSelect />
+                    </div>
+                    <div className="menu-legend">Appearance</div>
+                </div>
+            </HideInStatic>
         </div>
     );
 }

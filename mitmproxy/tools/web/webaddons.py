@@ -97,6 +97,13 @@ class WebAddon:
             ["tls", "icon", "path", "method", "status", "size", "time"],
             f"Columns to show in the flow list. Can be one of the following: {', '.join(AVAILABLE_WEB_COLUMNS)}",
         )
+        loader.add_option(
+            "web_theme",
+            str,
+            "system",
+            "Preferred color theme for the mitmweb user interface.",
+            choices=["system", "dark", "light"],
+        )
 
     def running(self):
         if hasattr(ctx.options, "web_open_browser") and ctx.options.web_open_browser:

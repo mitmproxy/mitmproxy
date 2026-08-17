@@ -52,7 +52,7 @@ function FlowFilterInput() {
             value={value}
             placeholder="Search"
             icon={FilterIcon.SEARCH}
-            color="black"
+            color="var(--mitmweb-fg)"
             onChange={(expr) => dispatch(setFilter(expr))}
         />
     );

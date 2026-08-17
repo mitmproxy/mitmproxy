@@ -36,7 +36,7 @@
 
         &.sort-asc,
         &.sort-desc {
-            background-color: lighten(#f2f2f2, 3%);
+            background-color: var(--mitmweb-th-sorted-bg);
             padding-right: 18px;
         }
 
@@ -51,7 +51,11 @@
             top: 4px;
             width: 14px;
             height: 14px;
-            background-color: fadeout(lighten(#f2f2f2, 3%), 20%);
+            background-color: color-mix(
+                in srgb,
+                var(--mitmweb-th-sorted-bg) 80%,
+                transparent
+            );
         }
     }
 
@@ -131,7 +135,13 @@
     }
 
     .col-icon {
-        width: 32px;
+        width: 24px;
+        color: var(--mitmweb-fg-muted);
+
+        .icon {
+            display: block;
+            margin: 0 auto;
+        }
     }
 
     .col-path {
@@ -166,7 +176,7 @@
     }
 
     .col-status {
-        width: 50px;
+        width: 80px;
     }
 
     .col-size {
