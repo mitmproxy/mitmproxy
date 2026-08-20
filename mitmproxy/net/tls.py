@@ -77,12 +77,15 @@ def is_supported_version(version: Version):
     # Without SECLEVEL, recent OpenSSL versions forbid old TLS versions.
     # https://github.com/pyca/cryptography/issues/9523
     client_ctx.set_cipher_list(b"@SECLEVEL=0:ALL")
-    client_ctx.set_min_proto_version(version.value)
-    client_ctx.set_max_proto_version(version.value)
-    client_conn = SSL.Connection(client_ctx)
-    client_conn.set_connect_state()
 
     try:
+        # On OpenSSL builds that have dropped a protocol version entirely
+        # (e.g. SSLv3 after POODLE/CVE-2014-3566), set_min/max_proto_version
+        # raises SSL.Error already at context-setup time, before recv().
+        client_ctx.set_min_proto_version(version.value)
+        client_ctx.set_max_proto_version(version.value)
+        client_conn = SSL.Connection(client_ctx)
+        client_conn.set_connect_state()
         client_conn.recv(4096)
     except SSL.WantReadError:
         return True

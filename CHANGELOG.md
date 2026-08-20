@@ -21,6 +21,10 @@
 - Remove the unused `msgpack` dependency. The msgpack contentview is
   implemented in Rust and shipped with `mitmproxy_rs` since mitmproxy 12.
   ([#8319](https://github.com/mitmproxy/mitmproxy/pull/8319), @lukehsiao)
+- Fix a crash on OpenSSL builds that reject a TLS protocol version at
+  context-setup time (e.g. SSLv3): `is_supported_version` now treats such a
+  version as unsupported instead of raising an unhandled `SSL.Error`.
+  ([#8294](https://github.com/mitmproxy/mitmproxy/pull/8294), @gaurav0107)
 - mitmweb: Fix the flow table header of the sorted column keeping a light background and hiding its sort chevron under the dark theme.
   ([#8336](https://github.com/mitmproxy/mitmproxy/pull/8336), @sleeyax)
 - mitmweb: Add a dark theme, selectable via the new `web_theme` option (`system`, `dark`, or `light`).
