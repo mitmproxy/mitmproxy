@@ -26,9 +26,9 @@ jobs:
     name: ${{ matrix.env }}
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@8fe88b311a66c441e01edfebe4cd90d8a47fa335
-      - uses: mhils/workflows/setup-uv@8fe88b311a66c441e01edfebe4cd90d8a47fa335
-      - uses: mhils/workflows/uv-sync@8fe88b311a66c441e01edfebe4cd90d8a47fa335
+      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/setup-uv@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/uv-sync@acc73c7af100db9fb3f1ad3c0178d382048e943f
         with:
           args: --only-group tox
 
@@ -51,14 +51,14 @@ jobs:
             py: "3.12"
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: mhils/workflows/checkout@8fe88b311a66c441e01edfebe4cd90d8a47fa335
-      - uses: mhils/workflows/setup-uv@8fe88b311a66c441e01edfebe4cd90d8a47fa335
-      - uses: mhils/workflows/uv-sync@8fe88b311a66c441e01edfebe4cd90d8a47fa335
+      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/setup-uv@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/uv-sync@acc73c7af100db9fb3f1ad3c0178d382048e943f
         with:
           args: --only-group tox
 
       - run: tox -e py${{ matrix.py }}
-      - uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6
+      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
@@ -88,9 +88,9 @@ jobs:
         run: |
           apt-get update
           apt-get install --no-install-recommends -y git ca-certificates binutils build-essential
-      - uses: mhils/workflows/checkout@8fe88b311a66c441e01edfebe4cd90d8a47fa335
-      - uses: mhils/workflows/setup-uv@8fe88b311a66c441e01edfebe4cd90d8a47fa335
-      - uses: mhils/workflows/uv-sync@8fe88b311a66c441e01edfebe4cd90d8a47fa335
+      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/setup-uv@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/uv-sync@acc73c7af100db9fb3f1ad3c0178d382048e943f
       - run: uv pip install .  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
 
       - if: runner.os == 'macOS' && github.repository == 'mitmproxy/mitmproxy'
@@ -125,7 +125,7 @@ jobs:
           path: release/dist
 
   build-wheel:
-    uses: mhils/workflows/.github/workflows/python-build.yml@8fe88b311a66c441e01edfebe4cd90d8a47fa335
+    uses: mhils/workflows/.github/workflows/python-build.yml@acc73c7af100db9fb3f1ad3c0178d382048e943f
     with:
       artifact: binaries.wheel
 
@@ -137,9 +137,9 @@ jobs:
         startsWith(github.ref, 'refs/tags/')
       )
     steps:
-      - uses: mhils/workflows/checkout@8fe88b311a66c441e01edfebe4cd90d8a47fa335
-      - uses: mhils/workflows/setup-uv@8fe88b311a66c441e01edfebe4cd90d8a47fa335
-      - uses: mhils/workflows/uv-sync@8fe88b311a66c441e01edfebe4cd90d8a47fa335
+      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/setup-uv@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/uv-sync@acc73c7af100db9fb3f1ad3c0178d382048e943f
       - run: uv pip install .  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
       - run: python -u release/build.py installbuilder-installer msix-installer
         env:
@@ -153,12 +153,12 @@ jobs:
   test-web-ui:
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@8fe88b311a66c441e01edfebe4cd90d8a47fa335
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .github/node-version.txt
       - name: Cache Node.js modules
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           # npm cache files are stored in `~/.npm` on Linux/macOS
           path: ~/.npm
@@ -170,7 +170,7 @@ jobs:
         run: npm ci
       - working-directory: ./web
         run: npm test
-      - uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6
+      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./web/coverage/coverage-final.json
@@ -179,7 +179,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-wheel
     steps:
-      - uses: mhils/workflows/checkout@8fe88b311a66c441e01edfebe4cd90d8a47fa335
+      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: binaries.wheel
@@ -192,9 +192,9 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@8fe88b311a66c441e01edfebe4cd90d8a47fa335
-      - uses: mhils/workflows/setup-uv@8fe88b311a66c441e01edfebe4cd90d8a47fa335
-      - uses: mhils/workflows/uv-sync@8fe88b311a66c441e01edfebe4cd90d8a47fa335
+      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/setup-uv@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/uv-sync@acc73c7af100db9fb3f1ad3c0178d382048e943f
       - run: |
           wget -q https://github.com/gohugoio/hugo/releases/download/v0.139.3/hugo_extended_0.139.3_linux-amd64.deb
           echo "3e58800d1fee57269208d07d104ae1a6ab886615344099f2dca0c6ad5279bc11 hugo_extended_0.139.3_linux-amd64.deb" | sha256sum -c
@@ -226,7 +226,7 @@ jobs:
     - build-wheel
     - build-windows-installer
     - docs
-    uses: mhils/workflows/.github/workflows/alls-green.yml@8fe88b311a66c441e01edfebe4cd90d8a47fa335
+    uses: mhils/workflows/.github/workflows/alls-green.yml@acc73c7af100db9fb3f1ad3c0178d382048e943f
     with:
       jobs: ${{ toJSON(needs) }}
       allowed-skips: build-windows-installer
@@ -246,23 +246,23 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@8fe88b311a66c441e01edfebe4cd90d8a47fa335
+      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: binaries.wheel
           path: release/docker
-      - uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
-      - uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v1.6.0
+      - uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
+      - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v1.6.0
         with:
           cache-binary: false
 
       - name: Login to Docker Hub
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           username: mitmbot
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -270,7 +270,7 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302
         env:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: index
         with:
@@ -286,7 +286,7 @@ jobs:
 
       - name: Build and push
         id: push
-        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: release/docker
           platforms: linux/amd64,linux/arm64
@@ -295,7 +295,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
-      - uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
         with:
           subject-name: ghcr.io/${{ github.repository }}
           subject-digest: ${{ steps.push.outputs.digest }}
@@ -326,9 +326,9 @@ jobs:
       R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
       R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
     steps:
-      - uses: mhils/workflows/checkout@8fe88b311a66c441e01edfebe4cd90d8a47fa335
-      - uses: mhils/workflows/setup-uv@8fe88b311a66c441e01edfebe4cd90d8a47fa335
-      - uses: mhils/workflows/uv-sync@8fe88b311a66c441e01edfebe4cd90d8a47fa335
+      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/setup-uv@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/uv-sync@acc73c7af100db9fb3f1ad3c0178d382048e943f
         with:
           args: --only-group deploy
 
@@ -347,7 +347,7 @@ jobs:
           merge-multiple: true
           path: release/dist
       - id: provenance
-        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
         with:
           subject-path: 'release/dist/*'
       - run: |
