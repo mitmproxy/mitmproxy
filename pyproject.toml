@@ -73,7 +73,7 @@ dev = [
     "pytest-xdist==3.8.0",
     "pytest==8.4.2",
     "requests==2.33.1",
-    "wheel==0.47.0",
+    "wheel==0.48.0",
     "build==1.4.3",
     "mypy==1.20.2",
     "types-requests==2.33.0.20260408",
