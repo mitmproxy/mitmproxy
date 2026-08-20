@@ -4,6 +4,8 @@ import os
 import time
 import urllib.parse
 import warnings
+from collections.abc import AsyncIterable
+from collections.abc import Awaitable
 from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Iterator
@@ -34,6 +36,11 @@ from mitmproxy.utils import typecheck
 from mitmproxy.utils.strutils import always_bytes
 from mitmproxy.utils.strutils import always_str
 from mitmproxy.websocket import WebSocketData
+
+MessageStreamResult = bytes | Iterable[bytes] | AsyncIterable[bytes]
+MessageStreamCallable = Callable[
+    [bytes], MessageStreamResult | Awaitable[MessageStreamResult]
+]
 
 
 # While headers _should_ be ASCII, it's not uncommon for certain headers to be utf-8 encoded.
@@ -244,7 +251,7 @@ class Message(serializable.Serializable):
         self.data.set_state(state)
 
     data: MessageData
-    stream: Callable[[bytes], Iterable[bytes] | bytes] | bool = False
+    stream: MessageStreamCallable | bool = False
     """
     This attribute controls if the message body should be streamed.
 
@@ -254,6 +261,9 @@ class Message(serializable.Serializable):
     but immediately forwarded instead.
     Alternatively, a transformation function can be specified, which will be called for each chunk of data.
     Please note that packet boundaries generally should not be relied upon.
+
+    Transformation functions may be async, or decorated with
+    `mitmproxy.script.run_in_thread` if they perform blocking synchronous work.
 
     This attribute must be set in the `requestheaders` or `responseheaders` hook.
     Setting it in `request` or  `response` is already too late, mitmproxy has buffered the message body already.
