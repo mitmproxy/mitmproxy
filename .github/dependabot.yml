@@ -3,7 +3,7 @@ updates:
   - package-ecosystem: github-actions
     directory: "/"
     cooldown:
-      default-days: 42
+      default-days: 7
     schedule:
       interval: "monthly"
     groups:
@@ -13,7 +13,7 @@ updates:
   - package-ecosystem: pip
     directory: "/"
     cooldown:
-      default-days: 42
+      default-days: 7
       exclude:
       - "pyopenssl"
       - "cryptography"
