@@ -6,22 +6,47 @@ exports[`FlowRow 1`] = `
     <tbody>
       <tr
         class="intercepted has-request has-response"
+        style="height: 32px;"
       >
         <td
           class="col-tls col-tls-https"
+          title="TLS encrypted"
         />
         <td
           class="col-icon"
+          title="websocket"
         >
-          <div
-            class="resource-icon resource-icon-websocket"
-          />
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-arrow-left-right icon icon-swap"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M8 3 4 7l4 4"
+            />
+            <path
+              d="M4 7h16"
+            />
+            <path
+              d="m16 21 4-4-4-4"
+            />
+            <path
+              d="M20 17H4"
+            />
+          </svg>
         </td>
         <td
           class="col-path"
         >
           <svg
-            aria-hidden="true"
             class="lucide lucide-pause icon icon-pause float-right"
             fill="none"
             height="16"
@@ -47,9 +72,11 @@ exports[`FlowRow 1`] = `
               x="5"
               y="3"
             />
+            <title>
+              Intercepted — waiting to resume
+            </title>
           </svg>
           <svg
-            aria-hidden="true"
             class="lucide lucide-triangle-alert icon icon-warning float-right"
             fill="none"
             height="16"
@@ -70,6 +97,9 @@ exports[`FlowRow 1`] = `
             <path
               d="M12 17h.01"
             />
+            <title>
+              error
+            </title>
           </svg>
           <span
             class="marker float-right"
@@ -79,13 +109,20 @@ exports[`FlowRow 1`] = `
         <td
           class="col-method"
         >
-          WSS
+          <span
+            class="badge method-badge"
+          >
+            WSS
+          </span>
         </td>
         <td
           class="col-status"
-          style="color: darkgreen;"
         >
-          200
+          <span
+            class="badge status-badge status-2xx"
+          >
+            200
+          </span>
         </td>
         <td
           class="col-size"
@@ -128,22 +165,46 @@ exports[`FlowRow 1`] = `
       </tr>
       <tr
         class=""
+        style="height: 32px;"
       >
         <td
           class="col-tls col-tls-https"
+          title="TLS encrypted"
         />
         <td
           class="col-icon"
+          title="dns"
         >
-          <div
-            class="resource-icon resource-icon-dns"
-          />
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-globe icon icon-globe"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+            />
+            <path
+              d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"
+            />
+            <path
+              d="M2 12h20"
+            />
+          </svg>
         </td>
         <td
           class="col-path"
         >
           <svg
-            aria-hidden="true"
             class="lucide lucide-triangle-alert icon icon-warning float-right"
             fill="none"
             height="16"
@@ -164,6 +225,9 @@ exports[`FlowRow 1`] = `
             <path
               d="M12 17h.01"
             />
+            <title>
+              error
+            </title>
           </svg>
           <span
             class="marker float-right"
@@ -173,13 +237,20 @@ exports[`FlowRow 1`] = `
         <td
           class="col-method"
         >
-          QUERY
+          <span
+            class="badge method-badge"
+          >
+            QUERY
+          </span>
         </td>
         <td
           class="col-status"
-          style="color: darkgreen;"
         >
-          NOERROR
+          <span
+            class="badge status-badge status-other"
+          >
+            NOERROR
+          </span>
         </td>
         <td
           class="col-size"

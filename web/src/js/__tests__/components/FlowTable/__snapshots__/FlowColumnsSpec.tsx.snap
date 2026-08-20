@@ -23,10 +23,43 @@ exports[`Flowcolumns Components should render IconColumn 1`] = `
       <tr>
         <td
           class="col-icon"
+          title="tcp"
         >
-          <div
-            class="resource-icon resource-icon-tcp"
-          />
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-cable icon icon-cable"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M17 19a1 1 0 0 1-1-1v-2a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a1 1 0 0 1-1 1z"
+            />
+            <path
+              d="M17 21v-2"
+            />
+            <path
+              d="M19 14V6.5a1 1 0 0 0-7 0v11a1 1 0 0 1-7 0V10"
+            />
+            <path
+              d="M21 21v-2"
+            />
+            <path
+              d="M3 5V3"
+            />
+            <path
+              d="M4 10a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2a2 2 0 0 1-2 2z"
+            />
+            <path
+              d="M7 5V3"
+            />
+          </svg>
         </td>
       </tr>
     </tbody>
@@ -41,10 +74,28 @@ exports[`Flowcolumns Components should render IconColumn 2`] = `
       <tr>
         <td
           class="col-icon"
+          title="plain"
         >
-          <div
-            class="resource-icon resource-icon-plain"
-          />
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-file icon icon-file"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"
+            />
+            <path
+              d="M14 2v5a1 1 0 0 0 1 1h5"
+            />
+          </svg>
         </td>
       </tr>
     </tbody>
@@ -59,10 +110,31 @@ exports[`Flowcolumns Components should render IconColumn 3`] = `
       <tr>
         <td
           class="col-icon"
+          title="not-modified"
         >
-          <div
-            class="resource-icon resource-icon-not-modified"
-          />
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-file-check icon icon-fileCheck"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"
+            />
+            <path
+              d="M14 2v5a1 1 0 0 0 1 1h5"
+            />
+            <path
+              d="m9 15 2 2 4-4"
+            />
+          </svg>
         </td>
       </tr>
     </tbody>
@@ -77,10 +149,28 @@ exports[`Flowcolumns Components should render IconColumn 4`] = `
       <tr>
         <td
           class="col-icon"
+          title="redirect"
         >
-          <div
-            class="resource-icon resource-icon-redirect"
-          />
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-corner-up-right icon icon-redirect"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="m15 14 5-5-5-5"
+            />
+            <path
+              d="M4 20v-7a4 4 0 0 1 4-4h12"
+            />
+          </svg>
         </td>
       </tr>
     </tbody>
@@ -95,10 +185,38 @@ exports[`Flowcolumns Components should render IconColumn 5`] = `
       <tr>
         <td
           class="col-icon"
+          title="image"
         >
-          <div
-            class="resource-icon resource-icon-image"
-          />
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-image icon icon-image"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect
+              height="18"
+              rx="2"
+              ry="2"
+              width="18"
+              x="3"
+              y="3"
+            />
+            <circle
+              cx="9"
+              cy="9"
+              r="2"
+            />
+            <path
+              d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"
+            />
+          </svg>
         </td>
       </tr>
     </tbody>
@@ -113,10 +231,28 @@ exports[`Flowcolumns Components should render IconColumn 6`] = `
       <tr>
         <td
           class="col-icon"
+          title="js"
         >
-          <div
-            class="resource-icon resource-icon-js"
-          />
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-braces icon icon-braces"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"
+            />
+            <path
+              d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"
+            />
+          </svg>
         </td>
       </tr>
     </tbody>
@@ -131,10 +267,49 @@ exports[`Flowcolumns Components should render IconColumn 7`] = `
       <tr>
         <td
           class="col-icon"
+          title="css"
         >
-          <div
-            class="resource-icon resource-icon-css"
-          />
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-palette icon icon-palette"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"
+            />
+            <circle
+              cx="13.5"
+              cy="6.5"
+              fill="currentColor"
+              r=".5"
+            />
+            <circle
+              cx="17.5"
+              cy="10.5"
+              fill="currentColor"
+              r=".5"
+            />
+            <circle
+              cx="6.5"
+              cy="12.5"
+              fill="currentColor"
+              r=".5"
+            />
+            <circle
+              cx="8.5"
+              cy="7.5"
+              fill="currentColor"
+              r=".5"
+            />
+          </svg>
         </td>
       </tr>
     </tbody>
@@ -149,10 +324,31 @@ exports[`Flowcolumns Components should render IconColumn 8`] = `
       <tr>
         <td
           class="col-icon"
+          title="html"
         >
-          <div
-            class="resource-icon resource-icon-document"
-          />
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-code-xml icon icon-code"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="m18 16 4-4-4-4"
+            />
+            <path
+              d="m6 8-4 4 4 4"
+            />
+            <path
+              d="m14.5 4-5 16"
+            />
+          </svg>
         </td>
       </tr>
     </tbody>
@@ -167,10 +363,28 @@ exports[`Flowcolumns Components should render IconColumn 9`] = `
       <tr>
         <td
           class="col-icon"
+          title="plain"
         >
-          <div
-            class="resource-icon resource-icon-plain"
-          />
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-file icon icon-file"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"
+            />
+            <path
+              d="M14 2v5a1 1 0 0 0 1 1h5"
+            />
+          </svg>
         </td>
       </tr>
     </tbody>
@@ -185,10 +399,34 @@ exports[`Flowcolumns Components should render IconColumn 10`] = `
       <tr>
         <td
           class="col-icon"
+          title="websocket"
         >
-          <div
-            class="resource-icon resource-icon-websocket"
-          />
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-arrow-left-right icon icon-swap"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M8 3 4 7l4 4"
+            />
+            <path
+              d="M4 7h16"
+            />
+            <path
+              d="m16 21 4-4-4-4"
+            />
+            <path
+              d="M20 17H4"
+            />
+          </svg>
         </td>
       </tr>
     </tbody>
@@ -237,7 +475,6 @@ exports[`Flowcolumns Components should render pathColumn 1`] = `
           class="col-path"
         >
           <svg
-            aria-hidden="true"
             class="lucide lucide-triangle-alert icon icon-warning float-right"
             fill="none"
             height="16"
@@ -258,6 +495,9 @@ exports[`Flowcolumns Components should render pathColumn 1`] = `
             <path
               d="M12 17h.01"
             />
+            <title>
+              error
+            </title>
           </svg>
           <span
             class="marker float-right"
@@ -279,7 +519,6 @@ exports[`Flowcolumns Components should render pathColumn 2`] = `
           class="col-path"
         >
           <svg
-            aria-hidden="true"
             class="lucide lucide-pause icon icon-pause float-right"
             fill="none"
             height="16"
@@ -305,9 +544,11 @@ exports[`Flowcolumns Components should render pathColumn 2`] = `
               x="5"
               y="3"
             />
+            <title>
+              Intercepted — waiting to resume
+            </title>
           </svg>
           <svg
-            aria-hidden="true"
             class="lucide lucide-x icon icon-close float-right"
             fill="none"
             height="16"
@@ -325,6 +566,9 @@ exports[`Flowcolumns Components should render pathColumn 2`] = `
             <path
               d="m6 6 12 12"
             />
+            <title>
+              Connection killed
+            </title>
           </svg>
           <span
             class="marker float-right"
@@ -360,10 +604,34 @@ exports[`should render columns: icon 1`] = `
       <tr>
         <td
           class="col-icon"
+          title="websocket"
         >
-          <div
-            class="resource-icon resource-icon-websocket"
-          />
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-arrow-left-right icon icon-swap"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M8 3 4 7l4 4"
+            />
+            <path
+              d="M4 7h16"
+            />
+            <path
+              d="m16 21 4-4-4-4"
+            />
+            <path
+              d="M20 17H4"
+            />
+          </svg>
         </td>
       </tr>
     </tbody>
@@ -395,7 +663,11 @@ exports[`should render columns: method 1`] = `
         <td
           class="col-method"
         >
-          WSS
+          <span
+            class="badge method-badge"
+          >
+            WSS
+          </span>
         </td>
       </tr>
     </tbody>
@@ -412,7 +684,6 @@ exports[`should render columns: path 1`] = `
           class="col-path"
         >
           <svg
-            aria-hidden="true"
             class="lucide lucide-triangle-alert icon icon-warning float-right"
             fill="none"
             height="16"
@@ -433,6 +704,9 @@ exports[`should render columns: path 1`] = `
             <path
               d="M12 17h.01"
             />
+            <title>
+              error
+            </title>
           </svg>
           <span
             class="marker float-right"
@@ -482,9 +756,12 @@ exports[`should render columns: status 1`] = `
       <tr>
         <td
           class="col-status"
-          style="color: darkgreen;"
         >
-          200
+          <span
+            class="badge status-badge status-2xx"
+          >
+            200
+          </span>
         </td>
       </tr>
     </tbody>
@@ -531,6 +808,7 @@ exports[`should render columns: tls 1`] = `
       <tr>
         <td
           class="col-tls col-tls-https"
+          title="TLS encrypted"
         />
       </tr>
     </tbody>

@@ -5,9 +5,12 @@ import {
     AlertTriangle,
     AppWindow,
     ArrowLeft,
+    ArrowLeftRight,
     ArrowRight,
     Ban,
+    Braces,
     Bug,
+    Cable,
     Check,
     ChevronsDown,
     ChevronDown,
@@ -16,18 +19,25 @@ import {
     CircleQuestionMark,
     CircleX,
     Clipboard,
+    CodeXml,
     Copy,
     CopyPlus,
+    CornerUpRight,
     Download,
     ExternalLink,
+    File,
+    FileCheck,
     FileOutput,
     Files,
     FolderOpen,
+    Globe,
     History,
     Highlighter,
+    Image as ImageIcon,
     Info,
     LoaderCircle,
     Paintbrush,
+    Palette,
     Pause,
     Pencil,
     Play,
@@ -35,6 +45,7 @@ import {
     RefreshCw,
     Save,
     Search,
+    Send,
     Settings,
     Square,
     SquareCheck,
@@ -44,6 +55,7 @@ import {
     Trash2,
     Upload,
     X,
+    Zap,
 } from "lucide-react";
 
 export const iconsMap = {
@@ -51,13 +63,16 @@ export const iconsMap = {
     addSquare: SquarePlus,
     arrowLeft: ArrowLeft,
     arrowRight: ArrowRight,
+    braces: Braces,
     browser: AppWindow,
+    cable: Cable,
     chevronDown: ChevronDown,
     chevronRight: ChevronRight,
     chevronUp: ChevronUp,
     close: X,
     closeCircle: CircleX,
     clipboard: Clipboard,
+    code: CodeXml,
     confirm: Check,
     confirmSquare: SquareCheck,
     copy: Copy,
@@ -70,15 +85,21 @@ export const iconsMap = {
     expandMore: ChevronsDown,
     export: FileOutput,
     external: ExternalLink,
+    file: File,
+    fileCheck: FileCheck,
     files: Files,
+    globe: Globe,
     help: CircleQuestionMark,
     highlight: Highlighter,
+    image: ImageIcon,
     info: Info,
     intercept: Pause,
     loading: LoaderCircle,
     mark: Paintbrush,
     openFolder: FolderOpen,
+    palette: Palette,
     pause: Pause,
+    redirect: CornerUpRight,
     replay: Redo2,
     refresh: RefreshCw,
     revert: History,
@@ -86,11 +107,14 @@ export const iconsMap = {
     resumeAll: StepForward,
     save: Save,
     search: Search,
+    send: Send,
     settings: Settings,
     square: Square,
+    swap: ArrowLeftRight,
     terminal: Terminal,
     upload: Upload,
     warning: AlertTriangle,
+    zap: Zap,
 } as const satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof iconsMap;
@@ -102,6 +126,7 @@ type IconProps = {
     className?: string;
     onClick?: React.MouseEventHandler<SVGSVGElement>;
     "aria-label"?: string;
+    title?: string;
 };
 
 export default function Icon({
@@ -111,9 +136,10 @@ export default function Icon({
     className,
     onClick,
     "aria-label": ariaLabel,
+    title,
 }: IconProps) {
     const SvgIcon = iconsMap[name];
-    const decorative = !ariaLabel;
+    const decorative = !ariaLabel && !title;
 
     return (
         <SvgIcon
@@ -123,6 +149,8 @@ export default function Icon({
             onClick={onClick}
             aria-label={ariaLabel}
             aria-hidden={decorative || undefined}
-        />
+        >
+            {title ? <title>{title}</title> : null}
+        </SvgIcon>
     );
 }

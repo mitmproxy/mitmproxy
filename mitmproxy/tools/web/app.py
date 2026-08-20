@@ -608,8 +608,10 @@ class FlowHandler(RequestHandler):
                 elif a == "response" and hasattr(flow, "response"):
                     response: mitmproxy.http.Response = flow.response
                     for k, v in b.items():
-                        if k in ["msg", "http_version"]:
-                            setattr(response, k, str(v))
+                        if k == "reason":
+                            response.reason = str(v)
+                        elif k == "http_version":
+                            response.http_version = str(v)
                         elif k == "code":
                             response.status_code = int(v)
                         elif k == "headers":
