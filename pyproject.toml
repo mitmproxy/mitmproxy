@@ -61,7 +61,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "click==8.4.0",
+    "click==8.4.2",
     "hypothesis==6.130.6",
     "maturin==1.14.1",
     "pdoc==16.0.0",
