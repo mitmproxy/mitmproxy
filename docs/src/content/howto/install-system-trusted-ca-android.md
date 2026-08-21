@@ -104,6 +104,17 @@ The go to your AVD, open up Magisk, click on `Modules` and install your module (
 
 Reboot your AVD.
 
+#### For Android 16 or if you cannot find mitmproxy certificate in the system certificates
+
+Since Android 16 moved the system certificates to a new location, the previous Magisk steps no longer work.
+
+To solve this issue:
+- Download the [Move Certificate](https://github.com/ys1231/MoveCertificate/releases) magisk module. Then push it to the AVD `adb push MoveCertificate-<version>.zip /sdcard/` 
+- Create the temp folder for the certificate for `Move Certificate` to load: `adb shell mkdir -p /data/local/tmp/cert`
+- Push the certificate to the previous created location: `adb push $hashed_name.0 /data/local/tmp/cert`
+- Load the `Move Certificate` module in the magisk, then reboot AVD
+ 
+
 ### Instructions for API LEVEL > 28 using `-writable-system`
 By default, the `/system` partition is mounted as read-only. The following steps describe how to gain write permissions on the `/system` partition and how to copy the certificate created in chapter 2.
 
