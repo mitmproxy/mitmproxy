@@ -14,7 +14,7 @@ import brotli
 
 if sys.version_info >= (3, 14):
     from compression import zstd
-else:
+else:  # pragma: no cover
     from backports import zstd
 
 # We have a shared single-element cache for encoding and decoding.
