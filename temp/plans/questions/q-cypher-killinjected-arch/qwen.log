@@ -1,0 +1,98 @@
+[0m
+> build · Qwen3.6
+[0m
+Let me read the relevant source files and issues to make informed decisions.
+[0m→ [0mRead .
+[0m✱ [0mGlob "**/*.py"[90m 100 matches[0m
+[0m→ [0mRead mitmproxy/proxy/events.py
+[0m→ [0mRead mitmproxy/flow.py
+[0m✱ [0mGlob "mitmproxy/addons/core.py"[90m 1 match[0m
+[0m✱ [0mGlob "mitmproxy/addons/proxyserver.py"[90m 1 match[0m
+[0m→ [0mRead mitmproxy/addons/core.py
+[0m→ [0mRead mitmproxy/addons/proxyserver.py
+[0m✱ [0mGrep "MessageInjected|TcpMessageInjected|UdpMessageInjected|WebSocketMessageInjected"[90m in mitmproxy · 27 matches[0m
+Now let me look at how layers handle events, the view.py kill call sites, and check #5484.
+[0m→ [0mRead mitmproxy/proxy/layers/websocket.py[90m [limit=50, offset=130][0m
+[0m→ [0mRead mitmproxy/proxy/layers/http/__init__.py[90m [limit=30, offset=960][0m
+[0m→ [0mRead mitmproxy/proxy/layers/tcp.py
+[0m✱ [0mGrep "\.kill\(\)"[90m in mitmproxy · 10 matches[0m
+Let me check the view.py kill calls and the mode_servers to understand event routing.
+[0m✱ [0mGrep "server_event|inject_event"[90m in mitmproxy/proxy/mode_servers.py · 0 matches[0m
+[0m→ [0mRead mitmproxy/addons/view.py[90m [offset=425, limit=30][0m
+[0m→ [0mRead mitmproxy/addons/view.py[90m [offset=585, limit=30][0m
+[0m✱ [0mGrep "server_event|def server_"[90m in mitmproxy/proxy/mode_servers.py · 0 matches[0m
+[0m✱ [0mGrep "def server_event"[90m in mitmproxy/proxy · 1 match[0m
+[0m→ [0mRead mitmproxy/proxy/layer.py[90m [limit=50, offset=1][0m
+[0m→ [0mRead mitmproxy/proxy/server.py[90m [offset=360, limit=50][0m
+[0m→ [0mRead mitmproxy/proxy/layer.py[90m [limit=100, offset=45][0m
+[0m→ [0mRead mitmproxy/proxy/utils.py
+Now let me check the HTTP layer's full handling of `MessageInjected` and the `nextlayer` addon to understand protocol upgrade routing.
+[0m✱ [0mGrep "class Nextlayer|nextlayer"[90m in mitmproxy/proxy · 1 match[0m
+[0m→ [0mRead mitmproxy/proxy/layers/http/__init__.py[90m [limit=40, offset=970][0m
+[0m✱ [0mGrep "class.*Layer.*layer\.Layer"[90m in mitmproxy/proxy/layers · 7 matches[0m
+[0m→ [0mRead mitmproxy/proxy/layer.py[90m [limit=100, offset=260][0m
+[0m✱ [0mGrep "class Nextlayer"[90m in mitmproxy · 0 matches[0m
+Let me check the nextlayer addon and how events propagate through the layer stack.
+[0m✱ [0mGrep "class NextLayer|next_layer"[90m in mitmproxy/addons · 9 matches[0m
+[0m→ [0mRead mitmproxy/proxy/layer.py[90m [limit=50, offset=145][0m
+Let me check the issues mentioned and look at the HTTP layer event handling more.
+[0m% [0mWebFetch https://github.com/mitmproxy/mitmproxy/issues/5484
+[0m% [0mWebFetch https://github.com/mitmproxy/mitmproxy/issues/4711
+Let me verify #5484's status and check the web app kill calls.
+[0m✱ [0mGrep "event_to_child|MessageInjected"[90m in mitmproxy/proxy/layers/http/__init__.py · 16 matches[0m
+[0m→ [0mRead mitmproxy/tools/web/app.py[90m [limit=25, offset=550][0m
+Now I have enough context. Let me write the verdict.
+[0m
+[0m$ [0mmkdir -p temp/plans/questions/q-cypher-killinjected-arch
+[0m
+[0m← [0mWrite temp/plans/questions/q-cypher-killinjected-arch/qwen.md
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/tmp/cypher-wt-1777492662/qwen/mitmproxy/proxy/events.py">
+ERROR [108:5] "command" overrides symbol of same name in class "CommandCompleted"
+  Variable is mutable so its type is invariant
+    Override type "OpenConnection" is not the same as base type "Command"
+ERROR [115:5] "command" overrides symbol of same name in class "CommandCompleted"
+  Variable is mutable so its type is invariant
+    Override type "StartHook" is not the same as base type "Command"
+ERROR [138:5] "command" overrides symbol of same name in class "CommandCompleted"
+  Variable is mutable so its type is invariant
+    Override type "RequestWakeup" is not the same as base type "Command"
+</diagnostics>
+
+LSP errors detected in other files:
+<diagnostics file="/tmp/cypher-wt-1777492662/qwen/mitmproxy/addons/proxyserver.py">
+ERROR [16:6] Import "wsproto.frame_protocol" could not be resolved
+ERROR [110:16] Argument of type "str | ProxyMode" cannot be assigned to parameter "key" of type "ProxyMode" in function "__getitem__"
+  Type "str | ProxyMode" is not assignable to type "ProxyMode"
+    "str" is not assignable to "ProxyMode"
+</diagnostics>
+
+LSP errors detected in other files:
+<diagnostics file="/tmp/cypher-wt-1777492662/qwen/mitmproxy/proxy/server.py">
+ERROR [25:8] Import "mitmproxy_rs" could not be resolved
+</diagnostics>
+
+LSP errors detected in other files:
+<diagnostics file="/tmp/cypher-wt-1777492662/qwen/mitmproxy/proxy/layers/websocket.py">
+ERROR [5:8] Import "wsproto.extensions" could not be resolved
+ERROR [6:8] Import "wsproto.frame_protocol" could not be resolved
+ERROR [7:8] Import "wsproto.utilities" could not be resolved
+ERROR [8:6] Import "wsproto" could not be resolved
+ERROR [9:6] Import "wsproto.frame_protocol" could not be resolved
+</diagnostics>
+[0m
+<!-- cypher-report-begin -->
+
+Q1 (per-protocol vs generic): [B] — Kill has no payload; per-protocol subclasses add boilerplate with zero semantic differentiation.
+
+Q2 (emission point):          [B] — `Flow.kill()` stays a pure dataclass mutation; the addon emits the event, mirroring `inject.tcp`/`inject.websocket` exactly.
+
+Q3 (mid-upgrade ownership):   `inject_event` routes by `flow.client_conn.id` to the connection's top layer. If `NextLayer` hasn't resolved the protocol, the kill event buffers in its event queue and replays to whichever layer wins the race — TCP or HTTP. The HTTP layer should handle `KillInjected` by closing the stream and both connections; TCP/WS/UDP layers close their connections. No propagation needed; the top layer that owns the sockets acts.
+
+Q4 (scope vs #5484):          [No] — #5484 ("X doesn't kill intercepted flow") is Closed and was the exact bug PR1 (#8199) fixed. PR2 closes #4711 only ("kill flows in transit").
+
+OVERALL VERDICT: Single `KillInjected(flow: Flow)` event class in `mitmproxy/proxy/events.py`. The `core.kill` command (and TUI/web kill handlers) call `f.kill()` for the state mutation, then construct `KillInjected(f)` and call `proxyserver.inject_event()`. The `inject_event` method routes by `client_conn.id` as it already does for `MessageInjected`. The HTTP layer gains an `isinstance(event, events.KillInjected)` branch alongside the existing `MessageInjected` handling at `http/__init__.py:971`, closing the stream and both client/server connections. TCP, WebSocket, and UDP layers add `KillInjected` to their `@expect` decorators and issue `CloseConnection` for both sides. The `NextLayer` buffer handles mid-upgrade gracefully — the event queues and replays to whichever protocol layer resolves. No per-protocol subclasses, no coupling of `flow.py` to proxy events, no new proxyserver commands.
+
+<!-- cypher-report-end -->

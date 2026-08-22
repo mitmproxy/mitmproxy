@@ -312,16 +312,13 @@ class Proxyserver(ServerManager):
     def listen_addrs(self) -> list[Address]:
         return [addr for server in self.servers for addr in server.listen_addrs]
 
-    def inject_event(self, event: events.MessageInjected):
-        connection_id: str | tuple
-        if event.flow.client_conn.transport_protocol != "udp":
-            connection_id = event.flow.client_conn.id
-        else:  # pragma: no cover
-            # temporary workaround: for UDP we don't have persistent client IDs yet.
-            connection_id = (
-                event.flow.client_conn.peername,
-                event.flow.client_conn.sockname,
-            )
+    def inject_event(self, event: events.MessageInjected | events.KillInjected):
+        # Connections are registered by client_conn.id for every transport
+        # (see mode_servers.ServerInstance.handle_stream), UDP included. An
+        # earlier UDP workaround keyed the lookup on (peername, sockname), which
+        # never matched the registry, so KillInjected/MessageInjected was
+        # silently dropped for every UDP flow (#8200).
+        connection_id = event.flow.client_conn.id
         if connection_id not in self.connections:
             raise ValueError("Flow is not from a live connection.")
 
@@ -331,6 +328,21 @@ class Proxyserver(ServerManager):
             keep_ref=True,
             client=event.flow.client_conn.peername,
         )
+
+    def flow_killed(self, flow: Flow):
+        """
+        Subscriber for `FlowKilledHook`. When a flow is killed, inject a
+        `KillInjected` event into the live connection's layer stack so the
+        active layer can close its client and server connections (#4711).
+
+        Flows without a live connection (already disconnected, replayed
+        from disk, etc.) are silently ignored — there's nothing to inject
+        into.
+        """
+        try:
+            self.inject_event(events.KillInjected(flow))
+        except ValueError:
+            pass
 
     @command.command("inject.websocket")
     def inject_websocket(

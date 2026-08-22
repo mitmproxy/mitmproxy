@@ -70,6 +70,19 @@
 - Fix `IndexError` in `is_mostly_bin` when exporting flows to HAR with payloads
   that have a UTF-8 continuation byte at the 100-byte cutoff.
   ([#8196](https://github.com/mitmproxy/mitmproxy/pull/8196), @juliosuas)
+- Killing a flow now closes its live client and server connections even when
+  the flow is in transit between hook checkpoints. `Flow.kill()` fires a new
+  `FlowKilledHook`; the proxyserver addon subscribes and injects a
+  `KillInjected` event into the connection's layer stack so the active
+  protocol layer can tear down its connections. Killing a flow from inside a
+  `tcp_message` / `udp_message` / `websocket_message` hook now also stops the
+  in-flight message from reaching its destination. Killing from a
+  `tcp_start` / `udp_start` hook tears the flow down before the upstream
+  connection is opened, and `KillInjected` is now delivered to UDP flows
+  (previously the connection lookup keyed UDP by address instead of client id,
+  so the event was silently dropped). Resolves the long-standing TODO
+  referencing #4711.
+  ([#8200](https://github.com/mitmproxy/mitmproxy/pull/8200), @georgeglarson)
 
 ## 12 April 2026: mitmproxy 12.2.2
 
