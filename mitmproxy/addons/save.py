@@ -5,8 +5,12 @@ from collections.abc import Sequence
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
+from typing import BinaryIO
+from typing import cast
 from typing import Literal
 from typing import Optional
+
+import zstandard as zstd
 
 import mitmproxy.types
 from mitmproxy import command
@@ -45,6 +49,7 @@ class Save:
         self.filt: flowfilter.TFilter | None = None
         self.active_flows: set[flow.Flow] = set()
         self.current_path: str | None = None
+        self.compress: bool = False
 
     def load(self, loader):
         loader.add_option(
@@ -55,7 +60,8 @@ class Save:
             Stream flows to file as they arrive. Prefix path with + to append.
             The full path can use python strftime() formating, missing
             directories are created as needed. A new file is opened every time
-            the formatted string changes.
+            the formatted string changes. Use save_stream_compress to
+            compress output with Zstandard.
             """,
         )
         loader.add_option(
@@ -63,6 +69,12 @@ class Save:
             Optional[str],
             None,
             "Filter which flows are written to file.",
+        )
+        loader.add_option(
+            "save_stream_compress",
+            bool,
+            False,
+            "Compress stream files on the fly using Zstandard.",
         )
 
     def configure(self, updated):
@@ -74,7 +86,11 @@ class Save:
                     raise exceptions.OptionsError(str(e)) from e
             else:
                 self.filt = None
-        if "save_stream_file" in updated or "save_stream_filter" in updated:
+        if (
+            "save_stream_file" in updated
+            or "save_stream_filter" in updated
+            or "save_stream_compress" in updated
+        ):
             if ctx.options.save_stream_file:
                 try:
                     self.maybe_rotate_to_new_file()
@@ -87,7 +103,8 @@ class Save:
 
     def maybe_rotate_to_new_file(self) -> None:
         path = datetime.today().strftime(_path(ctx.options.save_stream_file))
-        if self.current_path == path:
+        compress = ctx.options.save_stream_compress
+        if self.current_path == path and self.compress == compress:
             return
 
         if self.stream:
@@ -97,9 +114,26 @@ class Save:
         new_log_file = Path(path)
         new_log_file.parent.mkdir(parents=True, exist_ok=True)
 
-        f = new_log_file.open(_mode(ctx.options.save_stream_file))
+        mode = _mode(ctx.options.save_stream_file)
+        if mode == "ab" and new_log_file.exists() and new_log_file.stat().st_size > 0:
+            existing_is_zstd = new_log_file.read_bytes()[:4] == b"\x28\xb5\x2f\xfd"
+            if compress and not existing_is_zstd:
+                raise exceptions.OptionsError(
+                    "Cannot append compressed data to an uncompressed file."
+                )
+            if not compress and existing_is_zstd:
+                raise exceptions.OptionsError(
+                    "Cannot append uncompressed data to a compressed file."
+                )
+        if compress:
+            raw_file = new_log_file.open(mode)
+            cctx = zstd.ZstdCompressor()
+            f = cast(BinaryIO, cctx.stream_writer(raw_file))
+        else:
+            f = new_log_file.open(mode)
         self.stream = io.FilteredFlowWriter(f, self.filt)
         self.current_path = path
+        self.compress = compress
 
     def save_flow(self, flow: flow.Flow) -> None:
         """

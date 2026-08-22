@@ -25,7 +25,12 @@ class ReadFile:
         self._read_task: asyncio.Task | None = None
 
     def load(self, loader):
-        loader.add_option("rfile", Optional[str], None, "Read flows from file.")
+        loader.add_option(
+            "rfile",
+            Optional[str],
+            None,
+            "Read flows from file. Zstandard-compressed files are detected automatically.",
+        )
         loader.add_option(
             "readfile_filter", Optional[str], None, "Read only matching flows."
         )

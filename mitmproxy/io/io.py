@@ -7,6 +7,8 @@ from typing import BinaryIO
 from typing import cast
 from typing import Union
 
+import zstandard as zstd
+
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import flowfilter
@@ -29,6 +31,11 @@ class FlowReader:
 
     def __init__(self, fo: BinaryIO):
         self.fo = fo
+        header = self.peek(4)
+        if header[:4] == b"\x28\xb5\x2f\xfd":
+            dctx = zstd.ZstdDecompressor()
+            reader = dctx.stream_reader(fo, read_across_frames=True, closefd=False)
+            self.fo = BufferedReader(reader)
 
     def peek(self, n: int) -> bytes:
         try:
@@ -44,7 +51,12 @@ class FlowReader:
         """
         Yields Flow objects from the dump.
         """
+        try:
+            yield from self._stream_inner()
+        except zstd.ZstdError as e:
+            raise exceptions.FlowReadException(f"Invalid data format: {e}") from e
 
+    def _stream_inner(self) -> Iterable[flow.Flow]:
         if self.peek(4).startswith(
             b"\xef\xbb\xbf{"
         ):  # skip BOM, usually added by Fiddler

@@ -2,6 +2,7 @@ import io
 from pathlib import Path
 
 import pytest
+import zstandard as zstd
 from hypothesis import example
 from hypothesis import given
 from hypothesis.strategies import binary
@@ -9,7 +10,10 @@ from hypothesis.strategies import binary
 from mitmproxy import exceptions
 from mitmproxy import version
 from mitmproxy.io import FlowReader
+from mitmproxy.io import FlowWriter
+from mitmproxy.io import read_flows_from_paths
 from mitmproxy.io import tnetstring
+from mitmproxy.test import tflow
 
 here = Path(__file__).parent.parent / "data"
 
@@ -58,3 +62,101 @@ class TestFlowReader:
         ):
             for _ in FlowReader(io.BytesIO(b"14:7:version;1:0#}")).stream():
                 pass
+
+
+def _write_flow_to_file(path, compressed=False):
+    """Helper to write a test flow to a file, optionally compressed with zstd."""
+    f = tflow.tflow(resp=True)
+    if compressed:
+        cctx = zstd.ZstdCompressor()
+        with open(str(path), "wb") as raw:
+            with cctx.stream_writer(raw) as writer:
+                FlowWriter(writer).add(f)
+    else:
+        with open(str(path), "wb") as fo:
+            FlowWriter(fo).add(f)
+    return f
+
+
+class TestOpenFlowFile:
+    def test_uncompressed(self, tmp_path):
+        p = tmp_path / "flows"
+        _write_flow_to_file(p)
+        with open(str(p), "rb") as f:
+            flows = list(FlowReader(f).stream())
+        assert len(flows) == 1
+        assert flows[0].response
+
+    def test_zstd(self, tmp_path):
+        p = tmp_path / "flows.bin"
+        _write_flow_to_file(p, compressed=True)
+        with open(str(p), "rb") as f:
+            flows = list(FlowReader(f).stream())
+        assert len(flows) == 1
+        assert flows[0].response
+
+    def test_concatenated_zstd(self, tmp_path):
+        p = tmp_path / "flows.bin"
+        _write_flow_to_file(p, compressed=True)
+        # Append a second zstd frame
+        cctx = zstd.ZstdCompressor()
+        f2 = tflow.tflow(resp=True)
+        with open(str(p), "ab") as raw:
+            with cctx.stream_writer(raw) as writer:
+                FlowWriter(writer).add(f2)
+        with open(str(p), "rb") as f:
+            flows = list(FlowReader(f).stream())
+        assert len(flows) == 2
+
+
+class TestReadFlowsFromPathsCompressed:
+    def test_zstd(self, tmp_path):
+        p = tmp_path / "flows.zst"
+        _write_flow_to_file(p, compressed=True)
+        flows = read_flows_from_paths([str(p)])
+        assert len(flows) == 1
+
+
+class TestCorruptCompressedFiles:
+    def test_corrupt_zstd(self, tmp_path):
+        # Valid zstd magic but corrupt frame data
+        p = tmp_path / "corrupt.bin"
+        p.write_bytes(b"\x28\xb5\x2f\xfd" + b"\xff" * 20)
+        with pytest.raises(exceptions.FlowReadException):
+            with open(str(p), "rb") as f:
+                list(FlowReader(f).stream())
+
+    def test_corrupt_zstd_via_read_flows_from_paths(self, tmp_path):
+        p = tmp_path / "corrupt.bin"
+        p.write_bytes(b"\x28\xb5\x2f\xfd" + b"\xff" * 20)
+        with pytest.raises(exceptions.FlowReadException):
+            read_flows_from_paths([str(p)])
+
+    def test_short_file(self):
+        """A file shorter than 4 bytes is not misdetected as zstd and raises FlowReadException."""
+        with pytest.raises(
+            exceptions.FlowReadException, match="^Invalid data format\\.$"
+        ):
+            list(FlowReader(io.BytesIO(b"\x28\xb5")).stream())
+
+    def test_truncated_zstd(self, tmp_path):
+        """Truncated zstd yields partial data insufficient for tnetstring, so 0 flows (no error)."""
+        p = tmp_path / "truncated.bin"
+        _write_flow_to_file(p, compressed=True)
+        full_data = p.read_bytes()
+        p.write_bytes(full_data[: len(full_data) // 2])
+        with open(str(p), "rb") as f:
+            flows = list(FlowReader(f).stream())
+        assert flows == []
+
+    def test_corruption_after_valid_flow(self, tmp_path):
+        """A valid compressed flow followed by corruption raises FlowReadException."""
+
+        p = tmp_path / "partial_corrupt.bin"
+        _write_flow_to_file(p, compressed=True)
+        # Append garbage after the valid frame
+        with open(str(p), "ab") as f:
+            f.write(b"\xff" * 20)
+        with pytest.raises(exceptions.FlowReadException):
+            with open(str(p), "rb") as f:
+                list(FlowReader(f).stream())
