@@ -133,6 +133,14 @@ class Http3Connection(HttpConnection):
                 # Http2Connection also ignores HttpEvents that violate the current stream state
                 yield commands.Log(f"Received {event!r} unexpectedly: {e}")
 
+            except (ValueError, RuntimeError) as e:
+                yield commands.Log(f"Failed to encode HTTP/3 data for {event!r}: {e}")
+                self.h3_conn.close_stream(
+                    event.stream_id,
+                    H3ErrorCode.H3_INTERNAL_ERROR.value,
+                )
+                yield from self.h3_conn.transmit()
+
             else:
                 # transmit buffered data
                 yield from self.h3_conn.transmit()
