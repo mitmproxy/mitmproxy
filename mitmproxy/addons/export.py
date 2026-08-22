@@ -1,3 +1,4 @@
+import json
 import logging
 import shlex
 from collections.abc import Callable
@@ -118,6 +119,65 @@ def httpie_command(f: flow.Flow) -> str:
     return cmd
 
 
+def python_requests_command(f: flow.Flow) -> str:
+    # Copy as Python Requests
+    request = cleanup_request(f)
+    request = pop_headers(request)
+
+    def escape_quotes(s: str) -> str:
+        return s.replace('"', '\\"')
+
+    code = "import requests\n\n"
+
+    code += f'url = "{request.pretty_url}"\n'
+
+    # parse cookie
+    code += "cookies = {\n"
+    for k, v in request.cookies.items():
+        code += f'    "{k}": "{escape_quotes(v)}",\n'
+    code += "}\n"
+
+    # parse header
+    request.headers.pop("cookie", None)
+    code += "headers = {\n"
+    for k, v in request.headers.items():
+        code += f'    "{k}": "{escape_quotes(v)}",\n'
+    code += "}\n"
+
+    is_json = False
+    if request.content:
+        try:
+            request.content.decode("utf-8")
+        except UnicodeDecodeError:
+            # binary data will be represented as hex string
+            # format for multipart form data
+            body_str = (
+                '"""' + repr(request.content)[2:-1].replace("\\r\\n", "\n") + '"""'
+            )
+        else:
+            try:
+                # json data
+                body = json.loads(request.content)
+                body_str = repr(body)
+                is_json = True
+            except json.JSONDecodeError:
+                # Fall back to plain string representation
+                body_str = f'"{escape_quotes(repr(request.content)[2:-1])}"'
+
+        code += f"body = {body_str}\n"
+    else:
+        code += "body = None\n"
+
+    param = "json=body" if is_json else "data=body"
+    code += (
+        f'res = requests.request(method="{escape_quotes(request.method)}", '
+        f"url=url, headers=headers, cookies=cookies, {param})\n"
+    )
+    code += "print(res.text)\n"
+
+    return code
+
+
 def raw_request(f: flow.Flow) -> bytes:
     request = cleanup_request(f)
     if request.raw_content is None:
@@ -159,6 +219,7 @@ def raw(f: flow.Flow, separator=b"\r\n\r\n") -> bytes:
 formats: dict[str, Callable[[flow.Flow], str | bytes]] = dict(
     curl=curl_command,
     httpie=httpie_command,
+    python_requests=python_requests_command,
     raw=raw,
     raw_request=raw_request,
     raw_response=raw_response,
