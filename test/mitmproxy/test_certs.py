@@ -473,9 +473,9 @@ class TestCert:
         # Valid punycode
         sans = certs._fix_legacy_sans(["\U0001f4a9.example.com"])
         assert sans[0].value == "xn--ls8h.example.com"
-        # Lone surrogate fallback
+        # Lone surrogate fallback to placeholder (cryptography validates A-label)
         sans = certs._fix_legacy_sans(["test\udcff"])
-        assert sans[0].value == "test\udcff"
+        assert sans[0].value == "invalid.invalid"
 
     def test_multi_valued_rdns(self, tdata):
         subject = x509.Name(

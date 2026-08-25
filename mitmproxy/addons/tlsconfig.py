@@ -658,8 +658,11 @@ def _ip_or_dns_name(val: str) -> x509.GeneralName:
     except ValueError:
         try:
             return x509.DNSName(val.encode("idna").decode())
-        except UnicodeError:
+        except (UnicodeError, ValueError):
             # Fallback for invalid IDNA (e.g., lone surrogate) - see #7829
-            return x509.DNSName(val)
+            try:
+                return x509.DNSName(val)
+            except ValueError:
+                return x509.DNSName("invalid.invalid")
     else:
         return x509.IPAddress(ip)
