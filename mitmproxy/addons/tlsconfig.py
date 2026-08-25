@@ -357,7 +357,11 @@ class TlsConfig:
             try:
                 ip: bytes = ipaddress.ip_address(server.sni).packed
             except ValueError:
-                host_name = server.sni.encode("idna")
+                try:
+                    host_name = server.sni.encode("idna")
+                except UnicodeError:
+                    # Fallback for emoji/invalid IDNA SNI - see #7829
+                    host_name = server.sni.encode("utf-8", "surrogateescape")
                 tls_start.ssl_conn.set_tlsext_host_name(host_name)
                 ok = SSL._lib.X509_VERIFY_PARAM_set1_host(  # type: ignore
                     param, host_name, len(host_name)

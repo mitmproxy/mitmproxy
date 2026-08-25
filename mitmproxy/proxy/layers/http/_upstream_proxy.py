@@ -60,7 +60,11 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
             # RFC 3986 §3.2.2: IPv6 literals in an authority must be bracketed.
             host_bytes = b"[" + host.encode() + b"]"
         else:
-            host_bytes = host.encode("idna")
+            try:
+                host_bytes = host.encode("idna")
+            except UnicodeError:
+                # Fallback for emoji/invalid IDNA hostnames - see #7829
+                host_bytes = host.encode("utf-8", "surrogateescape")
         authority = host_bytes + f":{self.conn.address[1]}".encode()
         headers = http.Headers()
         if self.context.options.http_connect_send_host_header:

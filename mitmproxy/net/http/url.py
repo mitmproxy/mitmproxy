@@ -55,7 +55,11 @@ def parse(url: str | bytes) -> tuple[bytes, bytes, int, bytes]:
     if not parsed.hostname:
         raise ValueError("No hostname given")
     else:
-        host = parsed.hostname.encode("idna")
+        try:
+            host = parsed.hostname.encode("idna")
+        except UnicodeError:
+            # Fallback for emoji/invalid IDNA hostnames (e.g., emoji hostname) - see #7829
+            host = parsed.hostname.encode("utf-8", "surrogateescape")
 
     parsed_b: urllib.parse.ParseResultBytes = parsed.encode("ascii")  # type: ignore
 
@@ -173,7 +177,11 @@ def parse_authority(authority: AnyStr, check: bool) -> tuple[str, int | None]:
             m = _authority_re.match(authority.decode("utf-8"))
             if not m:
                 raise ValueError
-            host = m["host"].encode("utf-8").decode("idna")
+            try:
+                host = m["host"].encode("utf-8").decode("idna")
+            except UnicodeError:
+                # Fallback for emoji/invalid IDNA in authority - see #7829
+                host = m["host"]
         else:
             m = _authority_re.match(authority)
             if not m:
