@@ -90,7 +90,14 @@ def decode_multipart(
                 if match:
                     key = match.group(1)
 
-                    # 1. Check for encode_multipart's double-CRLF padding before boundary
+                    # 1. Check for encode_multipart's double-CRLF padding before boundary.
+                    #    Known ambiguity: a value whose own last two bytes genuinely are
+                    #    \r\n, followed by the one standard structural separator, is
+                    #    byte-for-byte indistinguishable from encode_multipart's padding
+                    #    on a value that doesn't end in \r\n -- so a real trailing \r\n in
+                    #    the value would be stripped here too. Prioritized correctly
+                    #    round-tripping encode_multipart's own output (see
+                    #    test_set_multipart_form) over this rare edge case.
                     if value.endswith(b"\r\n\r\n"):
                         value = value[:-4]
                     # 2. Standard single CRLF boundary delimiter
