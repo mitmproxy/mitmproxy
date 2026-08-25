@@ -51,6 +51,21 @@ def test_parse():
         url.parse("http://lo[calhost")
 
 
+def test_parse_idna_emoji():
+    # Valid emoji host punycodes - hits ascii rebuild path in url.parse
+    s, h, po, pa = url.parse("http://\U0001f4a9.example.com/test")
+    assert s == b"http"
+    assert h == b"xn--ls8h.example.com"
+    assert po == 80
+    assert pa == b"/test"
+    # Same via parse_authority str path
+    h2, p2 = url.parse_authority("\U0001f4a9.example.com:8080", True)
+    assert h2 == "\U0001f4a9.example.com"
+    # Lone surrogate still invalid
+    with pytest.raises(ValueError):
+        url.parse_authority("test\udcff:80", True)
+
+
 def test_ascii_check():
     test_url = "https://xyz.tax-edu.net?flag=selectCourse&lc_id=42825&lc_name=茅莽莽猫氓猫氓".encode()
     scheme, host, port, full_path = url.parse(test_url)
