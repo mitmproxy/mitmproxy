@@ -568,7 +568,10 @@ class TestTlsConfig:
 
 def test_ip_or_dns_name_idna_fallback():
     # Valid IDNA punycodes
-    assert tlsconfig._ip_or_dns_name("\U0001f4a9.example.com").value == "xn--ls8h.example.com"
+    assert (
+        tlsconfig._ip_or_dns_name("\U0001f4a9.example.com").value
+        == "xn--ls8h.example.com"
+    )
     # Lone surrogate cannot be punycoded - fallback to raw
     assert tlsconfig._ip_or_dns_name("test\udcff").value == "test\udcff"
     # IP stays IP
