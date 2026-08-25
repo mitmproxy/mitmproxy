@@ -258,6 +258,7 @@ class XmlHtmlContentview(Contentview):
             data_str = metadata.http_message.get_text(strict=False) or ""
         else:
             data_str = data.decode("utf8", "backslashreplace")
+        data_str = data_str.replace("\r\n", "\n").replace("\r", "\n")
         tokens = tokenize(data_str)
         return format_xml(tokens)
 

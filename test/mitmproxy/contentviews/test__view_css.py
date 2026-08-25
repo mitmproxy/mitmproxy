@@ -42,3 +42,11 @@ def test_simple():
 def test_render_priority():
     assert css.render_priority(b"data", Metadata(content_type="text/css"))
     assert not css.render_priority(b"data", Metadata(content_type="text/plain"))
+
+
+def test_crlf_line_endings():
+    meta = Metadata()
+    crlf = b"#foo {\r\n    color: red\r\n}\r\n"
+    lf = b"#foo {\n    color: red\n}\n"
+    assert css.prettify(crlf, meta) == css.prettify(lf, meta)
+    assert "\r" not in css.prettify(crlf, meta)
