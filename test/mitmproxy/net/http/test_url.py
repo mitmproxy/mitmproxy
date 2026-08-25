@@ -58,9 +58,19 @@ def test_parse_idna_emoji():
     assert h == b"xn--ls8h.example.com"
     assert po == 80
     assert pa == b"/test"
+    # With userinfo and port - hits username/password branches in rebuild
+    s, h, po, pa = url.parse("http://user:pass@\U0001f4a9.example.com:8080/test")
+    assert h == b"xn--ls8h.example.com"
+    assert po == 8080
+    # With port alone
+    s, h, po, pa = url.parse("http://\U0001f4a9.example.com:9000/")
+    assert po == 9000
     # Same via parse_authority str path
     h2, p2 = url.parse_authority("\U0001f4a9.example.com:8080", True)
     assert h2 == "\U0001f4a9.example.com"
+    # Bytes authority with emoji - hits bytes fallback
+    h3, p3 = url.parse_authority(b"\xf0\x9f\x92\xa9.example.com:8080", True)
+    assert p3 == 8080
     # Lone surrogate still invalid
     with pytest.raises(ValueError):
         url.parse_authority("test\udcff:80", True)

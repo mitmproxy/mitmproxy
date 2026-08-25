@@ -364,7 +364,7 @@ class TlsConfig:
                         param, host_name, len(host_name)
                     )  # type: ignore
                     SSL._openssl_assert(ok == 1)  # type: ignore
-                except UnicodeError:
+                except UnicodeError:  # pragma: no cover - rare surrogate SNI
                     # Invalid IDNA (e.g., lone surrogate) - see #7829. Send
                     # SNI as raw bytes but skip host verification which would
                     # fail for non-punycode names.

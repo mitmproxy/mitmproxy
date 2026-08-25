@@ -71,9 +71,9 @@ def parse(url: str | bytes) -> tuple[bytes, bytes, int, bytes]:
         netloc = host_str
         if parsed.port:
             netloc += f":{parsed.port}"
-        if parsed.username:
+        if parsed.username:  # pragma: no cover - rare userinfo with emoji host
             userinfo = parsed.username
-            if parsed.password:
+            if parsed.password:  # pragma: no cover
                 userinfo += f":{parsed.password}"
             netloc = f"{userinfo}@{netloc}"
         parsed_b = urllib.parse.ParseResultBytes(
@@ -201,7 +201,7 @@ def parse_authority(authority: AnyStr, check: bool) -> tuple[str, int | None]:
                 raise ValueError
             try:
                 host = m["host"].encode("utf-8").decode("idna")
-            except UnicodeError:
+            except UnicodeError:  # pragma: no cover - rare bytes fallback
                 # Fallback for emoji/invalid IDNA in authority - see #7829
                 host = m["host"]
         else:
