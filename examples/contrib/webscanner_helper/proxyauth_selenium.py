@@ -46,7 +46,7 @@ class SeleniumAddon:
     """This Addon can be used in combination with web application scanners in order to help them to authenticate
     against a web application.
 
-    Since the authentication is highly dependant on the web application, this add-on includes the abstract method
+    Since the authentication is highly dependent on the web application, this add-on includes the abstract method
     *login*. In order to use the add-on, a class for the web application inheriting from SeleniumAddon needs to be
     created. This class needs to include the concrete selenium actions necessary to authenticate against the web
     application. In addition, an authentication oracle which inherits from AuthorizationOracle should be created.

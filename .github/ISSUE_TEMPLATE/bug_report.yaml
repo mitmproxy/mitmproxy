@@ -1,0 +1,27 @@
+name: Bug Report
+description: File a bug report to help us improve.
+labels: ["kind/triage"]
+body:
+  - type: textarea
+    attributes:
+      label: Problem Description
+      value: |
+        A clear and concise description of what the bug is.
+        
+        #### Steps to reproduce the behavior:
+        1. 
+        2. 
+        3. 
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: System Information
+      description: Paste the output of "mitmproxy --version" here.
+      render: raw
+  - type: checkboxes
+    attributes:
+      label: 'Checklist'
+      options:
+        - label: This bug affects the [latest mitmproxy release](https://github.com/mitmproxy/mitmproxy/releases).
+          required: true

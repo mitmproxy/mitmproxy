@@ -393,6 +393,13 @@ def test_setgetval():
         v.setvalue_toggle([f], "key")
         assert v.getvalue(f, "key", "default") == "false"
 
+        # Test with a different key name to verify the fix for hardcoded "key" bug
+        v.setvalue([f], "custom_setting", "true")
+        v.setvalue_toggle([f], "custom_setting")
+        assert v.getvalue(f, "custom_setting", "default") == "false"
+        v.setvalue_toggle([f], "custom_setting")
+        assert v.getvalue(f, "custom_setting", "default") == "true"
+
 
 def test_order():
     v = view.View()

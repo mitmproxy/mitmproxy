@@ -1,9 +1,6 @@
 ---
 title: "Intercept Traffic"
 weight: 2
-menu:
-  web-tutorial:
-    weight: 2
 ---
 
 # Intercept Traffic

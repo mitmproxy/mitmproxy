@@ -5,11 +5,13 @@ import pytest
 
 from mitmproxy import flowfilter
 from mitmproxy import http
+from mitmproxy.flowfilter import FAnd
+from mitmproxy.flowfilter import TFilter
 from mitmproxy.test import tflow
 
 
 class TestParsing:
-    def _dump(self, x):
+    def _dump(self, x: TFilter):
         c = io.StringIO()
         x.dump(fp=c)
         assert c.getvalue()
@@ -34,6 +36,7 @@ class TestParsing:
         assert flowfilter.parse("~comment .")
         p = flowfilter.parse("~q ~c 10")
         self._dump(p)
+        assert isinstance(p, FAnd)
         assert len(p.lst) == 2
 
     def test_non_ascii(self):
@@ -85,6 +88,60 @@ class TestParsing:
         a = flowfilter.parse("~hq 'header: qvalue'")
         assert isinstance(a, flowfilter.FHeadRequest)
         self._dump(a)
+
+    @pytest.mark.parametrize(
+        ("expr", "expected"),
+        [
+            ("~a", "is asset"),
+            ("~marked", "is marked"),
+            ("~http", "is an HTTP Flow"),
+            ("~websocket", "is a Websocket Flow"),
+            ("~tcp", "is a TCP Flow"),
+            ("~udp", "is a UDP Flow"),
+            ("~dns", "is a DNS Flow"),
+            ("~all", "all flows"),
+            ("~q", "has no response"),
+            ("~s", "has response"),
+            ("~e", "has error"),
+            ("~t content", "content type matches /content/i"),
+            ("~tq content", "req. content type matches /content/i"),
+            ("~ts content", "resp. content type matches /content/i"),
+            ("~h rex", "header matches /rex/im"),
+            ("~hq rex", "req. header matches /rex/im"),
+            ("~hs rex", "resp. header matches /rex/im"),
+            ("~h header", "header matches /header/im"),
+            ("~hq header", "req. header matches /header/im"),
+            ("~hs header", "resp. header matches /header/im"),
+            ("~b rex", "body matches /rex/is"),
+            ("~bq rex", "body request matches /rex/is"),
+            ("~bs rex", "body response matches /rex/is"),
+            ("~b content", "body matches /content/is"),
+            ("~bq content", "body request matches /content/is"),
+            ("~bs content", "body response matches /content/is"),
+            ("~m get", "method matches /get/i"),
+            ("~d example.com", "domain matches /example.com/i"),
+            ("~u foo", "url matches /foo/i"),
+            ("~src 127.0.0.1", "source address matches /127.0.0.1/i"),
+            ("~dst example.com:443", "destination address matches /example.com:443/i"),
+            ("~replay", "flow has been replayed"),
+            ("~replayq", "request has been replayed"),
+            ("~replays", "response has been replayed"),
+            ("~meta foo", "flow metadata matches /foo/im"),
+            ("~marker red", "marker matches /red/i"),
+            ("~comment note", "comment matches /note/im"),
+            ("~c 404", "response code is 404"),
+            (
+                "(~u foobar & ~h voing)",
+                "url matches /foobar/i and header matches /voing/im",
+            ),
+            ("!~h test", "not header matches /test/im"),
+            ("~u foo & ~c 200", "url matches /foo/i and response code is 200"),
+            ("~u foo | ~c 200", "url matches /foo/i or response code is 200"),
+            ("!(~u foo | ~c 200)", "not (url matches /foo/i or response code is 200)"),
+        ],
+    )
+    def test_str_implementations(self, expr: str, expected: str):
+        assert str(flowfilter.parse(expr)) == expected
 
 
 class TestMatchingHTTPFlow:
@@ -827,7 +884,7 @@ def test_pyparsing_bug(extract_tb):
 
 def test_match():
     with pytest.raises(ValueError):
-        flowfilter.match("[foobar", None)
+        flowfilter.match("[foobar", tflow.tflow())
 
-    assert flowfilter.match(None, None)
-    assert not flowfilter.match("foobar", None)
+    assert flowfilter.match(None, tflow.tflow())
+    assert not flowfilter.match("foobar", tflow.tflow())

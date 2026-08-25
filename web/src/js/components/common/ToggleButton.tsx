@@ -1,4 +1,6 @@
 import React from "react";
+import classnames from "classnames";
+import Icon from "./Icon";
 
 type ToggleButtonProps = {
     checked: boolean;
@@ -13,18 +15,13 @@ export default function ToggleButton({
 }: ToggleButtonProps) {
     return (
         <div
-            className={
-                "btn btn-toggle " + (checked ? "btn-primary" : "btn-default")
-            }
+            className={classnames("btn toggle", {
+                "btn-primary toggle-on": checked,
+                "btn-default toggle-off": !checked,
+            })}
             onClick={onToggle}
         >
-            <i
-                className={
-                    "fa fa-fw " +
-                    (checked ? "fa-check-square-o" : "fa-square-o")
-                }
-            />
-            &nbsp;
+            <Icon name={checked ? "confirmSquare" : "square"} />
             {text}
         </div>
     );

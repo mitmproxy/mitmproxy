@@ -75,7 +75,7 @@ def test_unparse():
     assert url.unparse("http", "foo.com", 80, "/bar") == "http://foo.com/bar"
     assert url.unparse("https", "foo.com", 80, "") == "https://foo.com:80"
     assert url.unparse("https", "foo.com", 443, "") == "https://foo.com"
-    assert url.unparse("https", "foo.com", 443, "*") == "https://foo.com"
+    assert url.unparse(b"http", b"foo.com", 99, b"") == b"http://foo.com:99"
 
 
 # We ignore the byte 126: '~' because of an incompatibility in Python 3.6 and 3.7

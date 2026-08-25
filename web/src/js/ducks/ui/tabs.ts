@@ -1,3 +1,4 @@
+import type { PayloadAction } from "@reduxjs/toolkit";
 import { createSlice } from "@reduxjs/toolkit";
 
 export enum Tab {
@@ -11,12 +12,10 @@ const tabsSlice = createSlice({
     name: "ui/tabs",
     initialState: {
         current: Tab.FlowList,
-        isInitial: true,
     },
     reducers: {
-        setCurrent(state, action) {
+        setCurrent(state, action: PayloadAction<Tab>) {
             state.current = action.payload;
-            state.isInitial = false;
         },
     },
 });

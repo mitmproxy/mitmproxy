@@ -1,5 +1,6 @@
 import time
 from abc import abstractmethod
+from typing import assert_never
 
 from aioquic.h3.connection import ErrorCode as H3ErrorCode
 from aioquic.h3.connection import FrameUnexpected as H3FrameUnexpected
@@ -7,6 +8,7 @@ from aioquic.h3.events import DataReceived
 from aioquic.h3.events import HeadersReceived
 from aioquic.h3.events import PushPromiseReceived
 
+from . import ErrorCode
 from . import RequestData
 from . import RequestEndOfMessage
 from . import RequestHeaders
@@ -31,7 +33,6 @@ from ._http_h3 import TrailersReceived
 from mitmproxy import connection
 from mitmproxy import http
 from mitmproxy import version
-from mitmproxy.net.http import status_codes
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import context
 from mitmproxy.proxy import events
@@ -81,31 +82,50 @@ class Http3Connection(HttpConnection):
                 elif isinstance(event, (RequestEndOfMessage, ResponseEndOfMessage)):
                     self.h3_conn.end_stream(event.stream_id)
                 elif isinstance(event, (RequestProtocolError, ResponseProtocolError)):
-                    send_error_message = (
+                    status = event.code.http_status_code()
+                    if (
                         isinstance(event, ResponseProtocolError)
                         and not self.h3_conn.has_sent_headers(event.stream_id)
-                        and event.code != status_codes.NO_RESPONSE
-                    )
-                    if send_error_message:
+                        and status is not None
+                    ):
                         self.h3_conn.send_headers(
                             event.stream_id,
                             [
-                                (b":status", b"%d" % event.code),
+                                (b":status", b"%d" % status),
                                 (b"server", version.MITMPROXY.encode()),
                                 (b"content-type", b"text/html"),
                             ],
                         )
                         self.h3_conn.send_data(
                             event.stream_id,
-                            format_error(event.code, event.message),
+                            format_error(status, event.message),
                             end_stream=True,
                         )
                     else:
-                        if event.code == status_codes.CLIENT_CLOSED_REQUEST:
-                            code = H3ErrorCode.H3_REQUEST_CANCELLED.value
-                        else:
-                            code = H3ErrorCode.H3_INTERNAL_ERROR.value
-                        self.h3_conn.close_stream(event.stream_id, code)
+                        match event.code:
+                            case ErrorCode.CANCEL | ErrorCode.CLIENT_DISCONNECTED:
+                                error_code = H3ErrorCode.H3_REQUEST_CANCELLED
+                            case ErrorCode.KILL:
+                                error_code = H3ErrorCode.H3_INTERNAL_ERROR
+                            case ErrorCode.HTTP_1_1_REQUIRED:
+                                error_code = H3ErrorCode.H3_VERSION_FALLBACK
+                            case ErrorCode.PASSTHROUGH_CLOSE:
+                                # FIXME: This probably shouldn't be a protocol error, but an EOM event.
+                                error_code = H3ErrorCode.H3_REQUEST_CANCELLED
+                            case (
+                                ErrorCode.GENERIC_CLIENT_ERROR
+                                | ErrorCode.GENERIC_SERVER_ERROR
+                                | ErrorCode.REQUEST_TOO_LARGE
+                                | ErrorCode.RESPONSE_TOO_LARGE
+                                | ErrorCode.CONNECT_FAILED
+                                | ErrorCode.DESTINATION_UNKNOWN
+                                | ErrorCode.REQUEST_VALIDATION_FAILED
+                                | ErrorCode.RESPONSE_VALIDATION_FAILED
+                            ):
+                                error_code = H3ErrorCode.H3_INTERNAL_ERROR
+                            case other:  # pragma: no cover
+                                assert_never(other)
+                        self.h3_conn.close_stream(event.stream_id, error_code.value)
                 else:  # pragma: no cover
                     raise AssertionError(f"Unexpected event: {event!r}")
 
@@ -123,15 +143,18 @@ class Http3Connection(HttpConnection):
             for h3_event in h3_events:
                 if isinstance(h3_event, StreamClosed):
                     err_str = error_code_to_str(h3_event.error_code)
-                    if h3_event.error_code == H3ErrorCode.H3_REQUEST_CANCELLED:
-                        code = status_codes.CLIENT_CLOSED_REQUEST
-                    else:
-                        code = self.ReceiveProtocolError.code
+                    match h3_event.error_code:
+                        case H3ErrorCode.H3_REQUEST_CANCELLED:
+                            err_code = ErrorCode.CANCEL
+                        case H3ErrorCode.H3_VERSION_FALLBACK:
+                            err_code = ErrorCode.HTTP_1_1_REQUIRED
+                        case _:
+                            err_code = self.ReceiveProtocolError.code
                     yield ReceiveHttp(
                         self.ReceiveProtocolError(
                             h3_event.stream_id,
                             f"stream closed by client ({err_str})",
-                            code=code,
+                            code=err_code,
                         )
                     )
                 elif isinstance(h3_event, DataReceived):
@@ -178,7 +201,11 @@ class Http3Connection(HttpConnection):
             self.h3_conn.handle_connection_closed(event)
             msg = event.reason_phrase or error_code_to_str(event.error_code)
             for stream_id in self.h3_conn.get_open_stream_ids():
-                yield ReceiveHttp(self.ReceiveProtocolError(stream_id, msg))
+                yield ReceiveHttp(
+                    self.ReceiveProtocolError(
+                        stream_id, msg, self.ReceiveProtocolError.code
+                    )
+                )
 
         else:  # pragma: no cover
             raise AssertionError(f"Unexpected event: {event!r}")

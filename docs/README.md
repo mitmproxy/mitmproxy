@@ -10,5 +10,5 @@ This directory houses the mitmproxy documentation available at <https://docs.mit
 ## Editing docs locally
 
  1. Make sure the mitmproxy Python package is installed and the virtual python environment was activated. See [CONTRIBUTING.md](../CONTRIBUTING.md#development-setup) for details.
- 2. Run `./build.py` to generate additional documentation source files.
- 3. Now you can change your working directory to `./src` and run `hugo server -D`.
+ 2. Run `./docs/build.py` to generate additional documentation source files.
+ 3. Now you can change your working directory to `./docs/src` and run `hugo server -D`.

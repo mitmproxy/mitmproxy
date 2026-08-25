@@ -18,6 +18,7 @@ else:
 pdoc.render.configure(
     template_directory=here / "pdoc-template",
     edit_url_map=edit_url_map,
+    search=False,
 )
 # We can't configure Hugo, but we can configure pdoc.
 pdoc.render_helpers.formatter.cssclass = "chroma pdoc-code"
@@ -26,6 +27,7 @@ modules = [
     "mitmproxy.addonmanager",
     "mitmproxy.certs",
     "mitmproxy.connection",
+    "mitmproxy.contentviews",
     "mitmproxy.coretypes.multidict",
     "mitmproxy.dns",
     "mitmproxy.flow",
@@ -60,9 +62,7 @@ for module in modules:
         title: "{module}"
         url: "{filename}"
 
-        menu:
-            addons:
-                parent: 'Event Hooks & API'
+        menu: api
         ---
 
         {{{{< readfile file="/generated/{filename}" >}}}}
@@ -70,4 +70,14 @@ for module in modules:
         ).encode()
     )
 
-(here / ".." / "src" / "content" / "addons-api.md").touch()
+(here / "../src/content/api/_index.md").write_text(
+    textwrap.dedent(
+        f"""\
+        ---
+        title: "API Reference"
+        ---
+
+        """
+    ),
+    newline="\n",
+)

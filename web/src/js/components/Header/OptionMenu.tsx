@@ -4,9 +4,41 @@ import Button from "../common/Button";
 import DocsLink from "../common/DocsLink";
 import HideInStatic from "../common/HideInStatic";
 import * as modalActions from "../../ducks/ui/modal";
-import { useAppDispatch } from "../../ducks";
+import * as optionsActions from "../../ducks/options";
+import { useAppDispatch, useAppSelector } from "../../ducks";
 
 OptionMenu.title = "Options";
+
+function ThemeSelect() {
+    const dispatch = useAppDispatch();
+    const value = useAppSelector((state) => state.options.web_theme);
+    const choices = useAppSelector(
+        (state) => state.options_meta.web_theme?.choices,
+    ) ?? ["system", "dark", "light"];
+
+    return (
+        <div className="menu-entry">
+            <label>
+                Theme
+                <select
+                    className="theme-select"
+                    value={value}
+                    onChange={(e) =>
+                        dispatch(
+                            optionsActions.update("web_theme", e.target.value),
+                        )
+                    }
+                >
+                    {choices.map((choice) => (
+                        <option key={choice} value={choice}>
+                            {choice}
+                        </option>
+                    ))}
+                </select>
+            </label>
+        </div>
+    );
+}
 
 export default function OptionMenu() {
     const dispatch = useAppDispatch();
@@ -19,10 +51,11 @@ export default function OptionMenu() {
                     <div className="menu-content">
                         <Button
                             title="Open Options"
-                            icon="fa-cogs text-primary"
+                            icon="settings"
+                            iconClassName="text-primary"
                             onClick={() => dispatch(openOptions())}
                         >
-                            Edit Options <sup>alpha</sup>
+                            Edit Options
                         </Button>
                     </div>
                     <div className="menu-legend">Options Editor</div>
@@ -32,13 +65,15 @@ export default function OptionMenu() {
                     <div className="menu-content">
                         <OptionsToggle name="anticache">
                             Strip cache headers{" "}
-                            <DocsLink resource="overview-features/#anticache" />
+                            <DocsLink resource="overview/features/#anticache" />
                         </OptionsToggle>
                         <OptionsToggle name="showhost">
-                            Use host header for display
+                            Use host header for display{" "}
+                            <DocsLink resource="concepts/options/#showhost" />
                         </OptionsToggle>
                         <OptionsToggle name="ssl_insecure">
-                            Don&apos;t verify server certificates
+                            Don&apos;t verify server certificates{" "}
+                            <DocsLink resource="concepts/options/#ssl_insecure" />
                         </OptionsToggle>
                     </div>
                     <div className="menu-legend">Quick Options</div>
@@ -52,6 +87,15 @@ export default function OptionMenu() {
                 </div>
                 <div className="menu-legend">View Options</div>
             </div>
+
+            <HideInStatic>
+                <div className="menu-group">
+                    <div className="menu-content">
+                        <ThemeSelect />
+                    </div>
+                    <div className="menu-legend">Appearance</div>
+                </div>
+            </HideInStatic>
         </div>
     );
 }

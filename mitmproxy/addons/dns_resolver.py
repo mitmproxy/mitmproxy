@@ -30,7 +30,7 @@ class DnsResolver:
             "dns_name_servers",
             Sequence[str],
             [],
-            "Name servers to use for lookups. Default: operating system's name servers",
+            "Name servers to use for lookups in regular DNS mode/wireguard mode. Default: operating system's name servers",
         )
 
     def configure(self, updated):
@@ -115,8 +115,8 @@ class DnsResolver:
 
     async def resolve(
         self,
-        message: dns.Message,
-    ) -> dns.Message:
+        message: dns.DNSMessage,
+    ) -> dns.DNSMessage:
         q = message.question
         assert q
         try:

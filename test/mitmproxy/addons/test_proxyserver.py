@@ -87,6 +87,7 @@ async def test_start_stop(caplog_async):
                 == b"HTTP/1.1 204 No Content\r\n\r\n"
             )
             assert repr(ps) == "Proxyserver(1 active conns)"
+            assert ps.active_connections() == 1
 
             await (
                 ps.setup_servers()
@@ -168,6 +169,8 @@ async def test_inject_fail(caplog) -> None:
     assert "Cannot inject WebSocket messages into non-WebSocket flows." in caplog.text
     ps.inject_tcp(tflow.tflow(), True, b"test")
     assert "Cannot inject TCP messages into non-TCP flows." in caplog.text
+    ps.inject_tcp(tflow.ttcpflow(), True, b"test")
+    assert "Flow is not from a live connection." in caplog.text
 
     ps.inject_udp(tflow.tflow(), True, b"test")
     assert "Cannot inject UDP messages into non-UDP flows." in caplog.text
@@ -178,6 +181,9 @@ async def test_inject_fail(caplog) -> None:
     assert "Flow is not from a live connection." in caplog.text
     ps.inject_websocket(tflow.ttcpflow(), True, b"test")
     assert "Cannot inject WebSocket messages into non-WebSocket flows" in caplog.text
+
+    # str must not reach inject_event (issue #5808).
+    ps.inject_websocket("@focus", True, b"test")  # type: ignore[arg-type]
 
 
 async def test_warn_no_nextlayer(caplog):
@@ -289,16 +295,16 @@ async def test_dns(caplog_async, monkeypatch) -> None:
         s = await mitmproxy_rs.udp.open_udp_connection(*dns_addr)
         req = tdnsreq()
         s.write(req.packed)
-        resp = dns.Message.unpack(await s.read(65535))
+        resp = dns.DNSMessage.unpack(await s.read(65535))
         assert req.id == resp.id and "8.8.8.8" in str(resp)
         assert len(ps.connections) == 1
         s.write(req.packed)
-        resp = dns.Message.unpack(await s.read(65535))
+        resp = dns.DNSMessage.unpack(await s.read(65535))
         assert req.id == resp.id and "8.8.8.8" in str(resp)
         assert len(ps.connections) == 1
         req.id = req.id + 1
         s.write(req.packed)
-        resp = dns.Message.unpack(await s.read(65535))
+        resp = dns.DNSMessage.unpack(await s.read(65535))
         assert req.id == resp.id and "8.8.8.8" in str(resp)
         assert len(ps.connections) == 1
         (dns_conn,) = ps.connections.values()

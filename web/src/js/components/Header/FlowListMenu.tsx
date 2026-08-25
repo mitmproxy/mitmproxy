@@ -1,10 +1,10 @@
 import * as React from "react";
-import FilterInput from "./FilterInput";
+import FilterInput, { FilterIcon } from "./FilterInput";
 import * as flowsActions from "../../ducks/flows";
-import { setFilter, setHighlight } from "../../ducks/flows";
 import Button from "../common/Button";
 import { update as updateOptions } from "../../ducks/options";
 import { useAppDispatch, useAppSelector } from "../../ducks";
+import { FilterName, setFilter, setHighlight } from "../../ducks/ui/filter";
 
 FlowListMenu.title = "Flow List";
 
@@ -37,7 +37,7 @@ function InterceptInput() {
         <FilterInput
             value={value || ""}
             placeholder="Intercept"
-            type="pause"
+            icon={FilterIcon.INTERCEPT}
             color="hsl(208, 56%, 53%)"
             onChange={(val) => dispatch(updateOptions("intercept", val))}
         />
@@ -46,28 +46,30 @@ function InterceptInput() {
 
 function FlowFilterInput() {
     const dispatch = useAppDispatch();
-    const value = useAppSelector((state) => state.flows.filter);
+    const value = useAppSelector((state) => state.ui.filter[FilterName.Search]);
     return (
         <FilterInput
-            value={value || ""}
+            value={value}
             placeholder="Search"
-            type="search"
-            color="black"
-            onChange={(value) => dispatch(setFilter(value))}
+            icon={FilterIcon.SEARCH}
+            color="var(--mitmweb-fg)"
+            onChange={(expr) => dispatch(setFilter(expr))}
         />
     );
 }
 
 function HighlightInput() {
     const dispatch = useAppDispatch();
-    const value = useAppSelector((state) => state.flows.highlight);
+    const value = useAppSelector(
+        (state) => state.ui.filter[FilterName.Highlight],
+    );
     return (
         <FilterInput
-            value={value || ""}
+            value={value}
             placeholder="Highlight"
-            type="tag"
+            icon={FilterIcon.HIGHLIGHT}
             color="hsl(48, 100%, 50%)"
-            onChange={(value) => dispatch(setHighlight(value))}
+            onChange={(expr) => dispatch(setHighlight(expr))}
         />
     );
 }
@@ -78,7 +80,8 @@ export function ResumeAll() {
         <Button
             className="btn-sm"
             title="[a]ccept all"
-            icon="fa-forward text-success"
+            icon="resumeAll"
+            iconClassName="text-success"
             onClick={() => dispatch(flowsActions.resumeAll())}
         >
             Resume All

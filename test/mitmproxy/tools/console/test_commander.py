@@ -13,7 +13,7 @@ def commander_tctx(tmpdir):
     confdir = dir_name
 
     opts = options.Options()
-    opts.set(*[f"confdir={confdir}"])
+    opts.set(*[f"{confdir=!s}"])
     commander_tctx = taddons.context(options=opts)
     ch = command_history.CommandHistory()
     commander_tctx.master.addons.add(ch)

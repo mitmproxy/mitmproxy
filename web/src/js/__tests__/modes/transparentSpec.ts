@@ -1,6 +1,7 @@
-import { ModesState } from "../../ducks/modes";
+import type { ModesState } from "../../ducks/modes";
 import { parseSpec } from "../../modes";
-import { getSpec, parseRaw, TransparentState } from "../../modes/transparent";
+import type { TransparentState } from "../../modes/transparent";
+import { getSpec, parseRaw } from "../../modes/transparent";
 
 describe("getSpec transparent mode", () => {
     it("should return the correct mode config", () => {

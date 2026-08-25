@@ -3,9 +3,7 @@
 title: "mitmproxy.udp"
 url: "api/mitmproxy/udp.html"
 
-menu:
-    addons:
-        parent: 'Event Hooks & API'
+menu: api
 ---
 
 {{< readfile file="/generated/api/mitmproxy/udp.html" >}}

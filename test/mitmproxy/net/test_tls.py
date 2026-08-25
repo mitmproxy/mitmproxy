@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pytest
-from OpenSSL import crypto
+from cryptography.hazmat.primitives.asymmetric import ec
 from OpenSSL import SSL
 
 from mitmproxy import certs
@@ -60,8 +60,8 @@ def test_sslkeylogfile(tdata, monkeypatch):
     server = SSL.Connection(sctx)
     server.set_accept_state()
 
-    server.use_certificate(entry.cert.to_pyopenssl())
-    server.use_privatekey(crypto.PKey.from_cryptography_key(entry.privatekey))
+    server.use_certificate(entry.cert.to_cryptography())
+    server.use_privatekey(entry.privatekey)
 
     client = SSL.Connection(cctx)
     client.set_connect_state()
@@ -102,3 +102,7 @@ def test_is_dtls_record_magic():
     assert not tls.starts_like_dtls_record(bytes.fromhex("160300"))
     assert not tls.starts_like_dtls_record(bytes.fromhex("160304"))
     assert not tls.starts_like_dtls_record(bytes.fromhex("150301"))
+
+
+def test_get_curve():
+    assert isinstance(tls.get_curve("secp256r1"), ec.SECP256R1)

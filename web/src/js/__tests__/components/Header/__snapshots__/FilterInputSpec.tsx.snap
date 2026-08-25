@@ -1,30 +1,46 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`FilterInput Component should render correctly 1`] = `
-<div
-  className="filter-input input-group"
->
-  <span
-    className="input-group-addon"
+<DocumentFragment>
+  <div
+    class="filter-input input-group"
   >
-    <i
-      className="fa fa-fw fa-foo"
-      style={
-        {
-          "color": "red",
-        }
-      }
+    <span
+      class="input-group-addon"
+    >
+      <span
+        style="color: red;"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-search icon icon-search"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2.5"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="m21 21-4.34-4.34"
+          />
+          <circle
+            cx="11"
+            cy="11"
+            r="8"
+          />
+        </svg>
+      </span>
+    </span>
+    <input
+      class="input"
+      placeholder="bar"
+      type="text"
+      value="42"
     />
-  </span>
-  <input
-    className="form-control"
-    onBlur={[Function]}
-    onChange={[Function]}
-    onFocus={[Function]}
-    onKeyDown={[Function]}
-    placeholder="bar"
-    type="text"
-    value="42"
-  />
-</div>
+  </div>
+</DocumentFragment>
 `;

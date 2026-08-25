@@ -1,6 +1,7 @@
-import { ModesState } from "../../ducks/modes";
+import type { ModesState } from "../../ducks/modes";
 import { parseSpec } from "../../modes";
-import { getSpec, parseRaw, UpstreamState } from "../../modes/upstream";
+import type { UpstreamState } from "../../modes/upstream";
+import { getSpec, parseRaw } from "../../modes/upstream";
 
 describe("getSpec upstream mode", () => {
     it("should return the correct mode config", () => {

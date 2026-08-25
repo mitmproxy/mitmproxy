@@ -1,4 +1,5 @@
 import * as React from "react";
+import Icon from "../common/Icon";
 
 interface MissingModeProps {
     title: string;
@@ -10,10 +11,7 @@ export default function MissingMode({ title, description }: MissingModeProps) {
         <div className="missing-mode-container">
             <div className="title-icon-container">
                 <h4 className="mode-title">{title}</h4>
-                <i
-                    className="fa fa-exclamation-triangle"
-                    aria-hidden="true"
-                ></i>
+                <Icon name="warning" />
             </div>
             <p className="mode-description">{description}</p>
         </div>

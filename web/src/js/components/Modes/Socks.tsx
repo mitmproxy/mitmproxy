@@ -1,7 +1,8 @@
 import * as React from "react";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { getSpec, SocksState } from "../../modes/socks";
-import { ServerInfo } from "../../ducks/backendState";
+import type { SocksState } from "../../modes/socks";
+import { getSpec } from "../../modes/socks";
+import type { ServerInfo } from "../../ducks/backendState";
 import {
     setActive,
     setListenHost,
@@ -32,7 +33,7 @@ export default function Socks() {
             <h4 className="mode-title">SOCKS Proxy</h4>
             <p className="mode-description">
                 You manually configure your client application or device to use
-                a SOCKSv5 proxy.
+                a SOCKS5 proxy.
             </p>
 
             {servers}
@@ -60,7 +61,7 @@ function SocksRow({
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
-                <Popover iconClass="fa fa-cog">
+                <Popover icon="settings">
                     <h4>Advanced Configuration</h4>
                     <p>Listen Host</p>
                     <ValueEditor

@@ -1,7 +1,8 @@
 import { ReverseProxyProtocols } from "../../backends/consts";
-import { ModesState } from "../../ducks/modes";
+import type { ModesState } from "../../ducks/modes";
 import { parseSpec } from "../../modes";
-import { getSpec, parseRaw, ReverseState } from "../../modes/reverse";
+import type { ReverseState } from "../../modes/reverse";
+import { getSpec, parseRaw } from "../../modes/reverse";
 
 describe("getSpec reverse mode", () => {
     it("should return the correct mode config", () => {

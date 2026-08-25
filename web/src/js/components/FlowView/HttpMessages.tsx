@@ -10,7 +10,7 @@ import ValidateEditor from "../editors/ValidateEditor";
 import ValueEditor from "../editors/ValueEditor";
 
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { HTTPFlow, HTTPMessage, HTTPResponse } from "../../flow";
+import type { HTTPFlow, HTTPMessage, HTTPResponse } from "../../flow";
 import * as flowActions from "../../ducks/flows";
 import KeyValueListEditor from "../editors/KeyValueListEditor";
 import HttpMessage from "../contentviews/HttpMessage";
@@ -104,9 +104,11 @@ function ResponseLine({ flow }: ResponseLineProps) {
                     &nbsp;
                     <ValueEditor
                         content={flow.response.reason}
-                        onEditDone={(msg) =>
+                        onEditDone={(reason) =>
                             dispatch(
-                                flowActions.update(flow, { response: { msg } }),
+                                flowActions.update(flow, {
+                                    response: { reason },
+                                }),
                             )
                         }
                         selectAllOnClick={true}
@@ -167,16 +169,25 @@ function Trailers({ flow, message }: TrailersProps) {
 const Message = React.memo(function Message({
     flow,
     message,
-}: {
-    flow: HTTPFlow;
-    message: HTTPMessage;
-}) {
-    const part = flow.request === message ? "request" : "response";
-    const FirstLine = flow.request === message ? RequestLine : ResponseLine;
-
+    part,
+}:
+    | {
+          flow: HTTPFlow;
+          message: HTTPMessage;
+          part: "request";
+      }
+    | {
+          flow: HTTPFlow & { response: HTTPResponse };
+          message: HTTPMessage;
+          part: "response";
+      }) {
     return (
         <section className={part}>
-            <FirstLine flow={flow} />
+            {part === "request" ? (
+                <RequestLine flow={flow} />
+            ) : (
+                <ResponseLine flow={flow} />
+            )}
             <Headers flow={flow} message={message} />
             <hr />
             <HttpMessage key={flow.id + part} flow={flow} message={message} />
@@ -186,17 +197,15 @@ const Message = React.memo(function Message({
 });
 
 export function Request() {
-    const flow = useAppSelector(
-        (state) => state.flows.byId[state.flows.selected[0]],
-    ) as HTTPFlow;
-    return <Message flow={flow} message={flow.request} />;
+    const flow = useAppSelector((state) => state.flows.selected[0]) as HTTPFlow;
+    return <Message flow={flow} message={flow.request} part="request" />;
 }
 Request.displayName = "Request";
 
 export function Response() {
     const flow = useAppSelector(
-        (state) => state.flows.byId[state.flows.selected[0]],
+        (state) => state.flows.selected[0],
     ) as HTTPFlow & { response: HTTPResponse };
-    return <Message flow={flow} message={flow.response} />;
+    return <Message flow={flow} message={flow.response} part="response" />;
 }
 Response.displayName = "Response";

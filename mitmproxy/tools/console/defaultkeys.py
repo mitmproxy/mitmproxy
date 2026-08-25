@@ -18,6 +18,12 @@ def map(km: Keymap) -> None:
     km.add("Q", "console.exit", ["global"], "Exit immediately")
     km.add("q", "console.view.pop", ["commonkey", "global"], "Exit the current view")
     km.add("esc", "console.view.pop", ["commonkey", "global"], "Exit the current view")
+    km.add(
+        "H",
+        "set console_quickhelp_visible toggle",
+        ["global"],
+        "Toggle quick help bar visibility",
+    )
     km.add("-", "console.layout.cycle", ["global"], "Cycle to next layout")
     km.add("ctrl right", "console.panes.next", ["global"], "Focus next layout pane")
     km.add("ctrl left", "console.panes.prev", ["global"], "Focus previous layout pane")
@@ -76,7 +82,7 @@ def map(km: Keymap) -> None:
     km.add(
         "x",
         """
-        console.choose.cmd Format export.formats
+        console.choose.cmd "Export as..." export.formats
         console.command export.file {choice} @focus
         """,
         ["flowlist", "flowview"],
@@ -114,7 +120,7 @@ def map(km: Keymap) -> None:
     km.add(
         "o",
         """
-        console.choose.cmd Order view.order.options
+        console.choose.cmd "Order flows by..." view.order.options
         set view_order {choice}
         """,
         ["flowlist"],
@@ -161,7 +167,7 @@ def map(km: Keymap) -> None:
     km.add(
         "e",
         """
-        console.choose.cmd Part console.edit.focus.options
+        console.choose.cmd "Edit..." console.edit.focus.options
         console.edit.focus {choice}
         """,
         ["flowlist", "flowview"],
@@ -179,7 +185,7 @@ def map(km: Keymap) -> None:
     km.add(
         "v",
         """
-        console.choose "View Part" request,response
+        console.choose "View..." request,response
         console.bodyview @focus {choice}
         """,
         ["flowview"],
@@ -189,7 +195,7 @@ def map(km: Keymap) -> None:
     km.add(
         "m",
         """
-        console.choose.cmd Mode console.flowview.mode.options
+        console.choose.cmd "Set contentview..." console.flowview.mode.options
         console.flowview.mode.set {choice}
         """,
         ["flowview"],
@@ -198,7 +204,7 @@ def map(km: Keymap) -> None:
     km.add(
         "z",
         """
-        console.choose "Part" request,response
+        console.choose "Encode/decode..." request,response
         flow.encode.toggle @focus {choice}
         """,
         ["flowview"],

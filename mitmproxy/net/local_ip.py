@@ -33,8 +33,8 @@ def get_local_ip6(reachable: str = "2001:4860:4860::8888") -> str | None:
         s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
         s.connect((reachable, 80))
         return s.getsockname()[0]  # pragma: no cover
-    except OSError:
-        return None  # pragma: no cover
+    except OSError:  # pragma: no cover
+        return None
     finally:
         if s is not None:
             s.close()

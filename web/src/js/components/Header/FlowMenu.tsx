@@ -1,30 +1,39 @@
 import * as React from "react";
 import Button from "../common/Button";
-import { canReplay, MessageUtils } from "../../flow/utils";
+import {
+    canReplay,
+    canResumeOrKill,
+    canRevert,
+    MessageUtils,
+} from "../../flow/utils";
 import HideInStatic from "../common/HideInStatic";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import * as flowActions from "../../ducks/flows";
 import {
-    duplicate as duplicateFlow,
-    kill as killFlow,
-    remove as removeFlow,
-    replay as replayFlow,
-    resume as resumeFlow,
-    revert as revertFlow,
+    duplicate as duplicateFlows,
+    kill as killFlows,
+    remove as removeFlows,
+    replay as replayFlows,
+    resume as resumeFlows,
+    revert as revertFlows,
+    mark as markFlows,
 } from "../../ducks/flows";
 import Dropdown, { MenuItem } from "../common/Dropdown";
 import { copy } from "../../flow/export";
-import { Flow } from "../../flow";
+import type { Flow } from "../../flow";
+
+import type { JSX } from "react";
 
 FlowMenu.title = "Flow";
 
 export default function FlowMenu(): JSX.Element {
     const dispatch = useAppDispatch();
-    const flow = useAppSelector(
-        (state) => state.flows.byId[state.flows.selected[0]],
-    );
 
-    if (!flow) return <div />;
+    const selectedFlows = useAppSelector((state) => state.flows.selected);
+    const flow = selectedFlows[0];
+
+    const canResumeOrKillAny = selectedFlows.some(canResumeOrKill);
+
+    if (selectedFlows.length === 0) return <div />;
     return (
         <div className="flow-menu">
             <HideInStatic>
@@ -32,35 +41,44 @@ export default function FlowMenu(): JSX.Element {
                     <div className="menu-content">
                         <Button
                             title="[r]eplay flow"
-                            icon="fa-repeat text-primary"
-                            onClick={() => dispatch(replayFlow(flow))}
-                            disabled={!canReplay(flow)}
+                            icon="replay"
+                            iconClassName="text-primary"
+                            onClick={() => dispatch(replayFlows(selectedFlows))}
+                            disabled={!selectedFlows.some(canReplay)}
                         >
                             Replay
                         </Button>
                         <Button
                             title="[D]uplicate flow"
-                            icon="fa-copy text-info"
-                            onClick={() => dispatch(duplicateFlow(flow))}
+                            icon="duplicate"
+                            iconClassName="text-info"
+                            onClick={() =>
+                                dispatch(duplicateFlows(selectedFlows))
+                            }
                         >
                             Duplicate
                         </Button>
                         <Button
-                            disabled={!flow || !flow.modified}
+                            disabled={!selectedFlows.some(canRevert)}
                             title="revert changes to flow [V]"
-                            icon="fa-history text-warning"
-                            onClick={() => dispatch(revertFlow(flow))}
+                            icon="revert"
+                            iconClassName="text-warning"
+                            onClick={() => dispatch(revertFlows(selectedFlows))}
                         >
                             Revert
                         </Button>
                         <Button
                             title="[d]elete flow"
-                            icon="fa-trash text-danger"
-                            onClick={() => dispatch(removeFlow(flow))}
+                            icon="delete"
+                            iconClassName="text-danger"
+                            onClick={() => {
+                                dispatch(removeFlows(selectedFlows));
+                            }}
                         >
                             Delete
                         </Button>
-                        <MarkButton flow={flow} />
+
+                        <MarkButton flows={selectedFlows} />
                     </div>
                     <div className="menu-legend">Flow Modification</div>
                 </div>
@@ -78,18 +96,20 @@ export default function FlowMenu(): JSX.Element {
                 <div className="menu-group">
                     <div className="menu-content">
                         <Button
-                            disabled={!flow || !flow.intercepted}
+                            disabled={!canResumeOrKillAny}
                             title="[a]ccept intercepted flow"
-                            icon="fa-play text-success"
-                            onClick={() => dispatch(resumeFlow(flow))}
+                            icon="resume"
+                            iconClassName="text-success"
+                            onClick={() => dispatch(resumeFlows(selectedFlows))}
                         >
                             Resume
                         </Button>
                         <Button
-                            disabled={!flow || !flow.intercepted}
+                            disabled={!canResumeOrKillAny}
                             title="kill intercepted flow [x]"
-                            icon="fa-times text-danger"
-                            onClick={() => dispatch(killFlow(flow))}
+                            icon="abort"
+                            iconClassName="text-danger"
+                            onClick={() => dispatch(killFlows(selectedFlows))}
                         >
                             Abort
                         </Button>
@@ -102,15 +122,19 @@ export default function FlowMenu(): JSX.Element {
 }
 
 // Reference: https://stackoverflow.com/a/63627688/9921431
-const openInNewTab = (url) => {
+const openInNewTab = (url: string) => {
     const newWindow = window.open(url, "_blank", "noopener,noreferrer");
     if (newWindow) newWindow.opener = null;
 };
 
 function DownloadButton({ flow }: { flow: Flow }) {
+    const hasSingleFlowSelected = useAppSelector(
+        (state) => state.flows.selected.length === 1,
+    );
+
     if (flow.type !== "http")
         return (
-            <Button icon="fa-download" onClick={() => 0} disabled>
+            <Button icon="download" onClick={() => 0} disabled>
                 Download
             </Button>
         );
@@ -118,10 +142,11 @@ function DownloadButton({ flow }: { flow: Flow }) {
     if (flow.request.contentLength && !flow.response?.contentLength) {
         return (
             <Button
-                icon="fa-download"
+                icon="download"
                 onClick={() =>
                     openInNewTab(MessageUtils.getContentURL(flow, flow.request))
                 }
+                disabled={!hasSingleFlowSelected}
             >
                 Download
             </Button>
@@ -132,10 +157,11 @@ function DownloadButton({ flow }: { flow: Flow }) {
         if (!flow.request.contentLength && flow.response.contentLength) {
             return (
                 <Button
-                    icon="fa-download"
+                    icon="download"
                     onClick={() =>
                         openInNewTab(MessageUtils.getContentURL(flow, response))
                     }
+                    disabled={!hasSingleFlowSelected}
                 >
                     Download
                 </Button>
@@ -145,7 +171,11 @@ function DownloadButton({ flow }: { flow: Flow }) {
             return (
                 <Dropdown
                     text={
-                        <Button icon="fa-download" onClick={() => 1}>
+                        <Button
+                            icon="download"
+                            onClick={() => 1}
+                            disabled={!hasSingleFlowSelected}
+                        >
                             Download▾
                         </Button>
                     }
@@ -178,15 +208,18 @@ function DownloadButton({ flow }: { flow: Flow }) {
 }
 
 function ExportButton({ flow }: { flow: Flow }) {
+    const hasSingleFlowSelected = useAppSelector(
+        (state) => state.flows.selected.length === 1,
+    );
     return (
         <Dropdown
             className=""
             text={
                 <Button
                     title="Export flow."
-                    icon="fa-clone"
+                    icon="export"
                     onClick={() => 1}
-                    disabled={flow.type !== "http"}
+                    disabled={flow.type !== "http" || !hasSingleFlowSelected}
                 >
                     Export▾
                 </Button>
@@ -220,7 +253,7 @@ const markers = {
     ":brown_circle:": "🟤",
 };
 
-function MarkButton({ flow }: { flow: Flow }) {
+function MarkButton({ flows }: { flows: Flow[] }) {
     const dispatch = useAppDispatch();
     return (
         <Dropdown
@@ -228,7 +261,8 @@ function MarkButton({ flow }: { flow: Flow }) {
             text={
                 <Button
                     title="mark flow"
-                    icon="fa-paint-brush text-success"
+                    icon="mark"
+                    iconClassName="text-success"
                     onClick={() => 1}
                 >
                     Mark▾
@@ -236,19 +270,13 @@ function MarkButton({ flow }: { flow: Flow }) {
             }
             options={{ placement: "bottom-start" }}
         >
-            <MenuItem
-                onClick={() =>
-                    dispatch(flowActions.update(flow, { marked: "" }))
-                }
-            >
+            <MenuItem onClick={() => dispatch(markFlows(flows, ""))}>
                 ⚪ (no marker)
             </MenuItem>
             {Object.entries(markers).map(([name, sym]) => (
                 <MenuItem
                     key={name}
-                    onClick={() =>
-                        dispatch(flowActions.update(flow, { marked: name }))
-                    }
+                    onClick={() => dispatch(markFlows(flows, name))}
                 >
                     {sym} {name.replace(/[:_]/g, " ")}
                 </MenuItem>

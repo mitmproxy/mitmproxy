@@ -1,13 +1,14 @@
-import { Flow, MessagesMeta } from "../../flow";
+import type { Flow, MessagesMeta } from "../../flow";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import * as React from "react";
-import { useCallback, useMemo, useState } from "react";
-import { ContentViewData, useContent } from "../contentviews/useContent";
-import { MessageUtils } from "../../flow/utils";
+import { useCallback, useState } from "react";
+import type { ContentViewData } from "../contentviews/useContentView";
+import { useContentView } from "../contentviews/useContentView";
 import ViewSelector from "../contentviews/ViewSelector";
 import { setContentViewFor } from "../../ducks/ui/flow";
 import { formatTimeStamp } from "../../utils";
-import LineRenderer from "../contentviews/LineRenderer";
+import ContentRenderer from "../contentviews/ContentRenderer";
+import Icon from "../common/Icon";
 
 type MessagesPropTypes = {
     flow: Flow;
@@ -27,26 +28,14 @@ export default function Messages({ flow, messages_meta }: MessagesPropTypes) {
         () => setMaxLines(Math.max(1024, maxLines * 2)),
         [maxLines],
     );
-    const content = useContent(
-        MessageUtils.getContentURL(flow, "messages", contentView, maxLines + 1),
-        flow.id + messages_meta.count,
-    );
     const messages =
-        useMemo<ContentViewData[] | undefined>(() => {
-            if (content) {
-                try {
-                    return JSON.parse(content);
-                } catch (e) {
-                    const err: ContentViewData[] = [
-                        {
-                            description: "Network Error",
-                            lines: [[["error", `${content}`]]],
-                        },
-                    ];
-                    return err;
-                }
-            }
-        }, [content]) || [];
+        useContentView(
+            flow,
+            "messages",
+            contentView,
+            maxLines + 1,
+            flow.id + messages_meta.count,
+        ) ?? [];
 
     let remainingLines = maxLines;
 
@@ -67,25 +56,26 @@ export default function Messages({ flow, messages_meta }: MessagesPropTypes) {
                 />
             </div>
             {messages.map((d: ContentViewData, i) => {
-                const className = `fa fa-fw fa-arrow-${
-                    d.from_client ? "right text-primary" : "left text-danger"
-                }`;
+                const iconName = d.from_client ? "arrowRight" : "arrowLeft";
+                const iconClassName = d.from_client
+                    ? "text-primary"
+                    : "text-danger";
                 const renderer = (
                     <div key={i}>
                         <small>
-                            <i className={className} />
-                            <span className="pull-right">
+                            <Icon name={iconName} className={iconClassName} />
+                            <span className="float-right">
                                 {d.timestamp && formatTimeStamp(d.timestamp)}
                             </span>
                         </small>
-                        <LineRenderer
-                            lines={d.lines}
+                        <ContentRenderer
+                            content={d.text}
                             maxLines={remainingLines}
                             showMore={showMore}
                         />
                     </div>
                 );
-                remainingLines -= d.lines.length;
+                remainingLines -= d.text.split("\n").length;
                 return renderer;
             })}
         </div>

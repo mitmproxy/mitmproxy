@@ -90,10 +90,10 @@ def format_address(address: tuple | None) -> str:
         if host.is_unspecified:
             return f"*:{address[1]}"
         if isinstance(host, ipaddress.IPv4Address):
-            return f"{str(host)}:{address[1]}"
+            return f"{host}:{address[1]}"
         # If IPv6 is mapped to IPv4
         elif host.ipv4_mapped:
-            return f"{str(host.ipv4_mapped)}:{address[1]}"
-        return f"[{str(host)}]:{address[1]}"
+            return f"{host.ipv4_mapped}:{address[1]}"
+        return f"[{host}]:{address[1]}"
     except ValueError:
         return f"{address[0]}:{address[1]}"

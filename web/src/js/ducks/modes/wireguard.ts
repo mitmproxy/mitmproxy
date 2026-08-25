@@ -1,8 +1,6 @@
-import { parseRaw, WireguardState } from "../../modes/wireguard";
-import {
-    RECEIVE as RECEIVE_STATE,
-    UPDATE as UPDATE_STATE,
-} from "../backendState";
+import type { WireguardState } from "../../modes/wireguard";
+import { parseRaw } from "../../modes/wireguard";
+import { STATE_RECEIVE, STATE_UPDATE } from "../backendState";
 import { addSetter, createModeUpdateThunk, updateState } from "./utils";
 import { createSlice } from "@reduxjs/toolkit";
 
@@ -35,8 +33,8 @@ export const wireguardSlice = createSlice({
         addSetter(builder, "listen_host", setListenHost);
         addSetter(builder, "listen_port", setListenPort);
         addSetter(builder, "file_path", setFilePath);
-        builder.addCase(RECEIVE_STATE, updateState("wireguard", parseRaw));
-        builder.addCase(UPDATE_STATE, updateState("wireguard", parseRaw));
+        builder.addCase(STATE_RECEIVE, updateState("wireguard", parseRaw));
+        builder.addCase(STATE_UPDATE, updateState("wireguard", parseRaw));
     },
 });
 

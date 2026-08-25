@@ -14,9 +14,57 @@ exports[`HttpMessage 1`] = `
       <button
         class="btn-xs btn btn-default"
       >
-        <i
-          class="fa fa-edit"
-        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-clipboard icon icon-clipboard"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <rect
+            height="4"
+            rx="1"
+            ry="1"
+            width="8"
+            x="8"
+            y="2"
+          />
+          <path
+            d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
+          />
+        </svg>
+         Copy
+      </button>
+       
+      <button
+        class="btn-xs btn btn-default"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-pencil icon icon-edit"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"
+          />
+          <path
+            d="m15 5 4 4"
+          />
+        </svg>
          Edit
       </button>
        
@@ -25,10 +73,30 @@ exports[`HttpMessage 1`] = `
         href="#"
         title="Upload a file to replace the content."
       >
-        <i
-          class="fa fa-fw fa-upload"
-        />
-        Replace
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-upload icon icon-upload"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M12 3v12"
+          />
+          <path
+            d="m17 8-5-5-5 5"
+          />
+          <path
+            d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+          />
+        </svg>
+         Replace
         <input
           class="hidden"
           type="file"
@@ -40,9 +108,29 @@ exports[`HttpMessage 1`] = `
         href="#"
       >
         <span>
-          <i
-            class="fa fa-fw fa-files-o"
-          />
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-files icon icon-files"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"
+            />
+            <path
+              d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z"
+            />
+            <path
+              d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1"
+            />
+          </svg>
            
           <b>
             View:
@@ -56,39 +144,22 @@ exports[`HttpMessage 1`] = `
     </div>
     <pre>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
+      </div>
+      <div>
+         
       </div>
     </pre>
   </div>
@@ -109,24 +180,141 @@ exports[`HttpMessage 2`] = `
       <button
         class="btn-xs btn btn-default"
       >
-        <i
-          class="fa fa-check text-success"
-        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-check icon icon-confirm text-success"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M20 6 9 17l-5-5"
+          />
+        </svg>
          Done
       </button>
        
       <button
         class="btn-xs btn btn-default"
       >
-        <i
-          class="fa fa-times text-danger"
-        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-x icon icon-close text-danger"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M18 6 6 18"
+          />
+          <path
+            d="m6 6 12 12"
+          />
+        </svg>
          Cancel
       </button>
     </div>
     <div
       class="codeeditor"
-    />
+    >
+      <div
+        class="cm-theme-light"
+      >
+        <div
+          class="cm-editor ͼ1 ͼ2 ͼ4 ͼ17 ͼ15"
+        >
+          <div
+            aria-live="polite"
+            class="cm-announced"
+          />
+          <div
+            class="cm-scroller"
+            tabindex="-1"
+          >
+            <div
+              aria-hidden="true"
+              class="cm-gutters"
+              style="min-height: 14px; position: sticky;"
+            >
+              <div
+                class="cm-gutter cm-lineNumbers"
+              >
+                <div
+                  class="cm-gutterElement"
+                  style="height: 0px; visibility: hidden; pointer-events: none;"
+                >
+                  9
+                </div>
+                <div
+                  class="cm-gutterElement cm-activeLineGutter"
+                  style="height: 14px;"
+                >
+                  1
+                </div>
+              </div>
+              <div
+                class="cm-gutter cm-foldGutter"
+              >
+                <div
+                  class="cm-gutterElement"
+                  style="height: 0px; visibility: hidden; pointer-events: none;"
+                >
+                  <span
+                    title="Unfold line"
+                  >
+                    ›
+                  </span>
+                </div>
+                <div
+                  class="cm-gutterElement cm-activeLineGutter"
+                  style="height: 14px;"
+                />
+              </div>
+            </div>
+            <div
+              aria-multiline="true"
+              autocapitalize="off"
+              autocorrect="off"
+              class="cm-content"
+              contenteditable="true"
+              role="textbox"
+              spellcheck="false"
+              style="tab-size: 4;"
+              translate="no"
+              writingsuggestions="false"
+            >
+              <div
+                class="cm-activeLine cm-line"
+              >
+                <br />
+              </div>
+            </div>
+            <div
+              aria-hidden="true"
+              class="cm-layer cm-layer-above cm-cursorLayer"
+              style="z-index: 150; animation-duration: 1200ms;"
+            />
+            <div
+              aria-hidden="true"
+              class="cm-layer cm-selectionLayer"
+              style="z-index: -2;"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </DocumentFragment>
 `;
@@ -145,9 +333,57 @@ exports[`HttpMessage 3`] = `
       <button
         class="btn-xs btn btn-default"
       >
-        <i
-          class="fa fa-edit"
-        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-clipboard icon icon-clipboard"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <rect
+            height="4"
+            rx="1"
+            ry="1"
+            width="8"
+            x="8"
+            y="2"
+          />
+          <path
+            d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
+          />
+        </svg>
+         Copy
+      </button>
+       
+      <button
+        class="btn-xs btn btn-default"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-pencil icon icon-edit"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"
+          />
+          <path
+            d="m15 5 4 4"
+          />
+        </svg>
          Edit
       </button>
        
@@ -156,10 +392,30 @@ exports[`HttpMessage 3`] = `
         href="#"
         title="Upload a file to replace the content."
       >
-        <i
-          class="fa fa-fw fa-upload"
-        />
-        Replace
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-upload icon icon-upload"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M12 3v12"
+          />
+          <path
+            d="m17 8-5-5-5 5"
+          />
+          <path
+            d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+          />
+        </svg>
+         Replace
         <input
           class="hidden"
           type="file"
@@ -171,9 +427,29 @@ exports[`HttpMessage 3`] = `
         href="#"
       >
         <span>
-          <i
-            class="fa fa-fw fa-files-o"
-          />
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-files icon icon-files"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"
+            />
+            <path
+              d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z"
+            />
+            <path
+              d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1"
+            />
+          </svg>
            
           <b>
             View:
@@ -187,39 +463,188 @@ exports[`HttpMessage 3`] = `
     </div>
     <pre>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
+        rawdata
+      </div>
+      <div>
+         
+      </div>
+    </pre>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`HttpMessage 4`] = `
+<DocumentFragment>
+  <div
+    class="contentview"
+  >
+    <div
+      class="controls"
+    >
+      <h5>
+        Raw
+      </h5>
+      <button
+        class="btn-xs btn btn-default"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-clipboard icon icon-clipboard"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          rawdata
+          <rect
+            height="4"
+            rx="1"
+            ry="1"
+            width="8"
+            x="8"
+            y="2"
+          />
+          <path
+            d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
+          />
+        </svg>
+         Copy
+      </button>
+       
+      <button
+        class="btn-xs btn btn-default"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-pencil icon icon-edit"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"
+          />
+          <path
+            d="m15 5 4 4"
+          />
+        </svg>
+         Edit
+      </button>
+       
+      <a
+        class="btn btn-default btn-xs"
+        href="#"
+        title="Upload a file to replace the content."
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-upload icon icon-upload"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M12 3v12"
+          />
+          <path
+            d="m17 8-5-5-5 5"
+          />
+          <path
+            d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+          />
+        </svg>
+         Replace
+        <input
+          class="hidden"
+          type="file"
+        />
+      </a>
+       
+      <a
+        class="btn btn-default btn-xs"
+        href="#"
+      >
+        <span>
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-files icon icon-files"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"
+            />
+            <path
+              d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z"
+            />
+            <path
+              d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1"
+            />
+          </svg>
+           
+          <b>
+            View:
+          </b>
+           raw 
+          <span
+            class="caret"
+          />
         </span>
+      </a>
+    </div>
+    <pre>
+      <div>
+        rawdata
+      </div>
+      <div>
+        rawdata
+      </div>
+      <div>
+        rawdata
+      </div>
+      <div>
+        rawdata
+      </div>
+      <div>
+        rawdata
+      </div>
+      <div>
+         
       </div>
     </pre>
   </div>

@@ -394,7 +394,7 @@ class View(collections.abc.Sequence):
         """
         updated = []
         for f in flows:
-            current = self.settings[f].get("key", "false")
+            current = self.settings[f].get(key, "false")
             self.settings[f][key] = "false" if current == "true" else "true"
             updated.append(f)
         ctx.master.addons.trigger(hooks.UpdateHook(updated))

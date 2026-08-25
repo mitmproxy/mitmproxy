@@ -12,9 +12,31 @@ exports[`FlowView 1`] = `
         class="close-button"
         data-testid="close-button-id"
       >
-        <i
-          class="fa fa-times-circle"
-        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-x icon icon-closeCircle"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="m15 9-6 6"
+          />
+          <path
+            d="m9 9 6 6"
+          />
+        </svg>
       </button>
       <a
         class="active"
@@ -129,9 +151,37 @@ exports[`FlowView 1`] = `
         </div>
         <div
           aria-label="Add"
-          class="kv-add-row fa fa-plus-square-o"
+          class="kv-add-row"
           role="button"
-        />
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-square-plus icon icon-addSquare"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect
+              height="18"
+              rx="2"
+              width="18"
+              x="3"
+              y="3"
+            />
+            <path
+              d="M8 12h8"
+            />
+            <path
+              d="M12 8v8"
+            />
+          </svg>
+        </div>
       </div>
       <hr />
       <div
@@ -143,12 +193,30 @@ exports[`FlowView 1`] = `
           <h5>
             Loading...
           </h5>
+           
           <button
             class="btn-xs btn btn-default"
           >
-            <i
-              class="fa fa-edit"
-            />
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-pencil icon icon-edit"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"
+              />
+              <path
+                d="m15 5 4 4"
+              />
+            </svg>
              Edit
           </button>
            
@@ -157,10 +225,30 @@ exports[`FlowView 1`] = `
             href="#"
             title="Upload a file to replace the content."
           >
-            <i
-              class="fa fa-fw fa-upload"
-            />
-            Replace
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-upload icon icon-upload"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 3v12"
+              />
+              <path
+                d="m17 8-5-5-5 5"
+              />
+              <path
+                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+              />
+            </svg>
+             Replace
             <input
               class="hidden"
               type="file"
@@ -172,9 +260,29 @@ exports[`FlowView 1`] = `
             href="#"
           >
             <span>
-              <i
-                class="fa fa-fw fa-files-o"
-              />
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-files icon icon-files"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"
+                />
+                <path
+                  d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z"
+                />
+                <path
+                  d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1"
+                />
+              </svg>
                
               <b>
                 View:
@@ -204,9 +312,31 @@ exports[`FlowView 2`] = `
         class="close-button"
         data-testid="close-button-id"
       >
-        <i
-          class="fa fa-times-circle"
-        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-x icon icon-closeCircle"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="m15 9-6 6"
+          />
+          <path
+            d="m9 9 6 6"
+          />
+        </svg>
       </button>
       <a
         class=""
@@ -319,9 +449,37 @@ exports[`FlowView 2`] = `
         </div>
         <div
           aria-label="Add"
-          class="kv-add-row fa fa-plus-square-o"
+          class="kv-add-row"
           role="button"
-        />
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-square-plus icon icon-addSquare"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect
+              height="18"
+              rx="2"
+              width="18"
+              x="3"
+              y="3"
+            />
+            <path
+              d="M8 12h8"
+            />
+            <path
+              d="M12 8v8"
+            />
+          </svg>
+        </div>
       </div>
       <hr />
       <div
@@ -333,12 +491,30 @@ exports[`FlowView 2`] = `
           <h5>
             Loading...
           </h5>
+           
           <button
             class="btn-xs btn btn-default"
           >
-            <i
-              class="fa fa-edit"
-            />
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-pencil icon icon-edit"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"
+              />
+              <path
+                d="m15 5 4 4"
+              />
+            </svg>
              Edit
           </button>
            
@@ -347,10 +523,30 @@ exports[`FlowView 2`] = `
             href="#"
             title="Upload a file to replace the content."
           >
-            <i
-              class="fa fa-fw fa-upload"
-            />
-            Replace
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-upload icon icon-upload"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 3v12"
+              />
+              <path
+                d="m17 8-5-5-5 5"
+              />
+              <path
+                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+              />
+            </svg>
+             Replace
             <input
               class="hidden"
               type="file"
@@ -362,9 +558,29 @@ exports[`FlowView 2`] = `
             href="#"
           >
             <span>
-              <i
-                class="fa fa-fw fa-files-o"
-              />
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-files icon icon-files"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"
+                />
+                <path
+                  d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z"
+                />
+                <path
+                  d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1"
+                />
+              </svg>
                
               <b>
                 View:
@@ -394,9 +610,31 @@ exports[`FlowView 3`] = `
         class="close-button"
         data-testid="close-button-id"
       >
-        <i
-          class="fa fa-times-circle"
-        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-x icon icon-closeCircle"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="m15 9-6 6"
+          />
+          <path
+            d="m9 9 6 6"
+          />
+        </svg>
       </button>
       <a
         class=""
@@ -461,9 +699,29 @@ exports[`FlowView 3`] = `
             href="#"
           >
             <span>
-              <i
-                class="fa fa-fw fa-files-o"
-              />
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-files icon icon-files"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"
+                />
+                <path
+                  d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z"
+                />
+                <path
+                  d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1"
+                />
+              </svg>
                
               <b>
                 View:
@@ -477,12 +735,29 @@ exports[`FlowView 3`] = `
         </div>
       </div>
       <div>
-        <i
-          class="fa fa-fw fa-window-close text-muted"
-        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-x icon icon-close text-muted"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M18 6 6 18"
+          />
+          <path
+            d="m6 6 12 12"
+          />
+        </svg>
           Closed by server with code 1000 (Close Reason).
         <small
-          class="pull-right"
+          class="float-right"
         >
           1999-12-31 23:00:05.000
         </small>
@@ -504,9 +779,31 @@ exports[`FlowView 4`] = `
         class="close-button"
         data-testid="close-button-id"
       >
-        <i
-          class="fa fa-times-circle"
-        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-x icon icon-closeCircle"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="m15 9-6 6"
+          />
+          <path
+            d="m9 9 6 6"
+          />
+        </svg>
       </button>
       <a
         class=""
@@ -799,9 +1096,31 @@ exports[`FlowView 5`] = `
         class="close-button"
         data-testid="close-button-id"
       >
-        <i
-          class="fa fa-times-circle"
-        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-x icon icon-closeCircle"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="m15 9-6 6"
+          />
+          <path
+            d="m9 9 6 6"
+          />
+        </svg>
       </button>
       <a
         class=""
@@ -1013,9 +1332,31 @@ exports[`FlowView 6`] = `
         class="close-button"
         data-testid="close-button-id"
       >
-        <i
-          class="fa fa-times-circle"
-        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-x icon icon-closeCircle"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="m15 9-6 6"
+          />
+          <path
+            d="m9 9 6 6"
+          />
+        </svg>
       </button>
       <a
         class=""
@@ -1090,9 +1431,31 @@ exports[`FlowView 7`] = `
         class="close-button"
         data-testid="close-button-id"
       >
-        <i
-          class="fa fa-times-circle"
-        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-x icon icon-closeCircle"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="m15 9-6 6"
+          />
+          <path
+            d="m9 9 6 6"
+          />
+        </svg>
       </button>
       <a
         class=""
@@ -1167,9 +1530,31 @@ exports[`FlowView 8`] = `
         class="close-button"
         data-testid="close-button-id"
       >
-        <i
-          class="fa fa-times-circle"
-        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-x icon icon-closeCircle"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="m15 9-6 6"
+          />
+          <path
+            d="m9 9 6 6"
+          />
+        </svg>
       </button>
       <a
         class="active"
@@ -1219,9 +1604,29 @@ exports[`FlowView 8`] = `
             href="#"
           >
             <span>
-              <i
-                class="fa fa-fw fa-files-o"
-              />
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-files icon icon-files"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"
+                />
+                <path
+                  d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z"
+                />
+                <path
+                  d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1"
+                />
+              </svg>
                
               <b>
                 View:
@@ -1251,9 +1656,31 @@ exports[`FlowView 9`] = `
         class="close-button"
         data-testid="close-button-id"
       >
-        <i
-          class="fa fa-times-circle"
-        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-x icon icon-closeCircle"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="m15 9-6 6"
+          />
+          <path
+            d="m9 9 6 6"
+          />
+        </svg>
       </button>
       <a
         class=""
@@ -1316,9 +1743,31 @@ exports[`FlowView 10`] = `
         class="close-button"
         data-testid="close-button-id"
       >
-        <i
-          class="fa fa-times-circle"
-        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-x icon icon-closeCircle"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="m15 9-6 6"
+          />
+          <path
+            d="m9 9 6 6"
+          />
+        </svg>
       </button>
       <a
         class="active"
@@ -1430,9 +1879,31 @@ exports[`FlowView 11`] = `
         class="close-button"
         data-testid="close-button-id"
       >
-        <i
-          class="fa fa-times-circle"
-        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-x icon icon-closeCircle"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="m15 9-6 6"
+          />
+          <path
+            d="m9 9 6 6"
+          />
+        </svg>
       </button>
       <a
         class=""
@@ -1600,9 +2071,31 @@ exports[`FlowView 12`] = `
         class="close-button"
         data-testid="close-button-id"
       >
-        <i
-          class="fa fa-times-circle"
-        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-x icon icon-closeCircle"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="m15 9-6 6"
+          />
+          <path
+            d="m9 9 6 6"
+          />
+        </svg>
       </button>
       <a
         class=""
@@ -1671,9 +2164,31 @@ exports[`FlowView 13`] = `
         class="close-button"
         data-testid="close-button-id"
       >
-        <i
-          class="fa fa-times-circle"
-        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-x icon icon-closeCircle"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="m15 9-6 6"
+          />
+          <path
+            d="m9 9 6 6"
+          />
+        </svg>
       </button>
       <a
         class="active"
@@ -1723,9 +2238,29 @@ exports[`FlowView 13`] = `
             href="#"
           >
             <span>
-              <i
-                class="fa fa-fw fa-files-o"
-              />
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-files icon icon-files"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"
+                />
+                <path
+                  d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z"
+                />
+                <path
+                  d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1"
+                />
+              </svg>
                
               <b>
                 View:
@@ -1755,9 +2290,31 @@ exports[`FlowView 14`] = `
         class="close-button"
         data-testid="close-button-id"
       >
-        <i
-          class="fa fa-times-circle"
-        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-x icon icon-closeCircle"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="m15 9-6 6"
+          />
+          <path
+            d="m9 9 6 6"
+          />
+        </svg>
       </button>
       <a
         class=""

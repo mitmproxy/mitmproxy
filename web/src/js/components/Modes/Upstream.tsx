@@ -1,7 +1,8 @@
 import * as React from "react";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { getSpec, UpstreamState } from "../../modes/upstream";
-import { ServerInfo } from "../../ducks/backendState";
+import type { UpstreamState } from "../../modes/upstream";
+import { getSpec } from "../../modes/upstream";
+import type { ServerInfo } from "../../ducks/backendState";
 import {
     setDestination,
     setActive,
@@ -68,7 +69,7 @@ function UpstreamRow({
                     }
                     placeholder="http://example.com:8080"
                 />
-                <Popover iconClass="fa fa-cog">
+                <Popover icon="settings">
                     <h4>Advanced Configuration</h4>
                     <p>Listen Host</p>
                     <ValueEditor

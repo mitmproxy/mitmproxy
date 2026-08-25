@@ -1,5 +1,6 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Option, OptionsState } from "../_options_gen";
+import type { PayloadAction } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
+import type { Option, OptionsState } from "../_options_gen";
 import { HIDE_MODAL } from "./modal";
 
 interface OptionUpdate<T> {

@@ -7,7 +7,9 @@ test("ValueEditor", async () => {
     const editor: { current?: ValueEditor | null } = {};
     const { asFragment } = render(
         <ValueEditor
-            ref={(x) => (editor.current = x)}
+            ref={(x) => {
+                editor.current = x;
+            }}
             content="hello world"
             onEditDone={onEditDone}
         />,

@@ -79,7 +79,12 @@ if __name__ == "__main__":
     print("➡️ Updating web assets...")
     subprocess.run(["npm", "ci"], cwd=root / "web", check=True, capture_output=True)
     subprocess.run(
-        ["npm", "start", "prod"], cwd=root / "web", check=True, capture_output=True
+        ["npm", "run", "ci-build-release"],
+        cwd=root / "web",
+        check=True,
+    )
+    subprocess.run(
+        ["git", "add", "--all", f"mitmproxy/tools/web"], cwd=root, capture_output=True
     )
 
     print("➡️ Updating version...")
@@ -203,7 +208,7 @@ if __name__ == "__main__":
         )
         print(f"Last update: {docker_last_updated.isoformat(timespec='minutes')}")
         assert docker_last_updated > datetime.datetime.now(
-            datetime.timezone.utc
+            datetime.UTC
         ) - datetime.timedelta(hours=2)
 
     print("")

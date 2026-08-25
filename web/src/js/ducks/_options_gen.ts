@@ -45,6 +45,7 @@ export interface OptionsState {
     normalize_outbound_headers: boolean;
     onboarding: boolean;
     onboarding_host: string;
+    protobuf_definitions: string | undefined;
     proxy_debug: boolean;
     proxyauth: string | undefined;
     rawtcp: boolean;
@@ -74,9 +75,11 @@ export interface OptionsState {
     ssl_verify_upstream_trusted_confdir: string | undefined;
     stickyauth: string | undefined;
     stickycookie: string | undefined;
+    store_streamed_bodies: boolean;
     stream_large_bodies: string | undefined;
     strip_ech: boolean;
     tcp_hosts: string[];
+    tcp_timeout: number;
     termlog_verbosity: string;
     tls_ecdh_curve_client: string | undefined;
     tls_ecdh_curve_server: string | undefined;
@@ -95,8 +98,10 @@ export interface OptionsState {
     web_debug: boolean;
     web_host: string;
     web_open_browser: boolean;
+    web_password: string;
     web_port: number;
     web_static_viewer: string | undefined;
+    web_theme: string;
     websocket: boolean;
 }
 
@@ -148,6 +153,7 @@ export const defaultState: OptionsState = {
     normalize_outbound_headers: true,
     onboarding: true,
     onboarding_host: "mitm.it",
+    protobuf_definitions: undefined,
     proxy_debug: false,
     proxyauth: undefined,
     rawtcp: true,
@@ -177,9 +183,11 @@ export const defaultState: OptionsState = {
     ssl_verify_upstream_trusted_confdir: undefined,
     stickyauth: undefined,
     stickycookie: undefined,
+    store_streamed_bodies: false,
     stream_large_bodies: undefined,
     strip_ech: true,
     tcp_hosts: [],
+    tcp_timeout: 600,
     termlog_verbosity: "info",
     tls_ecdh_curve_client: undefined,
     tls_ecdh_curve_server: undefined,
@@ -198,7 +206,9 @@ export const defaultState: OptionsState = {
     web_debug: false,
     web_host: "127.0.0.1",
     web_open_browser: true,
+    web_password: "",
     web_port: 8081,
     web_static_viewer: "",
+    web_theme: "system",
     websocket: true,
 };

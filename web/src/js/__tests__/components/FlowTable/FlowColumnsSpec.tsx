@@ -1,8 +1,8 @@
 import * as React from "react";
-import renderer from "react-test-renderer";
 import FlowColumns from "../../../components/FlowTable/FlowColumns";
 import { TFlow, TTCPFlow } from "../../ducks/tutils";
 import { render } from "../../test-utils";
+import type { Flow } from "../../../flow";
 
 test("should render columns", async () => {
     const tflow = TFlow();
@@ -11,7 +11,7 @@ test("should render columns", async () => {
             <table>
                 <tbody>
                     <tr>
-                        <Col flow={tflow} />
+                        <Col flow={tflow} rowNumber={0} />
                     </tr>
                 </tbody>
             </table>,
@@ -20,102 +20,165 @@ test("should render columns", async () => {
     });
 });
 
-describe("Flowcolumns Components", () => {
-    it("should render IconColumn", () => {
-        let tcpflow = TTCPFlow(),
-            iconColumn = renderer.create(<FlowColumns.icon flow={tcpflow} />),
-            tree = iconColumn.toJSON();
-        expect(tree).toMatchSnapshot();
+test("index column should display rowNumber + 1", () => {
+    const tflow = TFlow();
+    const { container: c1 } = render(
+        <table>
+            <tbody>
+                <tr>
+                    <FlowColumns.index flow={tflow} rowNumber={0} />
+                </tr>
+            </tbody>
+        </table>,
+    );
+    expect(c1.querySelector(".col-index")!.textContent).toBe("1");
 
-        const tflow = { ...TFlow(), websocket: undefined };
-        iconColumn = renderer.create(<FlowColumns.icon flow={tflow} />);
-        tree = iconColumn.toJSON();
+    const { container: c2 } = render(
+        <table>
+            <tbody>
+                <tr>
+                    <FlowColumns.index flow={tflow} rowNumber={4} />
+                </tr>
+            </tbody>
+        </table>,
+    );
+    expect(c2.querySelector(".col-index")!.textContent).toBe("5");
+});
+
+describe("Flowcolumns Components", () => {
+    function testFlowColumn(elem) {
+        const { asFragment } = render(
+            <table>
+                <tbody>
+                    <tr>{elem}</tr>
+                </tbody>
+            </table>,
+        );
+        expect(asFragment()).toMatchSnapshot();
+    }
+
+    it("should render IconColumn", () => {
+        const testIconColumn = (flow: Flow) =>
+            testFlowColumn(<FlowColumns.icon flow={flow} rowNumber={0} />);
+
+        // TCP
+        let tcpflow = TTCPFlow();
+        testIconColumn(tcpflow);
         // plain
-        expect(tree).toMatchSnapshot();
+        const tflow = { ...TFlow(), websocket: undefined };
+        testIconColumn(tflow);
         // not modified
         tflow.response.status_code = 304;
-        iconColumn = renderer.create(<FlowColumns.icon flow={tflow} />);
-        tree = iconColumn.toJSON();
-        expect(tree).toMatchSnapshot();
+        testIconColumn(tflow);
         // redirect
         tflow.response.status_code = 302;
-        iconColumn = renderer.create(<FlowColumns.icon flow={tflow} />);
-        tree = iconColumn.toJSON();
-        expect(tree).toMatchSnapshot();
+        testIconColumn(tflow);
         // image
         const imageFlow = { ...TFlow(), websocket: undefined };
         imageFlow.response.headers = [["Content-Type", "image/jpeg"]];
-        iconColumn = renderer.create(<FlowColumns.icon flow={imageFlow} />);
-        tree = iconColumn.toJSON();
-        expect(tree).toMatchSnapshot();
+        testIconColumn(imageFlow);
         // javascript
         const jsFlow = { ...TFlow(), websocket: undefined };
         jsFlow.response.headers = [
             ["Content-Type", "application/x-javascript"],
         ];
-        iconColumn = renderer.create(<FlowColumns.icon flow={jsFlow} />);
-        tree = iconColumn.toJSON();
-        expect(tree).toMatchSnapshot();
+        testIconColumn(jsFlow);
         // css
         const cssFlow = { ...TFlow(), websocket: undefined };
         cssFlow.response.headers = [["Content-Type", "text/css"]];
-        iconColumn = renderer.create(<FlowColumns.icon flow={cssFlow} />);
-        tree = iconColumn.toJSON();
-        expect(tree).toMatchSnapshot();
+        testIconColumn(cssFlow);
         // html
         const htmlFlow = { ...TFlow(), websocket: undefined };
         htmlFlow.response.headers = [["Content-Type", "text/html"]];
-        iconColumn = renderer.create(<FlowColumns.icon flow={htmlFlow} />);
-        tree = iconColumn.toJSON();
-        expect(tree).toMatchSnapshot();
+        testIconColumn(htmlFlow);
         // default
         const fooFlow = { ...TFlow(), websocket: undefined };
         fooFlow.response.headers = [["Content-Type", "foo"]];
-        iconColumn = renderer.create(<FlowColumns.icon flow={fooFlow} />);
-        tree = iconColumn.toJSON();
-        expect(tree).toMatchSnapshot();
+        testIconColumn(fooFlow);
         // no response
         const noResponseFlow = { ...TFlow(), response: undefined };
-        iconColumn = renderer.create(
-            <FlowColumns.icon flow={noResponseFlow} />,
+        testIconColumn(noResponseFlow);
+    });
+
+    it("should pick the icon matching the resource type", () => {
+        const tflow = { ...TFlow(), websocket: undefined };
+        tflow.response.status_code = 302;
+        const { container } = render(
+            <table>
+                <tbody>
+                    <tr>
+                        <FlowColumns.icon flow={tflow} rowNumber={0} />
+                    </tr>
+                </tbody>
+            </table>,
         );
-        tree = iconColumn.toJSON();
-        expect(tree).toMatchSnapshot();
+        expect(container.querySelector(".col-icon")).toHaveAttribute(
+            "title",
+            "redirect",
+        );
+        expect(container.querySelector(".col-icon svg")).toHaveClass(
+            "icon-redirect",
+        );
     });
 
     it("should render pathColumn", () => {
-        let tflow = TFlow(),
-            pathColumn = renderer.create(<FlowColumns.path flow={tflow} />),
-            tree = pathColumn.toJSON();
-        expect(tree).toMatchSnapshot();
+        let tflow = TFlow();
+        testFlowColumn(<FlowColumns.path flow={tflow} rowNumber={0} />);
 
         tflow.error.msg = "Connection killed.";
         tflow.intercepted = true;
-        pathColumn = renderer.create(<FlowColumns.path flow={tflow} />);
-        tree = pathColumn.toJSON();
-        expect(tree).toMatchSnapshot();
+        testFlowColumn(<FlowColumns.path flow={tflow} rowNumber={0} />);
     });
 
     it("should render TimeColumn", () => {
-        let tflow = TFlow(),
-            timeColumn = renderer.create(<FlowColumns.time flow={tflow} />),
-            tree = timeColumn.toJSON();
-        expect(tree).toMatchSnapshot();
+        let tflow = TFlow();
+        testFlowColumn(<FlowColumns.time flow={tflow} rowNumber={0} />);
 
         const noResponseFlow = { ...tflow, response: undefined };
-        timeColumn = renderer.create(
-            <FlowColumns.time flow={noResponseFlow} />,
+        testFlowColumn(
+            <FlowColumns.time flow={noResponseFlow} rowNumber={0} />,
         );
-        tree = timeColumn.toJSON();
-        expect(tree).toMatchSnapshot();
     });
 
     it("should render CommentColumn", () => {
         const tflow = TFlow();
-        const commentColumn = renderer.create(
-            <FlowColumns.comment flow={tflow} />,
+        testFlowColumn(<FlowColumns.comment flow={tflow} rowNumber={0} />);
+    });
+
+    it("should render the status column across all status code ranges", () => {
+        const statusCell = (status_code: number) => {
+            const tflow = TFlow();
+            tflow.response.status_code = status_code;
+            const { container } = render(
+                <table>
+                    <tbody>
+                        <tr>
+                            <FlowColumns.status flow={tflow} rowNumber={0} />
+                        </tr>
+                    </tbody>
+                </table>,
+            );
+            return container.querySelector(".col-status")!.textContent;
+        };
+
+        for (const status_code of [103, 200, 304, 404, 500]) {
+            expect(statusCell(status_code)).toContain(String(status_code));
+        }
+
+        // no response -> empty status cell
+        const noResponseFlow = { ...TFlow(), response: undefined };
+        const { container } = render(
+            <table>
+                <tbody>
+                    <tr>
+                        <FlowColumns.status
+                            flow={noResponseFlow}
+                            rowNumber={0}
+                        />
+                    </tr>
+                </tbody>
+            </table>,
         );
-        const tree = commentColumn.toJSON();
-        expect(tree).toMatchSnapshot();
+        expect(container.querySelector(".col-status")!.textContent).toBe("");
     });
 });

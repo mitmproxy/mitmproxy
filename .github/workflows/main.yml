@@ -18,25 +18,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@0d7c124ffff22d26be111477a3ed9fadd853a6db
-    with:
-      cmd: tox -e lint
+  tox:
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [lint, filename_matching, mypy, individual_coverage, old-dependencies, test-offline]
+    name: ${{ matrix.env }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/setup-uv@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/uv-sync@acc73c7af100db9fb3f1ad3c0178d382048e943f
+        with:
+          args: --only-group tox
 
-  filename-matching:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@0d7c124ffff22d26be111477a3ed9fadd853a6db
-    with:
-      cmd: tox -e filename_matching
-
-  mypy:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@0d7c124ffff22d26be111477a3ed9fadd853a6db
-    with:
-      cmd: tox -e mypy
-
-  individual-coverage:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@0d7c124ffff22d26be111477a3ed9fadd853a6db
-    with:
-      cmd: tox -e individual_coverage
+      - run: tox -e ${{ matrix.env }}
 
   test:
     strategy:
@@ -44,70 +40,69 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            py: "3.13"
+            py: "3.14"
           - os: windows-latest
-            py: "3.13"
+            py: "3.14"
           - os: macos-latest
+            py: "3.14"
+          - os: ubuntu-latest
             py: "3.13"
           - os: ubuntu-latest
             py: "3.12"
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: mhils/workflows/checkout@0d7c124ffff22d26be111477a3ed9fadd853a6db
-      - uses: mhils/workflows/setup-python@0d7c124ffff22d26be111477a3ed9fadd853a6db
-      - run: pip install tox
-      - run: tox -e py
-        if: matrix.os != 'ubuntu-latest'
-      - name: Run tox -e py (without internet)
-        run: |
-          # install dependencies (requires internet connectivity)
-          tox -e py --notest  
-          # run tests with loopback only. We need to sudo for unshare, which means we need an absolute path for tox.
-          sudo unshare --net -- sh -c "ip link set lo up; $(which tox) -e py"
-        if: matrix.os == 'ubuntu-latest'
-      - uses: codecov/codecov-action@v5
+      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/setup-uv@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/uv-sync@acc73c7af100db9fb3f1ad3c0178d382048e943f
+        with:
+          args: --only-group tox
+
+      - run: tox -e py${{ matrix.py }}
+      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
-
-  test-old-dependencies:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: mhils/workflows/checkout@0d7c124ffff22d26be111477a3ed9fadd853a6db
-      - uses: mhils/workflows/setup-python@0d7c124ffff22d26be111477a3ed9fadd853a6db
-      - run: pip install tox-uv
-      - run: tox -e old-dependencies
 
   build:
     strategy:
       fail-fast: false
       matrix:
         include:
-          - image: macos-14
+          - image: macos-15
             platform: macos-arm64
-          - image: macos-13
+          - image: macos-15-intel
             platform: macos-x86_64
-          - image: windows-2019
+          - image: windows-2025
             platform: windows
-          - image: ubuntu-20.04  # Oldest available version so we get oldest glibc possible.
+          - image: ubuntu-latest
             platform: linux-x86_64
-          - image: ubuntu-22.04-arm  # Oldest available version so we get oldest glibc possible.
+            container: debian@sha256:aeec37aebc55ca5cc6fcfb8d5f6ae2fd43d5017ad849e6e2fdb5325d61e144db  # Old Debian 11 so we get oldest glibc possible.
+          - image: ubuntu-24.04-arm
             platform: linux-arm64
+            container: debian@sha256:aeec37aebc55ca5cc6fcfb8d5f6ae2fd43d5017ad849e6e2fdb5325d61e144db  # Old Debian 11 so we get oldest glibc possible.
     runs-on: ${{ matrix.image }}
+    container:
+      image: ${{ matrix.container }}
     steps:
-      - uses: mhils/workflows/checkout@0d7c124ffff22d26be111477a3ed9fadd853a6db
-      - uses: mhils/workflows/setup-python@0d7c124ffff22d26be111477a3ed9fadd853a6db
-      - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
+      - if: matrix.container
+        run: |
+          apt-get update
+          apt-get install --no-install-recommends -y git ca-certificates binutils build-essential
+      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/setup-uv@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/uv-sync@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - run: uv pip install .  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
 
       - if: runner.os == 'macOS' && github.repository == 'mitmproxy/mitmproxy'
             && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
         id: keychain
-        uses: apple-actions/import-codesign-certs@63fff01cd422d4b7b855d40ca1e9d34d2de9427d
+        uses: apple-actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466
         with:
           keychain: ${{ runner.temp }}/temp
           p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
           p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-      - if: runner.os == 'macOS' && github.repository == 'mitmproxy/mitmproxy'
+      - name: Build and notarize macOS app
+        if: runner.os == 'macOS' && github.repository == 'mitmproxy/mitmproxy'
             && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
         run: |
           python -u release/build.py macos-app \
@@ -124,15 +119,14 @@ jobs:
       - if: runner.os == 'Windows'
         run: python -u release/build.py standalone-binaries
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: binaries.${{ matrix.platform }}
           path: release/dist
 
   build-wheel:
-    uses: mhils/workflows/.github/workflows/python-build.yml@0d7c124ffff22d26be111477a3ed9fadd853a6db
+    uses: mhils/workflows/.github/workflows/python-build.yml@acc73c7af100db9fb3f1ad3c0178d382048e943f
     with:
-      python-version-file: .github/python-version.txt
       artifact: binaries.wheel
 
   build-windows-installer:
@@ -143,15 +137,15 @@ jobs:
         startsWith(github.ref, 'refs/tags/')
       )
     steps:
-      - uses: mhils/workflows/checkout@0d7c124ffff22d26be111477a3ed9fadd853a6db
-      - uses: mhils/workflows/setup-python@0d7c124ffff22d26be111477a3ed9fadd853a6db
-
-      - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
+      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/setup-uv@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/uv-sync@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - run: uv pip install .  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
       - run: python -u release/build.py installbuilder-installer msix-installer
         env:
           CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: binaries.windows-installer
           path: release/dist
@@ -159,12 +153,12 @@ jobs:
   test-web-ui:
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@0d7c124ffff22d26be111477a3ed9fadd853a6db
-      - uses: actions/setup-node@v4
+      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .github/node-version.txt
       - name: Cache Node.js modules
-        uses: actions/cache@v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           # npm cache files are stored in `~/.npm` on Linux/macOS
           path: ~/.npm
@@ -176,7 +170,7 @@ jobs:
         run: npm ci
       - working-directory: ./web
         run: npm test
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./web/coverage/coverage-final.json
@@ -185,8 +179,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-wheel
     steps:
-      - uses: mhils/workflows/checkout@0d7c124ffff22d26be111477a3ed9fadd853a6db
-      - uses: actions/download-artifact@v4
+      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: binaries.wheel
           path: release/docker
@@ -198,24 +192,25 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@0d7c124ffff22d26be111477a3ed9fadd853a6db
-      - uses: mhils/workflows/setup-python@0d7c124ffff22d26be111477a3ed9fadd853a6db
+      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/setup-uv@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/uv-sync@acc73c7af100db9fb3f1ad3c0178d382048e943f
       - run: |
           wget -q https://github.com/gohugoio/hugo/releases/download/v0.139.3/hugo_extended_0.139.3_linux-amd64.deb
           echo "3e58800d1fee57269208d07d104ae1a6ab886615344099f2dca0c6ad5279bc11 hugo_extended_0.139.3_linux-amd64.deb" | sha256sum -c
           sudo dpkg -i hugo*.deb
-      - run: pip install -e .[dev]
+
       - run: ./docs/build.py
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: docs
           path: docs/public
       # For releases, also build the archive version of the docs.
       - run: ./docs/build.py
         env:
-          DOCS_ARCHIVE: true
+          DOCS_ARCHIVE: ${{ github.ref_name }}
       - if: startsWith(github.ref, 'refs/tags/')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: docs-archive
           path: docs/public
@@ -223,19 +218,15 @@ jobs:
   check:
     if: always()
     needs:
-    - lint
-    - filename-matching
-    - mypy
-    - individual-coverage
+    - tox
     - test
     - test-docker
-    - test-old-dependencies
     - test-web-ui
     - build
     - build-wheel
     - build-windows-installer
     - docs
-    uses: mhils/workflows/.github/workflows/alls-green.yml@0d7c124ffff22d26be111477a3ed9fadd853a6db
+    uses: mhils/workflows/.github/workflows/alls-green.yml@acc73c7af100db9fb3f1ad3c0178d382048e943f
     with:
       jobs: ${{ toJSON(needs) }}
       allowed-skips: build-windows-installer
@@ -255,21 +246,23 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@0d7c124ffff22d26be111477a3ed9fadd853a6db
-      - uses: actions/download-artifact@v4
+      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: binaries.wheel
           path: release/docker
-      - uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3.2.0
-      - uses: docker/setup-buildx-action@6524bf65af31da8d45b59e8c27de4bd072b392f5 # v1.6.0
+      - uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
+      - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v1.6.0
+        with:
+          cache-binary: false
 
       - name: Login to Docker Hub
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           username: mitmbot
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -277,7 +270,7 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302
         env:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: index
         with:
@@ -293,7 +286,7 @@ jobs:
 
       - name: Build and push
         id: push
-        uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355 # v6.10.0
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: release/docker
           platforms: linux/amd64,linux/arm64
@@ -302,7 +295,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
-      - uses: actions/attest-build-provenance@v2
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
         with:
           subject-name: ghcr.io/${{ github.repository }}
           subject-digest: ${{ steps.push.outputs.digest }}
@@ -313,7 +306,7 @@ jobs:
     if: github.repository == 'mitmproxy/mitmproxy' && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
     environment: ${{ (github.ref == 'refs/heads/citest' || startsWith(github.ref, 'refs/tags/')) && 'deploy-release' || 'deploy-snapshot' }}
     needs: check
-    runs-on: ubuntu-22.04  # https://bugs.launchpad.net/ubuntu/+source/awscli/+bug/2066199
+    runs-on: ubuntu-latest
     permissions:
       id-token: write
       attestations: write
@@ -333,29 +326,28 @@ jobs:
       R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
       R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
     steps:
-      - uses: mhils/workflows/checkout@0d7c124ffff22d26be111477a3ed9fadd853a6db
-      - uses: mhils/workflows/setup-python@0d7c124ffff22d26be111477a3ed9fadd853a6db
-      - run: sudo apt-get update
-      - run: sudo apt-get install -y awscli
-      - if: startsWith(github.ref, 'refs/tags/')
-        run: sudo apt-get install -y twine
+      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/setup-uv@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/uv-sync@acc73c7af100db9fb3f1ad3c0178d382048e943f
+        with:
+          args: --only-group deploy
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: docs
           path: docs/public
       - if: startsWith(github.ref, 'refs/tags/')
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: docs-archive
           path: docs/archive
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: binaries.*
           merge-multiple: true
           path: release/dist
       - id: provenance
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
         with:
           subject-path: 'release/dist/*'
       - run: |

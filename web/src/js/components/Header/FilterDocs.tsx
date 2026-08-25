@@ -1,12 +1,17 @@
 import React, { Component } from "react";
 import { fetchApi } from "../../utils";
+import Icon from "../common/Icon";
 
 type FilterDocsProps = {
     selectHandler: (cmd: string) => void;
 };
 
+type FilterDocsDoc = {
+    commands: [string, string][];
+};
+
 type FilterDocsStates = {
-    doc: { commands: string[][] };
+    doc: FilterDocsDoc;
 };
 
 export default class FilterDocs extends Component<
@@ -15,11 +20,11 @@ export default class FilterDocs extends Component<
 > {
     // @todo move to redux
 
-    static xhr: Promise<any> | null;
-    static doc: { commands: string[][] };
+    static xhr: Promise<FilterDocsDoc> | null;
+    static doc: FilterDocsDoc;
 
-    constructor(props, context) {
-        super(props, context);
+    constructor(props: FilterDocsProps) {
+        super(props);
         this.state = { doc: FilterDocs.doc };
     }
 
@@ -43,7 +48,7 @@ export default class FilterDocs extends Component<
     render() {
         const { doc } = this.state;
         return !doc ? (
-            <i className="fa fa-spinner fa-spin" />
+            <Icon name="loading" className="icon-spin" />
         ) : (
             <table className="table table-condensed">
                 <tbody>
@@ -67,7 +72,7 @@ export default class FilterDocs extends Component<
                                 target="_blank"
                                 rel="noreferrer"
                             >
-                                <i className="fa fa-external-link" />
+                                <Icon name="external" />
                                 &nbsp; mitmproxy docs
                             </a>
                         </td>

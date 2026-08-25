@@ -1,0 +1,44 @@
+@import "modern-normalize";
+
+$max-mobile-width: 768px;
+
+@import "layout";
+@import "header";
+@import "sidebar";
+@import "content";
+
+@import "components/search";
+@import "components/anchors";
+@import "components/asciinema-player";
+@import "components/badges";
+@import "components/example";
+@import "components/github-button";
+@import "components/syntax-highlighting";
+
+@media (prefers-reduced-motion: no-preference) {
+  html:focus-within {
+    scroll-behavior: smooth;
+  }
+}
+
+@media (max-width: $max-mobile-width) {
+  .hide-mobile {
+    display: none;
+  }
+}
+
+.visually-hidden,
+.visually-hidden-focusable:not(:focus):not(:focus-within) {
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+.visually-hidden:not(caption),
+.visually-hidden-focusable:not(:focus):not(:focus-within):not(caption) {
+  position: absolute !important;
+}

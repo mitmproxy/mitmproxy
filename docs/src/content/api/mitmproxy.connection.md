@@ -3,9 +3,7 @@
 title: "mitmproxy.connection"
 url: "api/mitmproxy/connection.html"
 
-menu:
-    addons:
-        parent: 'Event Hooks & API'
+menu: api
 ---
 
 {{< readfile file="/generated/api/mitmproxy/connection.html" >}}

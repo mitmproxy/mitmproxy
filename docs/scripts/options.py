@@ -48,13 +48,13 @@ for key, option in sorted(unified_options.items(), key=lambda t: t[0]):
         f"""
           <tr id="{key}">
           <th>
-            <a class="anchor" href="#{key}">#&nbsp;&nbsp;</a>
-            {key}<br/>
-            {' '.join(["<span class='badge'>{}</span>".format(t) for t in option['tools']])}</th>
-          <td>{option['type']}</td>
-          <td>{option['help']}<br/>
-            Default: {option['default']}
-            {"<br/>Choices: {}".format(', '.join(option['choices'])) if option['choices'] else ""}
+            {key}<a class="anchor" href="#{key}"></a><br/>
+            {" ".join(["<span class='badge'>{}</span>".format(t) for t in option["tools"]])}</th>
+          <td>{option["type"]}</td>
+          <td>{option["help"]}<br/>
+            Default: {option["default"]}
+            {"<br/>Choices: {}".format(", ".join(option["choices"])) if option["choices"] else ""}
+
           </td>
           </tr>
           """.strip()

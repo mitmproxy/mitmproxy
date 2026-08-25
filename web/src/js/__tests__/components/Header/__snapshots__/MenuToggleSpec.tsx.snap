@@ -17,20 +17,21 @@ exports[`EventlogToggle 1`] = `
 `;
 
 exports[`MenuToggle Component should render correctly 1`] = `
-<div
-  className="menu-entry"
->
-  <label>
-    <input
-      checked={true}
-      onChange={[MockFunction]}
-      type="checkbox"
-    />
-    <p>
-      foo children
-    </p>
-  </label>
-</div>
+<DocumentFragment>
+  <div
+    class="menu-entry"
+  >
+    <label>
+      <input
+        checked=""
+        type="checkbox"
+      />
+      <p>
+        foo children
+      </p>
+    </label>
+  </div>
+</DocumentFragment>
 `;
 
 exports[`OptionsToggle 1`] = `

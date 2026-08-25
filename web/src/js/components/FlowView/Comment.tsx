@@ -1,4 +1,4 @@
-import { Flow } from "../../flow";
+import type { Flow } from "../../flow";
 import * as React from "react";
 import ValueEditor from "../editors/ValueEditor";
 import { useAppDispatch } from "../../ducks";

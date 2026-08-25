@@ -1,10 +1,17 @@
 import React, { Component } from "react";
 import classnames from "classnames";
 import Filt from "../../filt/filt";
+import Icon, { type IconName } from "../common/Icon";
 import FilterDocs from "./FilterDocs";
 
+export enum FilterIcon {
+    SEARCH = "search",
+    HIGHLIGHT = "highlight",
+    INTERCEPT = "intercept",
+}
+
 type FilterInputProps = {
-    type: string;
+    icon: IconName;
     color: string;
     placeholder: string;
     value: string;
@@ -23,8 +30,8 @@ export default class FilterInput extends Component<
 > {
     inputRef = React.createRef<HTMLInputElement>();
 
-    constructor(props, context) {
-        super(props, context);
+    constructor(props: FilterInputProps) {
+        super(props);
 
         // Consider both focus and mouseover for showing/hiding the tooltip,
         // because onBlur of the input is triggered before the click on the tooltip
@@ -44,8 +51,14 @@ export default class FilterInput extends Component<
         this.selectFilter = this.selectFilter.bind(this);
     }
 
-    UNSAFE_componentWillReceiveProps(nextProps) {
-        this.setState({ value: nextProps.value });
+    UNSAFE_componentWillReceiveProps(nextProps: FilterInputProps) {
+        // Local state intentionally diverges from props while typing
+        // (only valid filters reach the parent via `onChange`), so an
+        // unconditional sync would wipe the user's in-progress text on
+        // any unrelated parent re-render.
+        if (nextProps.value !== this.props.value) {
+            this.setState({ value: nextProps.value });
+        }
     }
 
     isValid(filt: string) {
@@ -54,7 +67,7 @@ export default class FilterInput extends Component<
                 Filt.parse(filt);
             }
             return true;
-        } catch (e) {
+        } catch {
             return false;
         }
     }
@@ -96,18 +109,23 @@ export default class FilterInput extends Component<
         this.setState({ mousefocus: false });
     }
 
-    onKeyDown(e: Partial<React.KeyboardEvent<HTMLInputElement>>) {
+    onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
         if (e.key === "Escape" || e.key === "Enter") {
             this.blur();
             // If closed using ESC/ENTER, hide the tooltip.
             this.setState({ mousefocus: false });
         }
-        e.stopPropagation?.();
+        e.stopPropagation();
     }
 
-    selectFilter(cmd: string) {
-        this.setState({ value: cmd });
+    selectFilter(value: string) {
+        this.setState({ value });
         this.inputRef.current?.focus();
+
+        // Only propagate valid filters upwards.
+        if (this.isValid(value)) {
+            this.props.onChange(value);
+        }
     }
 
     blur() {
@@ -119,7 +137,7 @@ export default class FilterInput extends Component<
     }
 
     render() {
-        const { type, color, placeholder } = this.props;
+        const { icon, color, placeholder } = this.props;
         const { value, focus, mousefocus } = this.state;
         return (
             <div
@@ -128,13 +146,15 @@ export default class FilterInput extends Component<
                 })}
             >
                 <span className="input-group-addon">
-                    <i className={"fa fa-fw fa-" + type} style={{ color }} />
+                    <span style={{ color }}>
+                        <Icon name={icon} strokeWidth={2.5} />
+                    </span>
                 </span>
                 <input
                     type="text"
                     ref={this.inputRef}
                     placeholder={placeholder}
-                    className="form-control"
+                    className="input"
                     value={value}
                     onChange={this.onChange}
                     onFocus={this.onFocus}

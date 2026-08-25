@@ -316,6 +316,8 @@ class Message(serializable.Serializable):
         The raw (potentially compressed) HTTP message body.
 
         In contrast to `Message.content` and `Message.text`, accessing this property never raises.
+        `raw_content` may be `None` if the content is missing, for example due to body streaming
+        (see `Message.stream`). In contrast, `b""` signals a present but empty message body.
 
         *See also:* `Message.content`, `Message.text`
         """
@@ -463,12 +465,17 @@ class Message(serializable.Serializable):
     def decode(self, strict: bool = True) -> None:
         """
         Decodes body based on the current Content-Encoding header, then
-        removes the header. If there is no Content-Encoding header, no
-        action is taken.
+        removes the header.
+
+        If the message body is missing or empty, no action is taken.
 
         *Raises:*
          - `ValueError`, when the content-encoding is invalid and strict is True.
         """
+        if not self.raw_content:
+            # The body is missing (for example, because of body streaming or because it's a response
+            # to a HEAD request), so we can't correctly update content-length.
+            return
         decoded = self.get_content(strict)
         self.headers.pop("content-encoding", None)
         self.content = decoded
@@ -484,7 +491,7 @@ class Message(serializable.Serializable):
         self.headers["content-encoding"] = encoding
         self.content = self.raw_content
         if "content-encoding" not in self.headers:
-            raise ValueError(f"Invalid content encoding {repr(encoding)}")
+            raise ValueError(f"Invalid content encoding {encoding!r}")
 
     def json(self, **kwargs: Any) -> Any:
         """
@@ -791,12 +798,13 @@ class Request(Message):
         """
         if self.first_line_format == "authority":
             return f"{self.host}:{self.port}"
-        return url.unparse(self.scheme, self.host, self.port, self.path)
+        path = self.path if self.path != "*" else ""
+        return url.unparse(self.scheme, self.host, self.port, path)
 
     @url.setter
     def url(self, val: str | bytes) -> None:
         val = always_str(val, "utf-8", "surrogateescape")
-        self.scheme, self.host, self.port, self.path = url.parse(val)
+        self.scheme, self.host, self.port, self.path = url.parse(val)  # type: ignore
 
     @property
     def pretty_host(self) -> str:
@@ -827,8 +835,9 @@ class Request(Message):
 
         pretty_host, pretty_port = url.parse_authority(host_header, check=False)
         pretty_port = pretty_port or url.default_port(self.scheme) or 443
+        path = self.path if self.path != "*" else ""
 
-        return url.unparse(self.scheme, pretty_host, pretty_port, self.path)
+        return url.unparse(self.scheme, pretty_host, pretty_port, path)
 
     def _get_query(self):
         query = urllib.parse.urlparse(self.url).query
@@ -979,9 +988,7 @@ class Request(Message):
             on generating the boundary.
             """
             boundary = "-" * 20 + binascii.hexlify(os.urandom(16)).decode()
-            self.headers["content-type"] = ct = (
-                f"multipart/form-data; boundary={boundary}"
-            )
+            self.headers["content-type"] = ct = f"multipart/form-data; {boundary=!s}"
         self.content = multipart.encode_multipart(ct, value)
 
     @property

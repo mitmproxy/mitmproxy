@@ -69,7 +69,7 @@ def dump_info(signal=None, frame=None, file=sys.stdout):  # pragma: no cover
                 bthreads.append(i)
             else:
                 print(i.name)
-        bthreads.sort(key=lambda x: x._thread_started)
+        bthreads.sort(key=lambda x: getattr(x, "_thread_started", 0))
         for i in bthreads:
             print(i._threadinfo())
 
@@ -103,7 +103,7 @@ def dump_info(signal=None, frame=None, file=sys.stdout):  # pragma: no cover
                     f.f_code.co_filename, f.f_lineno, f.f_globals
                 ).strip()
                 line = f"{line}  # at {os.path.basename(f.f_code.co_filename)}:{f.f_lineno}"
-                print(f"{asyncio_utils.task_repr(task)}\n" f"    {line}")
+                print(f"{asyncio_utils.task_repr(task)}\n    {line}")
 
         print("****************************************************")
 
@@ -127,5 +127,5 @@ def dump_stacks(signal=None, frame=None, file=sys.stdout):
 
 def register_info_dumpers():
     if os.name != "nt":  # pragma: windows no cover
-        signal.signal(signal.SIGUSR1, dump_info)
-        signal.signal(signal.SIGUSR2, dump_stacks)
+        signal.signal(signal.SIGUSR1, dump_info)  # type: ignore
+        signal.signal(signal.SIGUSR2, dump_stacks)  # type: ignore

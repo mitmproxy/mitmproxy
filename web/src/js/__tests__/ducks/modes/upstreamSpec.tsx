@@ -6,12 +6,8 @@ import upstreamReducer, {
     setListenHost,
     setListenPort,
 } from "../../../ducks/modes/upstream";
-import {
-    RECEIVE as STATE_RECEIVE,
-    BackendState,
-} from "../../../ducks/backendState";
+import { STATE_UPDATE } from "../../../ducks/backendState";
 import { TStore } from "../tutils";
-import { PayloadAction } from "@reduxjs/toolkit";
 
 describe("upstreamSlice", () => {
     it("should have working setters", async () => {
@@ -21,6 +17,7 @@ describe("upstreamSlice", () => {
         expect(store.getState().modes.upstream[0]).toEqual({
             active: false,
             destination: "example.com",
+            ui_id: store.getState().modes.upstream[0].ui_id,
         });
 
         await store.dispatch(
@@ -53,6 +50,7 @@ describe("upstreamSlice", () => {
             listen_host: "127.0.0.1",
             listen_port: 4444,
             destination: "example.com:8085",
+            ui_id: store.getState().modes.upstream[0].ui_id,
         });
 
         expect(fetchMock).toHaveBeenCalledTimes(4);
@@ -103,25 +101,22 @@ describe("upstreamSlice", () => {
     });
 
     it("should handle RECEIVE_STATE with an active upstream proxy", () => {
-        const action = {
-            type: STATE_RECEIVE.type,
-            payload: {
-                servers: {
-                    "upstream:https://example.com:8085@localhost:8080": {
-                        description: "HTTP(S) proxy (upstream mode)",
-                        full_spec:
-                            "upstream:https://example.com:8085@localhost:8080",
-                        is_running: true,
-                        last_exception: null,
-                        listen_addrs: [
-                            ["127.0.0.1", 8080],
-                            ["::1", 8080, 0, 0],
-                        ],
-                        type: "upstream",
-                    },
+        const action = STATE_UPDATE({
+            servers: {
+                "upstream:https://example.com:8085@localhost:8080": {
+                    description: "HTTP(S) proxy (upstream mode)",
+                    full_spec:
+                        "upstream:https://example.com:8085@localhost:8080",
+                    is_running: true,
+                    last_exception: null,
+                    listen_addrs: [
+                        ["127.0.0.1", 8080],
+                        ["::1", 8080, 0, 0],
+                    ],
+                    type: "upstream",
                 },
             },
-        } as PayloadAction<Partial<BackendState>>;
+        });
         const newState = upstreamReducer(initialState, action);
         expect(newState).toEqual([
             {
@@ -135,12 +130,7 @@ describe("upstreamSlice", () => {
     });
 
     it("should handle RECEIVE_STATE with no active upstream proxy", () => {
-        const action = {
-            type: STATE_RECEIVE.type,
-            payload: {
-                servers: {},
-            },
-        } as PayloadAction<Partial<BackendState>>;
+        const action = STATE_UPDATE({ servers: {} });
         const newState = upstreamReducer(initialState, action);
         expect(newState).toEqual([
             {

@@ -26,7 +26,7 @@ class Master:
 
     def __init__(
         self,
-        opts: options.Options,
+        opts: options.Options | None,
         event_loop: asyncio.AbstractEventLoop | None = None,
         with_termlog: bool = False,
     ):

@@ -78,6 +78,26 @@ class TestModifyBody:
             mb.request(f)
             assert f.request.content == b"baz"
 
+    def test_backslash_in_replacement(self):
+        mb = modifybody.ModifyBody()
+        with taddons.context(mb) as tctx:
+            tctx.configure(
+                mb,
+                modify_body=[
+                    r"/~q/foo/bar\x00",
+                    r"/~s/foo/bar\n",
+                ],
+            )
+            f = tflow.tflow()
+            f.request.content = b"foo"
+            mb.request(f)
+            assert f.request.content == b"bar\x00"
+
+            f = tflow.tflow(resp=True)
+            f.response.content = b"foo"
+            mb.response(f)
+            assert f.response.content == b"bar\n"
+
 
 class TestModifyBodyFile:
     def test_simple(self, tmpdir):

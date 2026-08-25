@@ -2,6 +2,7 @@ import ipaddress
 import logging
 import os
 import ssl
+import urllib.parse
 from pathlib import Path
 from typing import Any
 from typing import Literal
@@ -10,13 +11,13 @@ from typing import TypedDict
 from aioquic.h3.connection import H3_ALPN
 from aioquic.tls import CipherSuite
 from cryptography import x509
-from OpenSSL import crypto
 from OpenSSL import SSL
 
 from mitmproxy import certs
 from mitmproxy import connection
 from mitmproxy import ctx
 from mitmproxy import exceptions
+from mitmproxy import http
 from mitmproxy import tls
 from mitmproxy.net import tls as net_tls
 from mitmproxy.options import CONF_BASENAME
@@ -238,7 +239,7 @@ class TlsConfig:
             min_version=net_tls.Version[ctx.options.tls_version_client_min],
             max_version=net_tls.Version[ctx.options.tls_version_client_max],
             cipher_list=tuple(cipher_list),
-            ecdh_curve=ctx.options.tls_ecdh_curve_client,
+            ecdh_curve=net_tls.get_curve(ctx.options.tls_ecdh_curve_client),
             chain_file=entry.chain_file,
             request_client_cert=ctx.options.request_client_cert,
             alpn_select_callback=alpn_select_callback,
@@ -247,10 +248,8 @@ class TlsConfig:
         )
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
 
-        tls_start.ssl_conn.use_certificate(entry.cert.to_pyopenssl())
-        tls_start.ssl_conn.use_privatekey(
-            crypto.PKey.from_cryptography_key(entry.privatekey)
-        )
+        tls_start.ssl_conn.use_certificate(entry.cert.to_cryptography())
+        tls_start.ssl_conn.use_privatekey(entry.privatekey)
 
         # Force HTTP/1 for secure web proxies, we currently don't support CONNECT over HTTP/2.
         # There is a proof-of-concept branch at https://github.com/mhils/mitmproxy/tree/http2-proxy,
@@ -335,7 +334,7 @@ class TlsConfig:
             min_version=net_tls.Version[ctx.options.tls_version_server_min],
             max_version=net_tls.Version[ctx.options.tls_version_server_max],
             cipher_list=tuple(cipher_list),
-            ecdh_curve=ctx.options.tls_ecdh_curve_server,
+            ecdh_curve=net_tls.get_curve(ctx.options.tls_ecdh_curve_server),
             verify=verify,
             ca_path=ctx.options.ssl_verify_upstream_trusted_confdir,
             ca_pemfile=ctx.options.ssl_verify_upstream_trusted_ca,
@@ -373,7 +372,7 @@ class TlsConfig:
             raise ValueError("Cannot validate certificate hostname without SNI")
 
         if server.alpn_offers:
-            tls_start.ssl_conn.set_alpn_protos(server.alpn_offers)
+            tls_start.ssl_conn.set_alpn_protos(list(server.alpn_offers))
 
         tls_start.ssl_conn.set_connect_state()
 
@@ -521,13 +520,10 @@ class TlsConfig:
                 ctx.options.tls_ecdh_curve_client,
                 ctx.options.tls_ecdh_curve_server,
             ]:
-                if ecdh_curve is not None:
-                    try:
-                        crypto.get_elliptic_curve(ecdh_curve)
-                    except Exception as e:
-                        raise exceptions.OptionsError(
-                            f"Invalid ECDH curve: {ecdh_curve!r}"
-                        ) from e
+                if ecdh_curve is not None and ecdh_curve not in net_tls.EC_CURVES:
+                    raise exceptions.OptionsError(
+                        f"Invalid ECDH curve: {ecdh_curve!r}. Valid curves are: {', '.join(net_tls.EC_CURVES)}"
+                    )
 
         if "tls_version_client_min" in updated:
             self._warn_unsupported_version("tls_version_client_min", True)
@@ -583,6 +579,9 @@ class TlsConfig:
                 f"for insecure TLS versions to work."
             )
 
+    def crl_path(self) -> str:
+        return f"/mitmproxy-{self.certstore.default_ca.serial}.crl"
+
     def get_cert(self, conn_context: context.Context) -> certs.CertStoreEntry:
         """
         This function determines the Common Name (CN), Subject Alternative Names (SANs) and Organization Name
@@ -590,15 +589,28 @@ class TlsConfig:
         """
         altnames: list[x509.GeneralName] = []
         organization: str | None = None
+        crl_distribution_point: str | None = None
 
         # Use upstream certificate if available.
         if ctx.options.upstream_cert and conn_context.server.certificate_list:
-            upstream_cert = conn_context.server.certificate_list[0]
+            upstream_cert: certs.Cert = conn_context.server.certificate_list[0]
             if upstream_cert.cn:
                 altnames.append(_ip_or_dns_name(upstream_cert.cn))
             altnames.extend(upstream_cert.altnames)
             if upstream_cert.organization:
                 organization = upstream_cert.organization
+
+            # Replace original URL path with the CA cert serial number, which acts as a magic token
+            if crls := upstream_cert.crl_distribution_points:
+                try:
+                    scheme, netloc, *_ = urllib.parse.urlsplit(crls[0])
+                except ValueError:
+                    logger.info(f"Failed to parse CRL URL: {crls[0]!r}")
+                else:
+                    # noinspection PyTypeChecker
+                    crl_distribution_point = urllib.parse.urlunsplit(
+                        (scheme, netloc, self.crl_path(), None, None)
+                    )
 
         # Add SNI or our local IP address.
         if conn_context.client.sni:
@@ -616,7 +628,20 @@ class TlsConfig:
         # RFC 2818: If a subjectAltName extension of type dNSName is present, that MUST be used as the identity.
         # In other words, the Common Name is irrelevant then.
         cn = next((str(x.value) for x in altnames), None)
-        return self.certstore.get_cert(cn, altnames, organization)
+        return self.certstore.get_cert(
+            cn, altnames, organization, crl_distribution_point
+        )
+
+    def request(self, flow: http.HTTPFlow):
+        if not flow.live or flow.error or flow.response:
+            return
+        # Check if a request has a magic CRL token at the end
+        if flow.request.path.endswith(self.crl_path()):
+            flow.response = http.Response.make(
+                200,
+                self.certstore.default_crl,
+                {"Content-Type": "application/pkix-crl"},
+            )
 
 
 def _ip_or_dns_name(val: str) -> x509.GeneralName:

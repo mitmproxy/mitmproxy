@@ -158,7 +158,7 @@ class Core:
                         req.url = val
                     except ValueError as e:
                         raise exceptions.CommandError(
-                            f"URL {repr(val)} is invalid: {e}"
+                            f"URL {val!r} is invalid: {e}"
                         ) from e
                 else:
                     self.rupdate = False

@@ -118,8 +118,8 @@ class Command:
         try:
             bound_arguments = self.signature.bind(*args)
         except TypeError:
-            expected = f"Expected: {str(self.signature.parameters)}"
-            received = f"Received: {str(args)}"
+            expected = f"Expected: {self.signature.parameters}"
+            received = f"Received: {args}"
             raise exceptions.CommandError(
                 f"Command argument mismatch: \n    {expected}\n    {received}"
             )
@@ -200,8 +200,8 @@ class CommandManager:
         Parse a possibly partial command. Return a sequence of ParseResults and a sequence of remainder type help items.
         """
 
-        parts: pyparsing.ParseResults = command_lexer.expr.parseString(
-            cmdstr, parseAll=True
+        parts: pyparsing.ParseResults = command_lexer.expr.parse_string(
+            cmdstr, parse_all=True
         )
 
         parsed: list[ParseResult] = []

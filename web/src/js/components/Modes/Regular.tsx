@@ -7,9 +7,10 @@ import {
     setListenHost,
 } from "../../ducks/modes/regular";
 import ValueEditor from "../editors/ValueEditor";
-import { getSpec, RegularState } from "../../modes/regular";
+import type { RegularState } from "../../modes/regular";
+import { getSpec } from "../../modes/regular";
 import { Popover } from "./Popover";
-import { ServerInfo } from "../../ducks/backendState";
+import type { ServerInfo } from "../../ducks/backendState";
 import { ServerStatus } from "./CaptureSetup";
 
 export default function Regular() {
@@ -59,7 +60,7 @@ function RegularRow({
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
-                <Popover iconClass="fa fa-cog">
+                <Popover icon="settings">
                     <h4>Advanced Configuration</h4>
                     <p>Listen Host</p>
                     <ValueEditor

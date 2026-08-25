@@ -23,10 +23,10 @@ describe("formatTimeDelta", () => {
 describe("formatTimeStamp", () => {
     it("should return formatted time", () => {
         expect(
-            utils.formatTimeStamp(1483228800, { milliseconds: false }),
+            utils.formatTimeStamp(1483228800, { includeMilliseconds: false }),
         ).toEqual("2017-01-01 00:00:00");
         expect(
-            utils.formatTimeStamp(1483228800, { milliseconds: true }),
+            utils.formatTimeStamp(1483228800, { includeMilliseconds: true }),
         ).toEqual("2017-01-01 00:00:00.000");
     });
 });
@@ -63,18 +63,22 @@ describe("fetchApi", () => {
     it("should be possible to do put request", () => {
         fetchMock.mockClear();
         utils.fetchApi.put("http://foo", [1, 2, 3], {});
-        expect(fetchMock.mock.calls[0]).toEqual([
-            "http://foo",
-            {
+        expect(fetchMock.mock.calls[0][0]).toEqual("http://foo");
+        expect(fetchMock.mock.calls[0][1]).toEqual(
+            expect.objectContaining({
                 body: "[1,2,3]",
                 credentials: "same-origin",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-XSRFToken": undefined,
-                },
                 method: "PUT",
-            },
-        ]);
+            }),
+        );
+        expect(
+            (fetchMock.mock.calls[0][1]?.headers as Headers).get(
+                "Content-Type",
+            ),
+        ).toEqual("application/json");
+        expect(
+            (fetchMock.mock.calls[0][1]?.headers as Headers).has("X-XSRFToken"),
+        ).toBeFalsy();
     });
 });
 

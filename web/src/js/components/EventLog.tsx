@@ -1,14 +1,11 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import {
-    EventLogItem,
-    LogLevel,
-    toggleFilter,
-    toggleVisibility,
-} from "../ducks/eventLog";
+import type { EventLogItem } from "../ducks/eventLog";
+import { LogLevel, toggleFilter, toggleVisibility } from "../ducks/eventLog";
 import ToggleButton from "./common/ToggleButton";
 import EventList from "./EventLog/EventList";
-import { RootState } from "../ducks";
+import type { RootState } from "../ducks";
+import Icon from "./common/Icon";
 
 type EventLogState = {
     height: number;
@@ -17,8 +14,8 @@ type EventLogState = {
 type EventLogProps = {
     events: EventLogItem[];
     filters: { [level in LogLevel]: boolean };
-    toggleFilter: (filter: LogLevel) => any;
-    close: () => any;
+    toggleFilter: (filter: LogLevel) => void;
+    close: () => void;
     defaultHeight: number;
 };
 
@@ -26,10 +23,10 @@ export class PureEventLog extends Component<EventLogProps, EventLogState> {
     static defaultProps = {
         defaultHeight: 200,
     };
-    private dragStart: number;
+    private dragStart = 0;
 
-    constructor(props, context) {
-        super(props, context);
+    constructor(props: EventLogProps) {
+        super(props);
 
         this.state = { height: this.props.defaultHeight };
 
@@ -64,7 +61,7 @@ export class PureEventLog extends Component<EventLogProps, EventLogState> {
             <div className="eventlog" style={{ height }}>
                 <div onMouseDown={this.onDragStart}>
                     Eventlog
-                    <div className="pull-right">
+                    <div className="eventlog-actions float-right">
                         {Object.values(LogLevel).map((type) => (
                             <ToggleButton
                                 key={type}
@@ -73,7 +70,7 @@ export class PureEventLog extends Component<EventLogProps, EventLogState> {
                                 onToggle={() => toggleFilter(type)}
                             />
                         ))}
-                        <i onClick={close} className="fa fa-close"></i>
+                        <Icon name="close" onClick={close} />
                     </div>
                 </div>
                 <EventList events={events} />

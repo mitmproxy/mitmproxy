@@ -1,6 +1,7 @@
-import { ModesState } from "../../ducks/modes";
+import type { ModesState } from "../../ducks/modes";
 import { parseSpec } from "../../modes";
-import { getSpec, parseRaw, DnsState } from "../../modes/dns";
+import type { DnsState } from "../../modes/dns";
+import { getSpec, parseRaw } from "../../modes/dns";
 
 describe("getSpec dns mode", () => {
     it("should return the correct mode config", () => {

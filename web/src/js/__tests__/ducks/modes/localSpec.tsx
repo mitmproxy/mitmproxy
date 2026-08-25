@@ -3,13 +3,9 @@ import localReducer, {
     setActive,
     setSelectedProcesses,
 } from "../../../ducks/modes/local";
-import {
-    RECEIVE as STATE_RECEIVE,
-    BackendState,
-} from "../../../ducks/backendState";
+import { STATE_UPDATE } from "../../../ducks/backendState";
 import { TStore } from "../tutils";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
-import { PayloadAction } from "@reduxjs/toolkit";
 
 describe("localSlice", () => {
     beforeEach(() => {
@@ -24,6 +20,7 @@ describe("localSlice", () => {
         expect(store.getState().modes.local[0]).toEqual({
             active: false,
             selectedProcesses: "",
+            ui_id: store.getState().modes.local[0].ui_id,
         });
 
         const server = store.getState().modes.local[0];
@@ -33,6 +30,7 @@ describe("localSlice", () => {
         expect(store.getState().modes.local[0]).toEqual({
             active: true,
             selectedProcesses: "curl",
+            ui_id: store.getState().modes.local[0].ui_id,
         });
 
         expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -61,21 +59,18 @@ describe("localSlice", () => {
     });
 
     it("should handle RECEIVE_STATE with an active local proxy", () => {
-        const action = {
-            type: STATE_RECEIVE.type,
-            payload: {
-                servers: {
-                    "local:curl": {
-                        description: "Local redirector",
-                        full_spec: "local:curl",
-                        is_running: true,
-                        last_exception: null,
-                        listen_addrs: [],
-                        type: "local",
-                    },
+        const action = STATE_UPDATE({
+            servers: {
+                "local:curl": {
+                    description: "Local redirector",
+                    full_spec: "local:curl",
+                    is_running: true,
+                    last_exception: null,
+                    listen_addrs: [],
+                    type: "local",
                 },
             },
-        } as PayloadAction<Partial<BackendState>>;
+        });
         const newState = localReducer(initialState, action);
         expect(newState).toEqual([
             {
@@ -87,12 +82,7 @@ describe("localSlice", () => {
     });
 
     it("should handle RECEIVE_STATE with no active local proxy", () => {
-        const action = {
-            type: STATE_RECEIVE.type,
-            payload: {
-                servers: {},
-            },
-        } as PayloadAction<Partial<BackendState>>;
+        const action = STATE_UPDATE({ servers: {} });
         const newState = localReducer(initialState, action);
         expect(newState).toEqual([
             {

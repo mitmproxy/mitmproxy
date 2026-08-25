@@ -1074,6 +1074,17 @@ class TestMessageContentEncoding:
         assert r.raw_content == b"foo"
         assert "content-encoding" not in r.headers
 
+    def test_decode_noop_on_empty_content(self):
+        t = tresp(content=b"")
+        assert t.headers["content-length"] == "7"
+        t.decode()
+        assert t.headers["content-length"] == "7"
+
+        t = tresp(content=None)
+        assert t.headers["content-length"] == "7"
+        t.decode()
+        assert t.headers["content-length"] == "7"
+
 
 class TestMessageText:
     def test_simple(self):

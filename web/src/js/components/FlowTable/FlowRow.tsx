@@ -1,55 +1,66 @@
 import React, { useCallback } from "react";
 import classnames from "classnames";
-import { Flow } from "../../flow";
-import { useAppDispatch, useAppSelector } from "../../ducks";
-import { select } from "../../ducks/flows";
+import type { Flow } from "../../flow";
+import { useAppDispatch } from "../../ducks";
+import { select, selectRange, selectToggle } from "../../ducks/flows";
+import { isValidColumnName } from "../../flow/utils";
 import * as columns from "./FlowColumns";
 
 type FlowRowProps = {
     flow: Flow;
     selected: boolean;
     highlighted: boolean;
+    displayColumnNames: string[];
+    rowNumber: number;
+    height: number;
 };
 
 export default React.memo(function FlowRow({
     flow,
     selected,
     highlighted,
+    displayColumnNames,
+    rowNumber,
+    height,
 }: FlowRowProps) {
     const dispatch = useAppDispatch();
-    const displayColumnNames = useAppSelector(
-        (state) => state.options.web_columns,
-    );
     const className = classnames({
-        selected: selected,
-        highlighted: highlighted,
+        selected,
+        highlighted,
         intercepted: flow.intercepted,
         "has-request": flow.type === "http" && flow.request,
         "has-response": flow.type === "http" && flow.response,
     });
 
     const onClick = useCallback(
-        (e) => {
+        (e: React.MouseEvent<HTMLTableRowElement>) => {
             // a bit of a hack to disable row selection for quickactions.
-            let node = e.target;
+            let node = e.target as HTMLElement;
             while (node.parentNode) {
                 if (node.classList.contains("col-quickactions")) return;
-                node = node.parentNode;
+                node = node.parentNode as HTMLElement;
             }
-            dispatch(select(flow.id));
+            if (e.metaKey || e.ctrlKey) {
+                dispatch(selectToggle(flow));
+            } else if (e.shiftKey) {
+                window.getSelection()?.empty();
+                dispatch(selectRange(flow));
+            } else {
+                dispatch(select([flow]));
+            }
         },
         [flow],
     );
 
     const displayColumns = displayColumnNames
+        .filter(isValidColumnName)
         .map((x) => columns[x])
-        .filter((x) => x)
         .concat(columns.quickactions);
 
     return (
-        <tr className={className} onClick={onClick}>
+        <tr className={className} onClick={onClick} style={{ height }}>
             {displayColumns.map((Column) => (
-                <Column key={Column.name} flow={flow} />
+                <Column key={Column.name} flow={flow} rowNumber={rowNumber} />
             ))}
         </tr>
     );

@@ -3,9 +3,7 @@
 title: "mitmproxy.tls"
 url: "api/mitmproxy/tls.html"
 
-menu:
-    addons:
-        parent: 'Event Hooks & API'
+menu: api
 ---
 
 {{< readfile file="/generated/api/mitmproxy/tls.html" >}}

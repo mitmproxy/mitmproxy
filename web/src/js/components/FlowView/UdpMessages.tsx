@@ -1,4 +1,4 @@
-import { UDPFlow } from "../../flow";
+import type { UDPFlow } from "../../flow";
 import * as React from "react";
 import Messages from "./Messages";
 

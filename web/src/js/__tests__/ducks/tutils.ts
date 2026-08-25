@@ -1,8 +1,8 @@
 import { ConnectionState } from "../../ducks/connection";
 import { TDNSFlow, THTTPFlow, TTCPFlow, TUDPFlow } from "./_tflow";
-import { RootState } from "../../ducks";
-import { reducer } from "../../ducks/store";
-import { DNSFlow, HTTPFlow, TCPFlow, UDPFlow } from "../../flow";
+import type { RootState, RootStore } from "../../ducks";
+import { middlewares, reducer } from "../../ducks/store";
+import type { DNSFlow, Flow, HTTPFlow, TCPFlow, UDPFlow } from "../../flow";
 import { defaultState as defaultOptions } from "../../ducks/options";
 import { TBackendState } from "./_tbackendstate";
 import { configureStore } from "@reduxjs/toolkit";
@@ -10,6 +10,7 @@ import { Tab } from "../../ducks/ui/tabs";
 import { LogLevel } from "../../ducks/eventLog";
 import { ReverseProxyProtocols } from "../../backends/consts";
 import { defaultReverseState } from "../../modes/reverse";
+import { FilterName } from "../../ducks/ui/filter";
 
 export { THTTPFlow as TFlow, TTCPFlow, TUDPFlow };
 
@@ -73,40 +74,44 @@ export const testState: RootState = {
         },
         tabs: {
             current: Tab.Capture,
-            isInitial: true,
+        },
+        filter: {
+            [FilterName.Search]: "~u /second | ~tcp | ~dns | ~udp",
+            [FilterName.Highlight]: "~u /path",
         },
     },
     options: defaultOptions,
     flows: {
-        selected: [tflow1.id],
-        byId: {
-            [tflow0.id]: tflow0,
-            [tflow1.id]: tflow1,
-            [tflow2.id]: tflow2,
-            [tflow3.id]: tflow3,
-            [tflow4.id]: tflow4,
-        },
-        filter: "~u /second | ~tcp | ~dns | ~udp",
-        highlight: "~u /path",
+        selected: [tflow1],
+        selectedIds: new Set([tflow1.id]),
+        byId: new Map<string, Flow>([
+            [tflow0.id, tflow0],
+            [tflow1.id, tflow1],
+            [tflow2.id, tflow2],
+            [tflow3.id, tflow3],
+            [tflow4.id, tflow4],
+        ]),
         sort: {
             desc: true,
             column: "path",
         },
+        orderReversed: false,
         view: [tflow1, tflow2, tflow3, tflow4],
         list: [tflow0, tflow1, tflow2, tflow3, tflow4],
-        listIndex: {
-            [tflow0.id]: 0,
-            [tflow1.id]: 1,
-            [tflow2.id]: 2,
-            [tflow3.id]: 3,
-            [tflow4.id]: 4,
-        },
-        viewIndex: {
-            [tflow1.id]: 0,
-            [tflow2.id]: 1,
-            [tflow3.id]: 2,
-            [tflow4.id]: 3,
-        },
+        _listIndex: new Map<string, number>([
+            [tflow0.id, 0],
+            [tflow1.id, 1],
+            [tflow2.id, 2],
+            [tflow3.id, 3],
+            [tflow4.id, 4],
+        ]),
+        _viewIndex: new Map<string, number>([
+            [tflow1.id, 0],
+            [tflow2.id, 1],
+            [tflow3.id, 2],
+            [tflow4.id, 3],
+        ]),
+        highlightedIds: new Set([tflow1.id]),
     },
     connection: {
         state: ConnectionState.ESTABLISHED,
@@ -124,10 +129,10 @@ export const testState: RootState = {
             { id: "1", level: LogLevel.info, message: "foo" },
             { id: "2", level: LogLevel.error, message: "bar" },
         ],
-        byId: {}, // TODO: incomplete
-        list: [], // TODO: incomplete
-        listIndex: {}, // TODO: incomplete
-        viewIndex: {}, // TODO: incomplete
+        list: [
+            { id: "1", level: LogLevel.info, message: "foo" },
+            { id: "2", level: LogLevel.error, message: "bar" },
+        ],
     },
     commandBar: {
         visible: false,
@@ -136,17 +141,20 @@ export const testState: RootState = {
         regular: [
             {
                 active: true,
+                ui_id: 1,
             },
         ],
         local: [
             {
                 active: false,
                 selectedProcesses: "",
+                ui_id: 2,
             },
         ],
         wireguard: [
             {
                 active: false,
+                ui_id: 3,
             },
         ],
         reverse: [
@@ -154,28 +162,33 @@ export const testState: RootState = {
                 active: false,
                 protocol: ReverseProxyProtocols.HTTPS,
                 destination: "example.com",
+                ui_id: 4,
             },
             defaultReverseState(),
         ],
         transparent: [
             {
                 active: false,
+                ui_id: 5,
             },
         ],
         socks: [
             {
                 active: false,
+                ui_id: 6,
             },
         ],
         upstream: [
             {
                 active: false,
                 destination: "example.com",
+                ui_id: 7,
             },
         ],
         dns: [
             {
                 active: false,
+                ui_id: 8,
             },
         ],
     },
@@ -198,13 +211,12 @@ export const testState: RootState = {
     },
 };
 
-export const TStore = () =>
-    configureStore({
+export function TStore(
+    preloadedState: RootState | null = testState,
+): RootStore {
+    return configureStore({
         reducer,
-        preloadedState: testState,
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({
-                immutableCheck: { warnAfter: 500_000 },
-                serializableCheck: { warnAfter: 500_000 },
-            }),
+        preloadedState: preloadedState ?? undefined,
+        middleware: (getDefaultMiddleware) => getDefaultMiddleware(middlewares),
     });
+}

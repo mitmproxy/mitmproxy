@@ -19,12 +19,13 @@ exports[`RegularSpec 1`] = `
       >
         <input
           checked=""
-          id="mode-checkbox-:r0:"
-          name="mode-checkbox-:r0:"
+          id="mode-checkbox-«r0»"
+          name="mode-checkbox-«r0»"
           type="checkbox"
         />
         <label
-          for="mode-checkbox-:r0:"
+          class="mode-entry-label"
+          for="mode-checkbox-«r0»"
           style="margin-bottom: 0px; font-weight: normal;"
         >
           Run HTTP/S Proxy
@@ -33,15 +34,33 @@ exports[`RegularSpec 1`] = `
           class="mode-popover"
         >
           <button
-            popovertarget=":r1:"
+            popovertarget="«r1»"
           >
-            <i
+            <svg
               aria-hidden="true"
-              class="fa fa-cog"
-            />
+              class="lucide lucide-settings icon icon-settings"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"
+              />
+              <circle
+                cx="12"
+                cy="12"
+                r="3"
+              />
+            </svg>
           </button>
           <div
-            id=":r1:"
+            id="«r1»"
             popover="auto"
           >
             <h4>
@@ -100,12 +119,13 @@ exports[`RegularSpec 2`] = `
       >
         <input
           checked=""
-          id="mode-checkbox-:r2:"
-          name="mode-checkbox-:r2:"
+          id="mode-checkbox-«r2»"
+          name="mode-checkbox-«r2»"
           type="checkbox"
         />
         <label
-          for="mode-checkbox-:r2:"
+          class="mode-entry-label"
+          for="mode-checkbox-«r2»"
           style="margin-bottom: 0px; font-weight: normal;"
         >
           Run HTTP/S Proxy
@@ -114,15 +134,33 @@ exports[`RegularSpec 2`] = `
           class="mode-popover"
         >
           <button
-            popovertarget=":r3:"
+            popovertarget="«r3»"
           >
-            <i
+            <svg
               aria-hidden="true"
-              class="fa fa-cog"
-            />
+              class="lucide lucide-settings icon icon-settings"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"
+              />
+              <circle
+                cx="12"
+                cy="12"
+                r="3"
+              />
+            </svg>
           </button>
           <div
-            id=":r3:"
+            id="«r3»"
             popover="auto"
           >
             <h4>

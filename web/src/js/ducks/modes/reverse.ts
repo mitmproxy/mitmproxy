@@ -1,18 +1,12 @@
 import { createModeUpdateThunk, addSetter } from "./utils";
-import { ReverseProxyProtocols } from "../../backends/consts";
-import {
-    BackendState,
-    RECEIVE as RECEIVE_STATE,
-    UPDATE as UPDATE_STATE,
-} from "../backendState";
+import type { ReverseProxyProtocols } from "../../backends/consts";
+import type { BackendState } from "../backendState";
+import { STATE_RECEIVE, STATE_UPDATE } from "../backendState";
 import { shallowEqual } from "react-redux";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import {
-    defaultReverseState,
-    getSpec,
-    parseRaw,
-    ReverseState,
-} from "../../modes/reverse";
+import type { PayloadAction } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
+import type { ReverseState } from "../../modes/reverse";
+import { defaultReverseState, getSpec, parseRaw } from "../../modes/reverse";
 import { parseSpec } from "../../modes";
 
 export const setActive = createModeUpdateThunk<boolean>(
@@ -60,8 +54,8 @@ export const reverseSlice = createSlice({
         addSetter(builder, "protocol", setProtocol);
         addSetter(builder, "destination", setDestination);
 
-        builder.addCase(RECEIVE_STATE, updateState);
-        builder.addCase(UPDATE_STATE, updateState);
+        builder.addCase(STATE_RECEIVE, updateState);
+        builder.addCase(STATE_UPDATE, updateState);
         function updateState(
             state: ReverseState[],
             action: PayloadAction<Partial<BackendState>>,

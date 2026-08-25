@@ -434,7 +434,7 @@ def test_set():
     assert opts.bool is True
     opts.set("bool=true")
     assert opts.bool is True
-    with pytest.raises(exceptions.OptionsError):
+    with pytest.raises(exceptions.OptionsError, match="Failed to parse option bool: "):
         opts.set("bool=wobble")
 
     opts.set("bool=toggle")
@@ -444,7 +444,7 @@ def test_set():
 
     opts.set("int=1")
     assert opts.int == 1
-    with pytest.raises(exceptions.OptionsError):
+    with pytest.raises(exceptions.OptionsError, match="Failed to parse option int: "):
         opts.set("int=wobble")
     opts.set("optint")
     assert opts.optint is None

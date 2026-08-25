@@ -1,10 +1,12 @@
 /* eslint-disable react/prop-types */
-import React, { ComponentProps } from "react";
-import { Option, update as updateOptions } from "../../ducks/options";
+import type { ComponentProps } from "react";
+import React from "react";
+import type { Option } from "../../ducks/options";
+import { update as updateOptions } from "../../ducks/options";
 import classnames from "classnames";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 
-const stopPropagation = (e) => {
+const stopPropagation = (e: React.KeyboardEvent<HTMLElement>) => {
     if (e.key !== "Escape") {
         e.stopPropagation();
     }
@@ -101,7 +103,7 @@ function StringSequenceOption({
 
     const [textAreaValue, setTextAreaValue] = React.useState(value.join("\n"));
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newValue = e.target.value;
         setTextAreaValue(newValue); //save in the state the current input value
         onChange(
@@ -146,7 +148,7 @@ function PureOption({ choices, type, value, onChange, name, error }) {
         if (!Opt) throw `unknown option type ${type}`;
     }
     if (Opt !== BooleanOption) {
-        props.className = "form-control";
+        props.className = "input";
     }
 
     return (

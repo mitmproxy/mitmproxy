@@ -9,13 +9,15 @@ import {
     setListenPort,
     setProtocol,
 } from "../../ducks/modes/reverse";
-import { getSpec, ReverseState } from "../../modes/reverse";
+import type { ReverseState } from "../../modes/reverse";
+import { getSpec } from "../../modes/reverse";
 import { ReverseProxyProtocols } from "../../backends/consts";
-import { ServerInfo } from "../../ducks/backendState";
+import type { ServerInfo } from "../../ducks/backendState";
 import ValueEditor from "../editors/ValueEditor";
 import { ServerStatus } from "./CaptureSetup";
 import { ModeToggle } from "./ModeToggle";
 import { Popover } from "./Popover";
+import Icon from "../common/Icon";
 
 interface ReverseToggleRowProps {
     removable: boolean;
@@ -48,7 +50,7 @@ export default function Reverse() {
                     className="mode-reverse-add-server"
                     onClick={() => dispatch(addServer())}
                 >
-                    <i className="fa fa-plus-square-o" aria-hidden="true"></i>
+                    <Icon name="addSquare" />
                     Add additional server
                 </div>
             </div>
@@ -111,7 +113,7 @@ function ReverseToggleRow({
                     }
                     placeholder="example.com"
                 />
-                <Popover iconClass="fa fa-cog">
+                <Popover icon="settings">
                     <h4>Advanced Configuration</h4>
                     <p>Listen Host</p>
                     <ValueEditor
@@ -138,11 +140,14 @@ function ReverseToggleRow({
                     />
                 </Popover>
                 {removable && (
-                    <i
-                        className="fa fa-fw fa-trash fa-lg"
-                        aria-hidden="true"
-                        onClick={deleteServer}
-                    ></i>
+                    <span style={{ cursor: "pointer" }}>
+                        <Icon
+                            name="delete"
+                            size={20}
+                            className="text-muted"
+                            onClick={deleteServer}
+                        />
+                    </span>
                 )}
             </ModeToggle>
             <ServerStatus error={error} backendState={backendState} />

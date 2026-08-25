@@ -1,0 +1,703 @@
+// Semantic color tokens.
+// Light values below are byte-equal to the literals they replace, so this change is visually a no-op.
+// The dark theme overrides these under a `[data-theme="dark"]` selector.
+:root {
+    // Match native controls (form inputs, scrollbars) to the active theme.
+    color-scheme: light;
+
+    // Surfaces
+    --mitmweb-bg: #fff;
+    --mitmweb-bg-alt: #f2f2f2;
+    --mitmweb-bg-muted: #eee;
+    --mitmweb-bg-hover: #e6e6e6;
+    --mitmweb-bg-active: #e5e5e5;
+
+    // Text
+    --mitmweb-fg: #333;
+    --mitmweb-fg-input: #555;
+    --mitmweb-fg-muted: #777;
+    --mitmweb-fg-strong: #000;
+
+    // Neutral gray (muted border + text)
+    --mitmweb-gray: #b2b2b2;
+
+    // Green (mode left border)
+    --mitmweb-green: #77c77a;
+
+    // Borders
+    --mitmweb-border: #ccc;
+    --mitmweb-border-light: #ddd;
+    --mitmweb-border-lighter: #e5e5e5;
+    --mitmweb-border-strong: #adadad;
+
+    // Accent (primary)
+    --mitmweb-accent: #337ab7;
+    --mitmweb-accent-hover: #23527c;
+    --mitmweb-accent-active: #286090;
+    --mitmweb-accent-border: #2e6da4;
+    --mitmweb-accent-border-active: #204d74;
+    --mitmweb-focus-ring: #66afe9;
+
+    // State — solid backgrounds
+    --mitmweb-info: #5bc0de;
+    --mitmweb-info-hover: #31b0d5;
+    --mitmweb-info-border: #46b8da;
+    --mitmweb-info-border-hover: #269abc;
+    --mitmweb-success: #5cb85c;
+    --mitmweb-danger: #d9534f;
+    --mitmweb-warning: #f0ad4e;
+
+    // State — text
+    --mitmweb-text-success: #3c763d;
+    --mitmweb-text-info: #31708f;
+    --mitmweb-text-warning: #8a6d3b;
+    --mitmweb-text-danger: #a94442;
+
+    // State — soft colors, for the many small pills that are on screen permanently (status badges, footer options)
+    --mitmweb-neutral-soft-bg: var(--mitmweb-fg-muted);
+    --mitmweb-neutral-soft-fg: #fff;
+    --mitmweb-info-soft-bg: var(--mitmweb-info);
+    --mitmweb-info-soft-fg: #fff;
+    --mitmweb-success-soft-bg: var(--mitmweb-success);
+    --mitmweb-success-soft-fg: #fff;
+    --mitmweb-warning-soft-bg: var(--mitmweb-warning);
+    --mitmweb-warning-soft-fg: #fff;
+    --mitmweb-danger-soft-bg: var(--mitmweb-danger);
+    --mitmweb-danger-soft-fg: #fff;
+
+    // Highlight (row hover / suggestion selection)
+    --mitmweb-highlight: hsla(209, 52%, 84%, 0.5);
+
+    // Request/response first-line banner
+    --mitmweb-first-line-bg: #337ab7;
+    --mitmweb-first-line-fg: #fff;
+
+    // Flow table header cell the flows are sorted by, one shade off the header row
+    --mitmweb-th-sorted-bg: #fafafa;
+
+    // Flow table row states (base rows reuse --mitmweb-bg / --mitmweb-bg-alt; -alt is the even-row shade)
+    --mitmweb-row-highlight: hsl(48, 100%, 80%);
+    --mitmweb-row-highlight-alt: hsl(48, 100%, 75%);
+    --mitmweb-row-selected: hsl(209, 51%, 92%);
+    --mitmweb-row-selected-alt: hsl(209, 51%, 86%);
+    --mitmweb-row-selected-highlight: hsl(209, 96%, 74%);
+    --mitmweb-row-selected-highlight-alt: hsl(209, 96%, 68%);
+
+    // Alert
+    --mitmweb-alert-warning-bg: #fcf8e3;
+    --mitmweb-alert-warning-border: #faebcc;
+
+    // Drop shadow cast by panel edges (footers)
+    --mitmweb-shadow: lightgray;
+
+    // Applied to bitmap icons supplied by the OS, which we cannot recolor
+    --mitmweb-bitmap-icon-filter: none;
+
+    // `thumb track` for scrollbars
+    --mitmweb-scrollbar: auto;
+}
+
+[data-theme="dark"] {
+    color-scheme: dark;
+
+    // Surfaces
+    --mitmweb-bg: #1e1e1e;
+    --mitmweb-bg-alt: #252526;
+    --mitmweb-bg-muted: #2d2d2d;
+    --mitmweb-bg-hover: #333333;
+    --mitmweb-bg-active: #3a3a3a;
+
+    // Text
+    --mitmweb-fg: #d4d4d4;
+    --mitmweb-fg-input: #cccccc;
+    --mitmweb-fg-muted: #9a9a9a;
+    --mitmweb-fg-strong: #ffffff;
+
+    // Borders
+    --mitmweb-border: #3c3c3c;
+    --mitmweb-border-light: #333333;
+    --mitmweb-border-lighter: #333333;
+    --mitmweb-border-strong: #555555;
+
+    // Accent (primary) — brightened for contrast on dark surfaces
+    --mitmweb-accent: #4a9eff;
+    --mitmweb-accent-hover: #6fb3ff;
+    --mitmweb-accent-active: #3a8ae0;
+    --mitmweb-accent-border: #3a8ae0;
+    --mitmweb-accent-border-active: #2f77c4;
+    --mitmweb-focus-ring: #4a9eff;
+
+    // State — solid backgrounds keep their vivid hues
+    --mitmweb-info: #5bc0de;
+    --mitmweb-info-hover: #31b0d5;
+    --mitmweb-info-border: #46b8da;
+    --mitmweb-info-border-hover: #269abc;
+    --mitmweb-success: #5cb85c;
+    --mitmweb-danger: #d9534f;
+    --mitmweb-warning: #f0ad4e;
+
+    // State — text lightened for dark background
+    --mitmweb-text-success: #6cc26c;
+    --mitmweb-text-info: #5bc0de;
+    --mitmweb-text-warning: #d0a95c;
+    --mitmweb-text-danger: #e07b7b;
+
+    // State — soft colors. A solid fill glares when repeated across every row, so it sinks towards the background and the label carries the hue.
+    --mitmweb-neutral-soft-bg: #3a3a3a;
+    --mitmweb-neutral-soft-fg: #c8c8c8;
+    --mitmweb-info-soft-bg: #1e4a5a;
+    --mitmweb-info-soft-fg: #9fd6e8;
+    --mitmweb-success-soft-bg: #2c5533;
+    --mitmweb-success-soft-fg: #9fd3a3;
+    --mitmweb-warning-soft-bg: #574220;
+    --mitmweb-warning-soft-fg: #e6c081;
+    --mitmweb-danger-soft-bg: #5a2b29;
+    --mitmweb-danger-soft-fg: #eda6a3;
+
+    // Highlight (row hover / suggestion selection)
+    --mitmweb-highlight: hsla(209, 60%, 42%, 0.6);
+
+    // Request/response first-line banner — the accent blue is too bright to read monospace text on
+    --mitmweb-first-line-bg: #1c3a5e;
+    --mitmweb-first-line-fg: #dbe9fa;
+
+    // Flow table header cell the flows are sorted by, one shade off the header row
+    --mitmweb-th-sorted-bg: #2d2d2d;
+
+    // Flow table row states (base rows reuse --mitmweb-bg / --mitmweb-bg-alt; -alt is the even-row shade)
+    --mitmweb-row-highlight: hsl(48, 60%, 26%);
+    --mitmweb-row-highlight-alt: hsl(48, 60%, 22%);
+    --mitmweb-row-selected: hsl(209, 45%, 26%);
+    --mitmweb-row-selected-alt: hsl(209, 45%, 22%);
+    --mitmweb-row-selected-highlight: hsl(209, 55%, 34%);
+    --mitmweb-row-selected-highlight-alt: hsl(209, 55%, 30%);
+
+    // Alert
+    --mitmweb-alert-warning-bg: #4d4327;
+    --mitmweb-alert-warning-border: #6b5d2f;
+
+    // Drop shadow cast by panel edges (footers)
+    --mitmweb-shadow: #000;
+
+    // The OS hands us light icons.
+    // The generic executable icon is a plain white square, which glares on a dark popover.
+    // Dimming knocks it back to grey while leaving colored app icons recognizable.
+    --mitmweb-bitmap-icon-filter: brightness(0.7);
+
+    // Panes such as the flow table reserve a scrollbar gutter permanently (`overflow-y: scroll`).
+    // Under `color-scheme: dark` the UA paints that gutter light, so an idle scrollbar reads as a stray vertical line against the pane divider.
+    // Sinking the track into the surface keeps it as invisible as it is on light backgrounds.
+    --mitmweb-scrollbar: var(--mitmweb-border-strong) var(--mitmweb-bg);
+}
+
+// www.paulirish.com/2012/box-sizing-border-box-ftw/
+html {
+    box-sizing: border-box;
+    font-size: 10px;
+}
+
+*,
+*:before,
+*:after {
+    box-sizing: inherit;
+}
+
+@font-family-sans-serif:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    "Noto Sans",
+    "Liberation Sans",
+    sans-serif,
+    "Apple Color Emoji",
+    "Segoe UI Emoji",
+    "Segoe UI Symbol",
+    "Noto Color Emoji";
+@font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+
+body {
+    margin: 0;
+    font-family: @font-family-sans-serif;
+    font-size: 14px;
+    line-height: 1.42857143;
+    color: var(--mitmweb-fg);
+    background-color: var(--mitmweb-bg);
+    scrollbar-color: var(--mitmweb-scrollbar);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: inherit;
+    font-weight: 500;
+    line-height: 1.1;
+    color: inherit;
+}
+
+h1,
+h2,
+h3 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+h4,
+h5,
+h6 {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+h1 {
+    font-size: 36px;
+}
+
+h2 {
+    font-size: 30px;
+}
+
+h3 {
+    font-size: 24px;
+}
+
+h4 {
+    font-size: 18px;
+}
+
+h5 {
+    font-size: 14px;
+}
+
+h6 {
+    font-size: 12px;
+}
+
+p {
+    margin: 0 0 10px;
+}
+
+ul,
+ol {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+ul ul,
+ul ol,
+ol ul,
+ol ol {
+    margin-bottom: 0;
+}
+
+input,
+button,
+select,
+textarea {
+    font: inherit;
+}
+
+.float-right {
+    float: right;
+}
+
+.icon {
+    display: inline-block;
+    vertical-align: text-bottom;
+}
+
+.icon-spin {
+    animation: icon-spin 2s infinite linear;
+}
+
+@keyframes icon-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.text-primary {
+    color: var(--mitmweb-accent);
+}
+
+.docs-link,
+.docs-link:visited {
+    color: var(--mitmweb-accent);
+    text-decoration: none;
+}
+
+.docs-link:hover,
+.docs-link:focus {
+    color: var(--mitmweb-accent-hover);
+}
+
+.text-success {
+    color: var(--mitmweb-text-success);
+}
+
+.text-info {
+    color: var(--mitmweb-text-info);
+}
+
+.text-warning {
+    color: var(--mitmweb-text-warning);
+}
+
+.text-danger {
+    color: var(--mitmweb-text-danger);
+}
+
+.text-muted {
+    color: var(--mitmweb-fg-muted);
+}
+
+.hidden {
+    display: none !important;
+}
+
+.caret {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: 2px;
+    vertical-align: middle;
+    border-top: 4px dashed;
+    border-right: 4px solid transparent;
+    border-left: 4px solid transparent;
+}
+
+.btn {
+    display: inline-block;
+    text-decoration: none;
+    margin-bottom: 0;
+    font-weight: 400;
+    text-align: center;
+    vertical-align: middle;
+    touch-action: manipulation;
+    cursor: pointer;
+    background-image: none;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    padding: 6px 12px;
+    font-size: 14px;
+    line-height: 1.42857143;
+    border-radius: 4px;
+    user-select: none;
+}
+
+.btn:focus,
+.btn:hover {
+    color: var(--mitmweb-fg);
+    text-decoration: none;
+}
+
+.btn:active {
+    background-image: none;
+    outline: 0;
+    box-shadow: inset 0 3px 5px rgba(0, 0, 0, 12.5%);
+}
+
+.btn:disabled,
+.btn.disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+    box-shadow: none;
+}
+
+.btn-default {
+    color: var(--mitmweb-fg);
+    background-color: var(--mitmweb-bg);
+    border-color: var(--mitmweb-border);
+}
+
+.btn-default:hover,
+.btn-default:focus {
+    color: var(--mitmweb-fg);
+    background-color: var(--mitmweb-bg-hover);
+    border-color: var(--mitmweb-border-strong);
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: var(--mitmweb-accent);
+    border-color: var(--mitmweb-accent-border);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    color: #fff;
+    background-color: var(--mitmweb-accent-active);
+    border-color: var(--mitmweb-accent-border-active);
+}
+
+.btn-info {
+    color: #fff;
+    background-color: var(--mitmweb-info);
+    border-color: var(--mitmweb-info-border);
+}
+
+.btn-info:hover,
+.btn-info:focus {
+    color: #fff;
+    background-color: var(--mitmweb-info-hover);
+    border-color: var(--mitmweb-info-border-hover);
+}
+
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    border-radius: 3px;
+}
+
+.btn-xs {
+    padding: 1px 5px;
+    font-size: 12px;
+    line-height: 1.5;
+    border-radius: 3px;
+}
+
+.label {
+    display: inline;
+    padding: 0.2em 0.6em 0.3em;
+    font-size: 75%;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25em;
+}
+
+.label-default {
+    color: var(--mitmweb-neutral-soft-fg);
+    background-color: var(--mitmweb-neutral-soft-bg);
+}
+
+.label-primary {
+    background-color: var(--mitmweb-accent);
+}
+
+.label-success {
+    color: var(--mitmweb-success-soft-fg);
+    background-color: var(--mitmweb-success-soft-bg);
+}
+
+.label-danger {
+    color: var(--mitmweb-danger-soft-fg);
+    background-color: var(--mitmweb-danger-soft-bg);
+}
+
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.alert-warning {
+    color: var(--mitmweb-text-warning);
+    background-color: var(--mitmweb-alert-warning-bg);
+    border-color: var(--mitmweb-alert-warning-border);
+}
+
+.input-group {
+    position: relative;
+    display: table;
+    border-collapse: separate;
+}
+
+.input-group .input,
+.input-group-addon {
+    display: table-cell;
+}
+
+.input-group .input {
+    position: relative;
+    z-index: 2;
+    float: left;
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.input-group-addon {
+    width: 1%;
+    white-space: nowrap;
+    vertical-align: middle;
+    padding: 6px 12px;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1;
+    color: var(--mitmweb-fg-input);
+    text-align: center;
+    background-color: var(--mitmweb-bg-muted);
+    border: 1px solid var(--mitmweb-border);
+    border-radius: 4px;
+}
+
+.input-group .input-group-addon:first-child {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: 0;
+}
+
+.input-group .input:last-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.popover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1060;
+    display: none;
+    max-width: 276px;
+    padding: 1px;
+    text-align: left;
+    background-color: var(--mitmweb-bg);
+    background-clip: padding-box;
+    border: 1px solid rgba(0, 0, 0, 20%);
+    border-radius: 6px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 20%);
+}
+
+.popover-content {
+    padding: 9px 14px;
+}
+
+.popover > .arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+}
+
+.popover > .arrow:after {
+    content: "";
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+}
+
+.popover.top {
+    margin-top: -10px;
+}
+
+.popover.top > .arrow {
+    bottom: -11px;
+    left: 50%;
+    margin-left: -11px;
+    border-width: 11px 11px 0;
+    border-top-color: rgba(0, 0, 0, 25%);
+}
+
+.popover.top > .arrow:after {
+    bottom: 1px;
+    margin-left: -10px;
+    border-width: 10px 10px 0;
+    border-top-color: var(--mitmweb-bg);
+}
+
+.popover.bottom {
+    margin-top: 10px;
+}
+
+.popover.bottom > .arrow {
+    top: -11px;
+    left: 50%;
+    margin-left: -11px;
+    border-width: 0 11px 11px;
+    border-bottom-color: rgba(0, 0, 0, 25%);
+}
+
+.popover.bottom > .arrow:after {
+    top: 1px;
+    margin-left: -10px;
+    border-width: 0 10px 10px;
+    border-bottom-color: var(--mitmweb-bg);
+}
+
+.close {
+    float: right;
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--mitmweb-fg-strong);
+    text-shadow: 0 1px 0 #fff;
+    opacity: 0.2;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: var(--mitmweb-fg-strong);
+    text-decoration: none;
+    cursor: pointer;
+    opacity: 0.5;
+}
+
+.img-thumbnail {
+    display: inline-block;
+    max-width: 100%;
+    height: auto;
+    padding: 4px;
+    line-height: 1.42857143;
+    background-color: var(--mitmweb-bg);
+    border: 1px solid var(--mitmweb-border-light);
+    border-radius: 4px;
+    transition: all 0.2s ease-in-out;
+}
+
+.input {
+    display: block;
+    width: 100%;
+    height: 34px;
+    padding: 6px 12px;
+    font-size: 14px;
+    line-height: 1.42857143;
+    color: var(--mitmweb-fg-input);
+    background-color: var(--mitmweb-bg);
+    border: 1px solid var(--mitmweb-border);
+    border-radius: 4px;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 7.5%);
+    transition:
+        border-color ease-in-out 0.15s,
+        box-shadow ease-in-out 0.15s;
+}
+
+.input:focus {
+    border-color: var(--mitmweb-focus-ring);
+    outline: 0;
+    box-shadow:
+        inset 0 1px 1px rgba(0, 0, 0, 7.5%),
+        0 0 8px rgba(102, 175, 233, 60%);
+}
+
+select.input {
+    padding-right: 24px;
+}
+
+textarea.input {
+    height: auto;
+}
+
+.has-error .input {
+    border-color: var(--mitmweb-text-danger);
+}

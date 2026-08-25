@@ -1,29 +1,29 @@
 import * as React from "react";
-import renderer from "react-test-renderer";
-import FilterInput from "../../../components/Header/FilterInput";
+import FilterInput, {
+    FilterIcon,
+} from "../../../components/Header/FilterInput";
 import FilterDocs from "../../../components/Header/FilterDocs";
-import { act, render } from "../../test-utils";
+import { act, fireEvent, render } from "../../test-utils";
 
 describe("FilterInput Component", () => {
     it("should render correctly", () => {
-        const filterInput = renderer.create(
+        const { asFragment } = render(
             <FilterInput
-                type="foo"
+                icon={FilterIcon.SEARCH}
                 color="red"
                 placeholder="bar"
                 onChange={() => undefined}
                 value="42"
             />,
         );
-        const tree = filterInput.toJSON();
-        expect(tree).toMatchSnapshot();
+        expect(asFragment()).toMatchSnapshot();
     });
 
     function dummyInput(): FilterInput {
         const ref = React.createRef<FilterInput>();
         render(
             <FilterInput
-                type="foo"
+                icon={FilterIcon.SEARCH}
                 color="red"
                 placeholder="bar"
                 value="wat"
@@ -37,7 +37,7 @@ describe("FilterInput Component", () => {
     it("should handle componentWillReceiveProps", () => {
         const { rerender, getByDisplayValue } = render(
             <FilterInput
-                type="typ"
+                icon={FilterIcon.SEARCH}
                 color="red"
                 value="foo"
                 placeholder=""
@@ -46,7 +46,7 @@ describe("FilterInput Component", () => {
         );
         rerender(
             <FilterInput
-                type="typ"
+                icon={FilterIcon.SEARCH}
                 color="red"
                 value="bar"
                 placeholder=""
@@ -54,6 +54,37 @@ describe("FilterInput Component", () => {
             />,
         );
         expect(getByDisplayValue("bar")).toBeInTheDocument();
+    });
+
+    it("preserves user-typed text when the parent re-renders with an unchanged value prop", () => {
+        // `onChange` only propagates valid filters, so a half-typed
+        // invalid filter lives in local state while `props.value`
+        // remains the last valid filter. A parent re-render with the
+        // same `value` must not clobber the in-progress text.
+        const onChange = jest.fn();
+        const props = {
+            icon: FilterIcon.SEARCH,
+            color: "red",
+            placeholder: "Filter",
+            value: "",
+            onChange,
+        };
+        const { rerender, getByPlaceholderText } = render(
+            <FilterInput {...props} />,
+        );
+        const input = getByPlaceholderText("Filter") as HTMLInputElement;
+
+        // User types an invalid filter — `onChange` does not propagate
+        // it (see the existing `should handle isValid` test that
+        // asserts "~foo bar" is invalid).
+        act(() => fireEvent.change(input, { target: { value: "~foo bar" } }));
+        expect(input.value).toBe("~foo bar");
+        expect(onChange).not.toHaveBeenCalled();
+
+        // Parent re-renders with the same `value=""`. The input must
+        // retain the user's in-progress text.
+        rerender(<FilterInput {...props} />);
+        expect(input.value).toBe("~foo bar");
     });
 
     it("should handle isValid", () => {
@@ -116,11 +147,15 @@ describe("FilterInput Component", () => {
         const filterInput = dummyInput();
         const input = filterInput.inputRef.current!;
         input.blur = jest.fn();
-        const mockEvent = {
+        const mockEvent: Partial<React.KeyboardEvent<HTMLInputElement>> = {
             key: "Escape",
             stopPropagation: jest.fn(),
         };
-        act(() => filterInput.onKeyDown(mockEvent));
+        act(() =>
+            filterInput.onKeyDown(
+                mockEvent as React.KeyboardEvent<HTMLInputElement>,
+            ),
+        );
         expect(input.blur).toBeCalled();
         expect(filterInput.state.mousefocus).toBeFalsy();
         expect(mockEvent.stopPropagation).toBeCalled();
@@ -133,6 +168,7 @@ describe("FilterInput Component", () => {
         act(() => filterInput.selectFilter("bar"));
         expect(filterInput.state.value).toEqual("bar");
         expect(input.focus).toBeCalled();
+        expect(filterInput.props.onChange).toBeCalledWith("bar");
     });
 
     it("should handle select", () => {

@@ -107,7 +107,7 @@ async def test_cut_clip(caplog):
 
         with mock.patch("pyperclip.copy") as pc:
             log_message = (
-                "Pyperclip could not find a " "copy/paste mechanism for your system."
+                "Pyperclip could not find a copy/paste mechanism for your system."
             )
             pc.side_effect = pyperclip.PyperclipException(log_message)
             tctx.command(c.clip, "@all", "request.method")

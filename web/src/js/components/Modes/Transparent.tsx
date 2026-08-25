@@ -1,7 +1,8 @@
 import * as React from "react";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { getSpec, TransparentState } from "../../modes/transparent";
-import { ServerInfo } from "../../ducks/backendState";
+import type { TransparentState } from "../../modes/transparent";
+import { getSpec } from "../../modes/transparent";
+import type { ServerInfo } from "../../ducks/backendState";
 import {
     setActive,
     setListenHost,
@@ -66,7 +67,7 @@ function TransparentRow({
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
-                <Popover iconClass="fa fa-cog">
+                <Popover icon="settings">
                     <h4>Advanced Configuration</h4>
                     <p>Listen Host</p>
                     <ValueEditor

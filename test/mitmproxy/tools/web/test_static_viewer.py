@@ -41,20 +41,21 @@ def test_save_flows(tmpdir):
 
 
 def test_save_flows_content(tmpdir):
-    flows = [tflow.tflow(resp=False), tflow.tflow(resp=True)]
-    with mock.patch("time.time", mock.Mock(side_effect=[1, 2, 2] * 4)):
-        static_viewer.save_flows_content(tmpdir, flows)
-    flows_path = tmpdir.join("flows")
-    assert len(flows_path.listdir()) == len(flows)
-    for p in flows_path.listdir():
-        assert p.join("request").check(dir=1)
-        assert p.join("response").check(dir=1)
-        assert p.join("request/content.data").check(file=1)
-        assert p.join("request/content").check(dir=1)
-        assert p.join("response/content.data").check(file=1)
-        assert p.join("response/content").check(dir=1)
-        assert p.join("request/content/Auto.json").check(file=1)
-        assert p.join("response/content/Auto.json").check(file=1)
+    with taddons.context():
+        flows = [tflow.tflow(resp=False), tflow.tflow(resp=True)]
+        with mock.patch("time.time", mock.Mock(side_effect=[1, 2, 2] * 4)):
+            static_viewer.save_flows_content(tmpdir, flows)
+        flows_path = tmpdir.join("flows")
+        assert len(flows_path.listdir()) == len(flows)
+        for p in flows_path.listdir():
+            assert p.join("request").check(dir=1)
+            assert p.join("response").check(dir=1)
+            assert p.join("request/content.data").check(file=1)
+            assert p.join("request/content").check(dir=1)
+            assert p.join("response/content.data").check(file=1)
+            assert p.join("response/content").check(dir=1)
+            assert p.join("request/content/Auto.json").check(file=1)
+            assert p.join("response/content/Auto.json").check(file=1)
 
 
 async def test_static_viewer(tmpdir):

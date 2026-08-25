@@ -1,10 +1,12 @@
 import * as React from "react";
-import { LocalState } from "../../modes/local";
+import type { LocalState } from "../../modes/local";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { setSelectedProcesses } from "../../ducks/modes/local";
 import { Popover } from "./Popover";
-import { fetchProcesses, Process } from "../../ducks/processes";
+import type { Process } from "../../ducks/processes";
+import { fetchProcesses } from "../../ducks/processes";
 import { rpartition } from "../../utils";
+import Icon from "../common/Icon";
 
 interface LocalDropdownProps {
     server: LocalState;
@@ -109,7 +111,7 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
                     placeholder={
                         selectedProcesses && selectedProcesses?.length > 0
                             ? "Add more"
-                            : "(all applications)"
+                            : "all applications"
                     }
                     value={currentSearch}
                     onChange={handleInputChange}
@@ -118,15 +120,38 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
                     onBlur={() => setPopoverVisible(false)}
                 />
                 <Popover
-                    iconClass="fa fa-chevron-down"
+                    icon="chevronDown"
                     classname="local-popover"
                     isVisible={isPopoverVisible}
                 >
                     <h4>Current Applications running on machine</h4>
                     {isLoading ? (
-                        <i className="fa fa-spinner" aria-hidden="true"></i>
+                        <Icon name="loading" />
                     ) : filteredProcesses.length > 0 ? (
                         <ul className="dropdown-list">
+                            <li
+                                className={`dropdown-item ${selectedProcesses === "" ? "selected" : ""}`}
+                                onClick={() => {
+                                    dispatch(
+                                        setSelectedProcesses({
+                                            server,
+                                            value: "",
+                                        }),
+                                    );
+                                }}
+                                role="menuitem"
+                            >
+                                <div className="process-details">
+                                    <div className="process-icon" />
+                                    <span className="process-name">
+                                        All applications
+                                    </span>
+                                </div>
+                                {selectedProcesses === "" && (
+                                    <Icon name="confirm" />
+                                )}
+                            </li>
+                            <hr className="process-separator" />
                             {filteredProcesses.map((option, index) => (
                                 <li
                                     key={index}
@@ -146,6 +171,9 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
                                             {extractProcessName(option)}
                                         </span>
                                     </div>
+                                    {isSelected(option) && (
+                                        <Icon name="confirm" />
+                                    )}
                                 </li>
                             ))}
                         </ul>

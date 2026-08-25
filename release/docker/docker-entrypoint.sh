@@ -19,7 +19,9 @@ usermod -o \
     >/dev/null  # hide "usermod: no changes"
 
 if [[ "$1" = "mitmdump" || "$1" = "mitmproxy" || "$1" = "mitmweb" ]]; then
-  exec gosu mitmproxy "$@"
+  # Drop privileges if we are starting one of the mitmproxy tools.
+  # Set HOME to /home/mitmproxy for config dir fix (mitmproxy/mitmproxy#7597)
+  exec env HOME=/home/mitmproxy gosu mitmproxy "$@"
 else
   exec "$@"
 fi

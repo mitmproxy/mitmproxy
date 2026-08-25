@@ -1,3 +1,4 @@
+import logging
 import re
 
 import urwid
@@ -60,6 +61,7 @@ class WindowStack:
             help=help.HelpView(master),
             eventlog=eventlog.EventLog(master),
             edit_focus_query=grideditor.QueryEditor(master),
+            edit_focus_comment=grideditor.CommentEditor(master),
             edit_focus_cookies=grideditor.CookieEditor(master),
             edit_focus_setcookies=grideditor.SetCookieEditor(master),
             edit_focus_setcookie_attrs=grideditor.CookieAttributeEditor(master),
@@ -304,6 +306,10 @@ class Window(urwid.Frame):
 
 
 class Screen(urwid.raw_display.Screen):
+    def __init__(self) -> None:
+        super().__init__()
+        self.logger = logging.getLogger("urwid")
+
     def write(self, data):
         if common.IS_WINDOWS_OR_WSL:
             # replace urwid's SI/SO, which produce artifacts under WSL.

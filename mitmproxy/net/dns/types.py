@@ -179,7 +179,15 @@ _STRINGS = {
     TA: "TA",
     DLV: "DLV",
 }
+_INTS = {v: k for k, v in _STRINGS.items()}
 
 
-def to_str(type: int) -> str:
-    return _STRINGS.get(type, f"TYPE({type})")
+def to_str(type_: int) -> str:
+    return _STRINGS.get(type_, f"TYPE({type_})")
+
+
+def from_str(type_: str) -> int:
+    try:
+        return _INTS[type_]
+    except KeyError:
+        return int(type_.removeprefix("TYPE(").removesuffix(")"))

@@ -1,20 +1,16 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Modal Component 1`] = `
-<DocumentFragment>
-  <div />
-</DocumentFragment>
-`;
+exports[`Modal Component 1`] = `<DocumentFragment />`;
 
 exports[`Modal Component 2`] = `
 <DocumentFragment>
   <div>
     <div
-      class="modal-backdrop fade in"
+      class="modal-backdrop is-visible"
     />
     <div
       aria-labelledby="options"
-      class="modal modal-visible"
+      class="modal is-visible"
       id="optionsModal"
       role="dialog"
       tabindex="-1"
@@ -35,9 +31,26 @@ exports[`Modal Component 2`] = `
                 data-dismiss="modal"
                 type="button"
               >
-                <i
-                  class="fa fa-fw fa-times"
-                />
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-x icon icon-close"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M18 6 6 18"
+                  />
+                  <path
+                    d="m6 6 12 12"
+                  />
+                </svg>
               </button>
               <div
                 class="modal-title"
@@ -54,24 +67,25 @@ exports[`Modal Component 2`] = `
                 class="form-horizontal"
               >
                 <div
-                  class="form-group"
+                  class="form-row"
                 >
                   <div
-                    class="col-xs-6"
+                    class="col-6"
                   >
                     <label
+                      class="control-label"
                       for="anticache"
                     >
                       anticache
                     </label>
                     <div
-                      class="help-block small"
+                      class="help-block text-small"
                     >
                       Strip out request headers that might cause the server to return 304-not-modified.
                     </div>
                   </div>
                   <div
-                    class="col-xs-6"
+                    class="col-6"
                   >
                     <div
                       class=""
@@ -92,30 +106,31 @@ exports[`Modal Component 2`] = `
                   </div>
                 </div>
                 <div
-                  class="form-group"
+                  class="form-row"
                 >
                   <div
-                    class="col-xs-6"
+                    class="col-6"
                   >
                     <label
+                      class="control-label"
                       for="body_size_limit"
                     >
                       body_size_limit
                     </label>
                     <div
-                      class="help-block small"
+                      class="help-block text-small"
                     >
                       Byte size limit of HTTP request and response bodies. Understands k/m/g suffixes, i.e. 3m for 3 megabytes.
                     </div>
                   </div>
                   <div
-                    class="col-xs-6"
+                    class="col-6"
                   >
                     <div
                       class=""
                     >
                       <input
-                        class="form-control"
+                        class="input"
                         name="body_size_limit"
                         type="text"
                         value=""
@@ -124,30 +139,31 @@ exports[`Modal Component 2`] = `
                   </div>
                 </div>
                 <div
-                  class="form-group"
+                  class="form-row"
                 >
                   <div
-                    class="col-xs-6"
+                    class="col-6"
                   >
                     <label
+                      class="control-label"
                       for="connection_strategy"
                     >
                       connection_strategy
                     </label>
                     <div
-                      class="help-block small"
+                      class="help-block text-small"
                     >
                       Determine when server connections should be established. When set to lazy, mitmproxy tries to defer establishing an upstream connection as long as possible. This makes it possible to use server replay while being offline. When set to eager, mitmproxy can detect protocols with server-side greetings, as well as accurately mirror TLS ALPN negotiation.
                     </div>
                   </div>
                   <div
-                    class="col-xs-6"
+                    class="col-6"
                   >
                     <div
                       class=""
                     >
                       <select
-                        class="form-control"
+                        class="input"
                         name="connection_strategy"
                       >
                         <option
@@ -165,37 +181,38 @@ exports[`Modal Component 2`] = `
                   </div>
                 </div>
                 <div
-                  class="form-group"
+                  class="form-row"
                 >
                   <div
-                    class="col-xs-6"
+                    class="col-6"
                   >
                     <label
+                      class="control-label"
                       for="listen_port"
                     >
                       listen_port
                     </label>
                     <div
-                      class="help-block small"
+                      class="help-block text-small"
                     >
                       Proxy service port.
                     </div>
                   </div>
                   <div
-                    class="col-xs-6"
+                    class="col-6"
                   >
                     <div
                       class=""
                     >
                       <input
-                        class="form-control"
+                        class="input"
                         name="listen_port"
                         type="number"
                         value="8080"
                       />
                     </div>
                     <div
-                      class="small"
+                      class="text-small"
                     >
                       Default: 
                       <strong>

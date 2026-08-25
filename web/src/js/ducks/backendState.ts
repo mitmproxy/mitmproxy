@@ -3,32 +3,34 @@
  * e.g. the list of available content views or the current version.
  */
 
-import { createAction, PayloadAction } from "@reduxjs/toolkit";
+import { createAction, createSlice } from "@reduxjs/toolkit";
 
-export const RECEIVE = createAction<Partial<BackendState>>("STATE_RECEIVE");
-export const UPDATE = createAction<Partial<BackendState>>("STATE_UPDATE");
+export const STATE_RECEIVE = createAction<BackendState>("STATE_RECEIVE");
+export const STATE_UPDATE = createAction<Partial<BackendState>>("STATE_UPDATE");
 
 export interface ServerInfo {
     description: string;
     full_spec: string;
     is_running: boolean;
     last_exception: string | null;
-    listen_addrs: [string, number][];
+    listen_addrs: ([string, number] | [string, number, number, number])[];
     type: string;
     wireguard_conf?: string;
     tun_name?: string;
 }
 
 export interface BackendState {
-    available: boolean;
     version: string;
     contentViews: string[];
     servers: { [key: string]: ServerInfo };
     platform: string;
     localModeUnavailable: string | null;
 }
+export interface BackendStateExtra extends BackendState {
+    available: boolean;
+}
 
-export const defaultState: BackendState = {
+export const defaultState: BackendStateExtra = {
     available: false,
     version: "",
     contentViews: [],
@@ -37,23 +39,26 @@ export const defaultState: BackendState = {
     localModeUnavailable: null,
 };
 
-export function mockUpdate(newState: Partial<BackendState>) {
-    return {
-        type: UPDATE.type,
-        payload: newState,
-    };
-}
+const backendStateSlice = createSlice({
+    name: "backendState",
+    initialState: defaultState,
+    reducers: {},
+    extraReducers: (builder) => {
+        builder
+            .addCase(STATE_RECEIVE, (state, action) => {
+                return {
+                    ...state,
+                    available: true,
+                    ...action.payload,
+                };
+            })
+            .addCase(STATE_UPDATE, (state, action) => {
+                return {
+                    ...state,
+                    ...action.payload,
+                };
+            });
+    },
+});
 
-export default function reducer(state = defaultState, action): BackendState {
-    switch (action.type) {
-        case RECEIVE.type:
-        case UPDATE.type:
-            return {
-                ...state,
-                available: true,
-                ...(action as PayloadAction<Partial<BackendState>>).payload,
-            };
-        default:
-            return state;
-    }
-}
+export default backendStateSlice.reducer;

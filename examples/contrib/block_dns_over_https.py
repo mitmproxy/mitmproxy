@@ -186,7 +186,8 @@ default_blocklist: dict = {
         "2606:4700:60:0:a71e:6467:cef8:2a56",
         "2620:10a:80bb::10",
         "2620:10a:80bb::20",
-        "2620:10a:80bb::30" "2620:10a:80bc::10",
+        "2620:10a:80bb::30",
+        "2620:10a:80bc::10",
         "2620:10a:80bc::20",
         "2620:10a:80bc::30",
         "2620:119:fc::2",
@@ -256,8 +257,8 @@ additional_doh_ips: list[str] = []
 doh_hostnames, doh_ips = default_blocklist["hostnames"], default_blocklist["ips"]
 
 # convert to sets for faster lookups
-doh_hostnames = set(doh_hostnames)
-doh_ips = set(doh_ips)
+doh_hostnames = set(doh_hostnames) | set(additional_doh_names)
+doh_ips = set(doh_ips) | set(additional_doh_ips)
 
 
 def _has_dns_message_content_type(flow):
@@ -334,7 +335,7 @@ def _requested_hostname_is_in_doh_blocklist(flow):
     :return: True if server's hostname is in DoH blocklist, otherwise False
     """
     hostname = flow.request.host
-    ip = flow.server_conn.address
+    ip = flow.server_conn.address[0]
     return hostname in doh_hostnames or hostname in doh_ips or ip in doh_ips
 
 

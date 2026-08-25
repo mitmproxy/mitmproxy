@@ -1,7 +1,7 @@
 import pytest
 import requests
-
 from examples.complex import xss_scanner as xss
+
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 

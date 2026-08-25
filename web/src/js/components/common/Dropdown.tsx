@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { usePopper } from "react-popper";
-import * as PopperJS from "@popperjs/core";
+import type { UseFloatingOptions } from "@floating-ui/react-dom";
+import { useFloating } from "@floating-ui/react-dom";
 import classnames from "classnames";
+import Icon from "./Icon";
 
-export const Divider = () => <li role="separator" className="divider" />;
+export const Divider = () => <li role="separator" className="menu-divider" />;
 
 type MenuItemProps = {
     onClick: () => void;
@@ -11,7 +12,7 @@ type MenuItemProps = {
 };
 
 export function MenuItem({ onClick, children, ...attrs }: MenuItemProps) {
-    const click = (e) => {
+    const click = (e: React.MouseEvent<HTMLAnchorElement>) => {
         e.preventDefault();
         onClick();
     };
@@ -33,23 +34,16 @@ type SubMenuProps = {
 
 export function SubMenu({ title, children, className }: SubMenuProps) {
     const [open, setOpen] = useState(false);
-    const [referenceElement, setReferenceElement] =
-        useState<HTMLLIElement | null>(null);
-    const [popperElement, setPopperElement] = useState<HTMLUListElement | null>(
-        null,
-    );
-    const { styles, attributes } = usePopper(referenceElement, popperElement, {
+    const { refs, floatingStyles } = useFloating({
         placement: "right-start",
     });
-
     let submenu: React.ReactNode | null = null;
     if (open) {
         submenu = (
             <ul
-                className={classnames("dropdown-menu show", className)}
-                ref={setPopperElement}
-                style={styles.popper}
-                {...attributes.popper}
+                className={classnames("dropdown-menu is-open", className)}
+                ref={refs.setFloating}
+                style={floatingStyles}
             >
                 {children}
             </ul>
@@ -58,16 +52,12 @@ export function SubMenu({ title, children, className }: SubMenuProps) {
 
     return (
         <li
-            ref={setReferenceElement}
+            ref={refs.setReference}
             onMouseEnter={() => setOpen(true)}
             onMouseLeave={() => setOpen(false)}
         >
             <a>
-                <i
-                    className="fa fa-caret-right pull-right"
-                    aria-hidden="true"
-                />{" "}
-                {title}
+                <Icon name="chevronRight" className="float-right" /> {title}
             </a>
             {submenu}
         </li>
@@ -77,9 +67,9 @@ export function SubMenu({ title, children, className }: SubMenuProps) {
 type DropdownProps = {
     text: React.ReactNode;
     children: React.ReactNode;
-    options?: Partial<PopperJS.Options>;
+    options?: UseFloatingOptions;
     className?: string;
-    onOpen?: (boolean) => void;
+    onOpen?: (b: boolean) => void;
 };
 /*
  * When modifying this component, check that File -> Open and flow content upload work.
@@ -92,28 +82,21 @@ export default React.memo(function Dropdown({
     onOpen,
     ...attrs
 }: DropdownProps) {
-    const [refElement, setRefElement] = useState<HTMLAnchorElement | null>(
-        null,
-    );
     const [open, _setOpen] = useState(false);
-    const [popperElement, setPopperElement] = useState<HTMLUListElement | null>(
-        null,
-    );
-    const { styles, attributes } = usePopper(refElement, popperElement, {
-        ...options,
-    });
+
+    const { refs, floatingStyles } = useFloating(options);
 
     const setOpen = (b: boolean) => {
         _setOpen(b);
-        onOpen && onOpen(b);
+        if (onOpen) onOpen(b);
     };
 
     useEffect(() => {
-        if (!popperElement) return;
+        if (!refs.floating.current) return;
         document.addEventListener(
             "click",
             (e) => {
-                if (!popperElement.contains(e.target as Node)) {
+                if (!refs.floating.current?.contains(e.target as Node)) {
                     e.preventDefault();
                     e.stopPropagation();
                     setOpen(false);
@@ -127,16 +110,15 @@ export default React.memo(function Dropdown({
             },
             { once: true, capture: true },
         );
-    }, [popperElement]);
+    }, [refs.floating.current]);
 
     let contents;
     if (open) {
         contents = (
             <ul
-                className="dropdown-menu show"
-                ref={setPopperElement}
-                style={styles.popper}
-                {...attributes.popper}
+                className="dropdown-menu is-open"
+                ref={refs.setFloating}
+                style={floatingStyles}
             >
                 {children}
             </ul>
@@ -149,8 +131,11 @@ export default React.memo(function Dropdown({
         <>
             <a
                 href="#"
-                ref={setRefElement}
-                className={classnames(className, { open: open })}
+                ref={refs.setReference}
+                className={classnames(className, {
+                    open: open,
+                    "is-open": open,
+                })}
                 onClick={(e) => {
                     e.preventDefault();
                     setOpen(true);

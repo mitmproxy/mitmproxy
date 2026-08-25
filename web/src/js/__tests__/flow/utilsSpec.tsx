@@ -1,7 +1,7 @@
 import * as utils from "../../flow/utils";
 import { TFlow, TTCPFlow, TUDPFlow } from "../ducks/tutils";
 import { TDNSFlow, THTTPFlow } from "../ducks/_tflow";
-import { HTTPFlow } from "../../flow";
+import type { HTTPFlow, HTTPHeader, HTTPMessage } from "../../flow";
 
 describe("MessageUtils", () => {
     it("should be possible to get first header", () => {
@@ -23,8 +23,12 @@ describe("MessageUtils", () => {
     });
 
     it("should be possible to match header", () => {
-        const h1 = ["foo", "bar"];
-        const msg = { headers: [h1] };
+        const h1: HTTPHeader = ["foo", "bar"];
+        const msg: HTTPMessage = {
+            http_version: "HTTP/1.1",
+            headers: [h1],
+            timestamp_start: 0,
+        };
         expect(utils.MessageUtils.match_header(msg, /foo/i)).toEqual(h1);
         expect(utils.MessageUtils.match_header(msg, /123/i)).toBeFalsy();
     });
@@ -82,6 +86,22 @@ describe("isValidHttpVersion", () => {
     });
 });
 
+describe("statusClass", () => {
+    it.each([
+        [101, "status-1xx"],
+        [200, "status-2xx"],
+        [204, "status-2xx"],
+        [301, "status-3xx"],
+        [404, "status-4xx"],
+        [500, "status-5xx"],
+        [599, "status-5xx"],
+        [700, "status-other"],
+        ["NOERROR", "status-other"],
+    ])("statusClass(%s) === %s", (code, expected) => {
+        expect(utils.statusClass(code)).toBe(expected);
+    });
+});
+
 it("should be possible to get a start time", () => {
     expect(utils.startTime(THTTPFlow())).toEqual(946681200);
     expect(utils.startTime(TTCPFlow())).toEqual(946681200);
@@ -104,4 +124,63 @@ it("should be possible to get a total size", () => {
     expect(utils.getTotalSize(TTCPFlow())).toEqual(12);
     expect(utils.getTotalSize(TUDPFlow())).toEqual(12);
     expect(utils.getTotalSize(TDNSFlow())).toEqual(8);
+});
+
+describe("getResourceType", () => {
+    const httpFlow = (status_code: number, contentType?: string): HTTPFlow => {
+        const flow: HTTPFlow = THTTPFlow();
+        flow.websocket = undefined;
+        flow.response!.status_code = status_code;
+        flow.response!.headers = contentType
+            ? [["Content-Type", contentType]]
+            : [];
+        return flow;
+    };
+
+    it("classifies non-HTTP flows by their protocol", () => {
+        expect(utils.getResourceType(TTCPFlow())).toEqual("tcp");
+        expect(utils.getResourceType(TUDPFlow())).toEqual("udp");
+        expect(utils.getResourceType(TDNSFlow())).toEqual("dns");
+    });
+
+    it("classifies flows over QUIC as quic", () => {
+        const flow = TUDPFlow();
+        flow.client_conn.tls_version = "QUICv1";
+        expect(utils.getResourceType(flow)).toEqual("quic");
+    });
+
+    it("classifies websocket flows", () => {
+        expect(utils.getResourceType(THTTPFlow())).toEqual("websocket");
+    });
+
+    it("falls back to plain without a response", () => {
+        const flow: HTTPFlow = THTTPFlow();
+        flow.websocket = undefined;
+        flow.response = undefined;
+        expect(utils.getResourceType(flow)).toEqual("plain");
+    });
+
+    it("classifies by status code before content type", () => {
+        expect(utils.getResourceType(httpFlow(304, "text/html"))).toEqual(
+            "not-modified",
+        );
+        expect(utils.getResourceType(httpFlow(302, "text/html"))).toEqual(
+            "redirect",
+        );
+    });
+
+    it("classifies by content type", () => {
+        expect(utils.getResourceType(httpFlow(200, "image/jpeg"))).toEqual(
+            "image",
+        );
+        expect(
+            utils.getResourceType(httpFlow(200, "application/x-javascript")),
+        ).toEqual("js");
+        expect(utils.getResourceType(httpFlow(200, "text/css"))).toEqual("css");
+        expect(utils.getResourceType(httpFlow(200, "text/html"))).toEqual(
+            "html",
+        );
+        expect(utils.getResourceType(httpFlow(200, "foo"))).toEqual("plain");
+        expect(utils.getResourceType(httpFlow(200))).toEqual("plain");
+    });
 });

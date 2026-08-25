@@ -24,11 +24,6 @@ def can_edit_inplace(opt):
         return True
 
 
-def fcol(s, width, attr):
-    s = str(s)
-    return ("fixed", width, urwid.Text((attr, s)))
-
-
 class OptionItem(urwid.WidgetWrap):
     def __init__(self, walker, opt, focused, namewidth, editing):
         self.walker, self.opt, self.focused = walker, opt, focused

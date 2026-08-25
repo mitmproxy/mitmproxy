@@ -44,7 +44,6 @@ from mitmproxy.utils.data import pkg_data
 
 logger = logging.getLogger(__name__)
 
-TCP_TIMEOUT = 60 * 10
 UDP_TIMEOUT = 20
 
 
@@ -115,7 +114,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         # on protocols that start with a server greeting.
         self.layer = layer.NextLayer(context, ask_on_start=True)
         if self.client.transport_protocol == "tcp":
-            timeout = TCP_TIMEOUT
+            timeout = context.options.tcp_timeout
         else:
             timeout = UDP_TIMEOUT
         self.timeout_watchdog = TimeoutWatchdog(timeout, self.on_timeout)
@@ -506,6 +505,12 @@ if __name__ == "__main__":  # pragma: no cover
 
     opts = moptions.Options()
     # options duplicated here to simplify testing setup
+    opts.add_option(
+        "store_streamed_bodies",
+        bool,
+        False,
+        "",
+    )
     opts.add_option(
         "connection_strategy",
         str,

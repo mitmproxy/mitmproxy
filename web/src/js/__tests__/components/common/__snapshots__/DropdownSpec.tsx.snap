@@ -14,16 +14,13 @@ exports[`Dropdown 1`] = `
 exports[`Dropdown 2`] = `
 <DocumentFragment>
   <a
-    class="open"
+    class="open is-open"
     href="#"
   >
     open me
   </a>
   <ul
-    class="dropdown-menu show"
-    data-popper-escaped="true"
-    data-popper-placement="bottom"
-    data-popper-reference-hidden="true"
+    class="dropdown-menu is-open"
     style="position: absolute; left: 0px; top: 0px; transform: translate(0px, 0px);"
   >
     <li>
@@ -34,7 +31,7 @@ exports[`Dropdown 2`] = `
       </a>
     </li>
     <li
-      class="divider"
+      class="menu-divider"
       role="separator"
     />
     <li>
@@ -64,10 +61,23 @@ exports[`SubMenu 1`] = `
 <DocumentFragment>
   <li>
     <a>
-      <i
+      <svg
         aria-hidden="true"
-        class="fa fa-caret-right pull-right"
-      />
+        class="lucide lucide-chevron-right icon icon-chevronRight float-right"
+        fill="none"
+        height="16"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="16"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="m9 18 6-6-6-6"
+        />
+      </svg>
        submenu
     </a>
   </li>
@@ -78,17 +88,27 @@ exports[`SubMenu 2`] = `
 <DocumentFragment>
   <li>
     <a>
-      <i
+      <svg
         aria-hidden="true"
-        class="fa fa-caret-right pull-right"
-      />
+        class="lucide lucide-chevron-right icon icon-chevronRight float-right"
+        fill="none"
+        height="16"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="16"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="m9 18 6-6-6-6"
+        />
+      </svg>
        submenu
     </a>
     <ul
-      class="dropdown-menu show"
-      data-popper-escaped="true"
-      data-popper-placement="right-start"
-      data-popper-reference-hidden="true"
+      class="dropdown-menu is-open"
       style="position: absolute; left: 0px; top: 0px; transform: translate(0px, 0px);"
     >
       <li>
@@ -107,10 +127,23 @@ exports[`SubMenu 3`] = `
 <DocumentFragment>
   <li>
     <a>
-      <i
+      <svg
         aria-hidden="true"
-        class="fa fa-caret-right pull-right"
-      />
+        class="lucide lucide-chevron-right icon icon-chevronRight float-right"
+        fill="none"
+        height="16"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="16"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="m9 18 6-6-6-6"
+        />
+      </svg>
        submenu
     </a>
   </li>

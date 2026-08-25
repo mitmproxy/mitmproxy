@@ -32,6 +32,7 @@ from mitmproxy.proxy.layers import UDPLayer
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.http import HttpStream
 from mitmproxy.proxy.layers.tls import HTTP1_ALPNS
+from mitmproxy.proxy.layers.tls import HTTP3_ALPN
 from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.test import taddons
 
@@ -92,12 +93,45 @@ quic_client_hello = bytes.fromhex(
     "297c0013924e88248684fe8f2098326ce51aa6e5"
 )
 
+quic_fragmented_client_hello1 = bytes.fromhex(
+    "c20000000108d520c3803f5de4d3000044bcb607af28f41aef1616d37bdc7697d73d7963a2d622e7ccddfb4859"
+    "f369d840f949a29bb19ad7264728eb31eada17a4e1ba666bba67868cf2c30ca4e1d41f67d392c296787a50615a"
+    "1caf4282f9cc59c98816e1734b57ba4dedf02c225a3f57163bb77703299fafb46d09a4d281eb44f988edd28984"
+    "04a7161cf7454d8e184f87ae9be1f3bd2c2ae04ba14233ec92960a75a4201bc114070ecfd4c10a4fb0c72749ee"
+    "b5fa0e52b53dc0da6a485eb8bb467e7a1972c4e1c3a38622857b44eb94d653ee2f2e1fa3bf3f01cacd17b2668a"
+    "8578e04da4181f3d6ad4031e4f7adec95d015d4f275505ae14fa03154b18c3b838143fac06cb2c8b395effa47c"
+    "08923e352d1c4beff9e228760f5a80e6214485c7e53efd8d649492aafb3a9c9472335569c2d7971c86f319069e"
+    "c6ccd13b0b8f517c51fc2e42dc5e7bc3434f306955cf1dc575ea9e18617699045b92b006599afd94abb25018ea"
+    "f63cfcc247f76b728c4fc4e663dff64b90059d1d27f8ecd63bb548862b88bcd52e0711f222b15c022d214a2cc3"
+    "93e537e32d149c67aa84692f1a204475a7acceaa0ab5f823ea90af601bdfb7f4036971e1c786fca7fa7e8ab042"
+    "24307bcc3093886b54e4c9e6b7cb286d6259a8231ffae0f589f687f92232ac5384988631efb70dc85fc594bb3c"
+    "1c0ceebc08b37d8989da0ae786e30d1278ffddbac47484346afd8439495aa1d392ce76f8ebc8d3d1870a0698ca"
+    "b133cabbacae924013025e7bce5ac6aaf87684b6409a6a58e8bb294c249a5c7ca9b2961c57dc031485e3a000ec"
+    "ea4e908cf9f33e86f0fd5d4ca5996b73c273dfda3fe68aa6a385984cb7fd2bf5f69d997580b407d48845215422"
+    "c3c9fe52e7aa4b4e11c067db3e7c87c55f3b1400f796a4b873b666b7027c33138c1f310f65e20b53bcba019f1e"
+    "08aee1a89430744c8bd2dd3a788410caa4356099b87cab2463da107a6919af38c159a258ff6693dd71f1941a52"
+    "01d6a0b2fc52cfab6e0ba2c84c6231bc2a54fe1b6af1641e1168599ea03da913e537880f13128515085fd17b47"
+    "fe202b82152d1c7df2e66788a2d0e0aab0e6375d368f8064e29912f32d4c509408a642a597bcf39c3e6fe31873"
+    "e6173067cf3fc65702152e43a9d2cc7262e69550bd3c10e833c3c5ec48878b214426eca9cdc169f59cbc2c93dc"
+    "94562e05d94761c9f76191b505097dca964d56b9889f904347f6b250f5a1f2bf3c9e9f4370a164a4185e0d83c0"
+    "96e1799b8d950535cf96eec690fa765e9e74baea45f3157ba8c78158d365acc1a5abb358093cca6afcde287096"
+    "ba74b4238789ede0947083facfc9bb3129361a283d72fe860c9666877fb263650410ae5af9fd48e9a2214f9f0a"
+    "39f3b55edca84c836a745f8fc294d176b878fede1e375358d2e63bbbc0632752b19afda03e527b6e9deb32b0a8"
+    "e617f5396312b7769ccd164e43ba1ada90d97005ab8e4eda57d3a953b5cf5fac9676fc64dd7163bdb6b17f6984"
+    "f70070f2eadace62317215f240100db10283cd4b7c62f2ba1191c0feee9e6fc6026dcaec12ecb2329221130aac"
+    "18f08b091f5292e51c0ca35cfefabf9b86d8478f7cc9f2983260e6cec537081684119a02d51e0895d9ee9294cf"
+    "a6f695173fa816f168751cf1d79730ded3e7e97325d2582a6516436aa165260f576f330535cf28d6f9c26a6f7d"
+    "dd74b60e702826392ac9f16a1ccdb5"
+)
+
 quic_short_header_packet = bytes.fromhex(
     "52e23539dde270bb19f7a8b63b7bcf3cdacf7d3dc68a7e00318bfa2dac3bad12cb7d78112efb5bcb1ee8e0b347"
     "641cccd2736577d0178b4c4c4e97a8e9e2af1d28502e58c4882223e70c4d5124c4b016855340e982c5c453d61d"
     "7d0720be075fce3126de3f0d54dc059150e0f80f1a8db5e542eb03240b0a1db44a322fb4fd3c6f2e054b369e14"
     "5a5ff925db617d187ec65a7f00d77651968e74c1a9ddc3c7fab57e8df821b07e103264244a3a03d17984e29933"
 )
+
+invalid_quic = bytes.fromhex("806b3343cf00000000000000000000000000")
 
 dns_query = bytes.fromhex("002a01000001000000000000076578616d706c6503636f6d0000010001")
 
@@ -277,6 +311,24 @@ class TestNextLayer:
                 quic_client_hello,
                 True,
                 id="quic sni",
+            ),
+            pytest.param(
+                ["example.com"],
+                [],
+                "udp",
+                "192.0.2.1",
+                invalid_quic,
+                False,
+                id="invalid quic",
+            ),
+            pytest.param(
+                ["example.com"],
+                [],
+                "udp",
+                "192.0.2.1",
+                quic_fragmented_client_hello1,
+                NeedsMoreData,
+                id="fragmented quic hello",
             ),
             # allow
             pytest.param(
@@ -755,6 +807,16 @@ transparent_proxy_configs = [
         id=f"transparent proxy: http via ALPN",
     ),
     pytest.param(
+        http3 := TConf(
+            before=[modes.TransparentProxy, ServerQuicLayer, ClientQuicLayer],
+            after=[modes.TransparentProxy, ServerQuicLayer, ClientQuicLayer, HttpLayer],
+            server_address=("192.0.2.1", 443),
+            transport_protocol="udp",
+            alpn=HTTP3_ALPN,
+        ),
+        id=f"transparent proxy: http3 via ALPN",
+    ),
+    pytest.param(
         TConf(
             before=[modes.TransparentProxy],
             after=[modes.TransparentProxy, TCPLayer],
@@ -848,6 +910,13 @@ transparent_proxy_configs = [
             tls_version="QUICv1",
         ),
         id=f"transparent proxy: non-http quic",
+    ),
+    pytest.param(
+        dataclasses.replace(
+            http3,
+            ignore_hosts=["$^"],
+        ),
+        id="transparent proxy: http3 not ignored but with ignoring active",
     ),
 ]
 

@@ -3,9 +3,7 @@
 title: "mitmproxy.proxy.context"
 url: "api/mitmproxy/proxy/context.html"
 
-menu:
-    addons:
-        parent: 'Event Hooks & API'
+menu: api
 ---
 
 {{< readfile file="/generated/api/mitmproxy/proxy/context.html" >}}

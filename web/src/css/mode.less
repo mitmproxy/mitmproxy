@@ -1,16 +1,11 @@
-@import (reference) "../../node_modules/bootstrap/less/variables.less";
-@import (reference) "../../node_modules/bootstrap/less/mixins/grid.less";
-@import (reference) "../../node_modules/bootstrap/less/mixins/labels.less";
-@import (reference) "../../node_modules/bootstrap/less/labels.less";
-
 .modes {
-    padding: 1em 2em;
+    padding: 1em 2em 2em 2em;
     overflow-y: auto;
     height: 100%;
     width: 100vw;
 
-    h3 {
-        margin-bottom: 10px;
+    h2 {
+        margin-bottom: 0;
     }
 
     .modes-category {
@@ -18,11 +13,11 @@
     }
 
     .green-left-border {
-        border-left: 10px solid #77c77a;
+        border-left: 10px solid var(--mitmweb-green);
     }
 
     .gray-left-border {
-        border-left: 10px solid #b2b2b2;
+        border-left: 10px solid var(--mitmweb-gray);
     }
 
     .modes-container {
@@ -37,7 +32,7 @@
     }
 
     .mode-description {
-        color: #b2b2b2;
+        color: var(--mitmweb-gray);
         margin-top: -10px;
     }
 
@@ -45,15 +40,22 @@
         text-align: left;
         display: flex;
         align-items: center;
+        gap: 8px;
         font-size: 1.5rem;
         font-weight: normal;
         margin: 0;
 
         input[type="checkbox"] {
-            margin: 0 10px;
-            vertical-align: middle;
+            margin: 0 2px 0 0;
             width: 1.8rem;
             height: 1.8rem;
+            flex: 0 0 auto;
+        }
+
+        .mode-entry-label {
+            display: inline-flex;
+            align-items: center;
+            min-height: 26px;
         }
 
         p {
@@ -68,9 +70,14 @@
     }
 
     .mode-local {
-        i {
+        .icon {
             font-size: 1.8rem;
             cursor: pointer;
+            transition: color 120ms ease-in-out;
+
+            &:hover {
+                color: var(--mitmweb-fg);
+            }
         }
         .processes-container {
             display: flex;
@@ -89,7 +96,7 @@
             display: flex;
             flex-direction: row;
             gap: 5px;
-            background-color: #e0e0e0;
+            background-color: var(--mitmweb-bg-active);
             padding: 5px;
             border-radius: 4px;
             height: 30px;
@@ -98,7 +105,7 @@
             align-content: center;
             align-items: center;
 
-            > i {
+            > .icon {
                 font-size: 15px;
             }
         }
@@ -115,7 +122,7 @@
 
             .dropdown-header {
                 padding: 5px;
-                border: 1px solid #ccc;
+                border: 1px solid var(--mitmweb-border);
                 border-radius: 4px;
                 cursor: pointer;
                 display: flex;
@@ -123,13 +130,16 @@
                 align-items: center;
                 margin-right: 10px;
                 height: 30px;
+                overflow: hidden;
             }
 
             input {
                 border: none;
                 flex: 1;
+                min-width: 0;
                 outline: none;
-                color: black;
+                color: var(--mitmweb-fg);
+                background: transparent;
             }
 
             .dropdown-list {
@@ -151,14 +161,15 @@
                 border-radius: 4px;
                 cursor: pointer;
                 transition: background-color 0.2s ease;
+                justify-content: space-between;
             }
 
             .dropdown-item.selected {
-                background-color: #e0e0e0;
+                background-color: var(--mitmweb-bg-active);
             }
 
             .dropdown-item:hover {
-                background-color: #f0f0f0;
+                background-color: var(--mitmweb-bg-muted);
             }
 
             .process-details {
@@ -173,30 +184,47 @@
                 color: #5f6368;
                 width: 25px;
                 height: 25px;
+                filter: var(--mitmweb-bitmap-icon-filter);
             }
 
             .process-name {
                 font-weight: 500;
-                color: #333;
+                color: var(--mitmweb-fg);
+            }
+
+            .process-separator {
+                margin-top: 10px;
+                margin-bottom: 10px;
             }
         }
 
         .local-popover {
             button {
                 font-size: 1rem;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0;
+                width: 24px;
+                height: 24px;
             }
-            i {
-                font-size: 1.5rem;
+
+            > button .icon {
+                font-size: 1.2rem;
+                line-height: 1;
+            }
+
+            .dropdown-item > .icon-confirm {
+                font-size: 1.2rem;
+                line-height: 1;
             }
 
             @supports (anchor-name: --test) {
                 > div {
                     margin: 0;
                     position: absolute;
-                    left: 0;
-                    top: calc(anchor(bottom) + 10px);
-                    justify-self: anchor-center;
-                    align-self: auto;
+                    top: 10px;
+                    position-area: bottom;
                 }
             }
 
@@ -211,7 +239,7 @@
     }
 
     .mode-input {
-        border: 1px solid #ccc;
+        border: 1px solid var(--mitmweb-border);
         margin-left: 10px;
         border-radius: 4px;
         min-width: 120px;
@@ -219,7 +247,7 @@
     }
 
     .mode-reverse-input {
-        border: 1px solid #ccc;
+        border: 1px solid var(--mitmweb-border);
         margin-left: 10px;
         margin-right: 10px;
         border-radius: 4px;
@@ -228,7 +256,7 @@
     }
 
     .mode-upstream-input {
-        border: 1px solid #ccc;
+        border: 1px solid var(--mitmweb-border);
         margin-left: 10px;
         margin-right: 5px;
         border-radius: 4px;
@@ -238,7 +266,7 @@
 
     .mode-reverse-dropdown {
         margin: 0 5px;
-        border: 1px solid #ccc;
+        border: 1px solid var(--mitmweb-border);
         border-radius: 4px;
         height: 25px;
     }
@@ -263,34 +291,71 @@
             opacity: 1;
         }
 
-        i {
-            font-size: 2rem;
+        .icon {
+            width: 20px;
+            height: 20px;
             margin-right: 5px;
         }
     }
 
     .mode-popover {
+        display: inline-flex;
+        align-items: center;
+        align-self: center;
+
         > button {
             background-color: transparent;
             border: none;
             cursor: pointer;
-            font-size: 2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            width: 26px;
+            height: 26px;
+            line-height: 1;
+        }
+
+        > button .icon {
+            color: var(--mitmweb-fg-muted);
+            width: 20px;
+            height: 20px;
+            transition: color 120ms ease-in-out;
+
+            &:hover {
+                color: var(--mitmweb-fg);
+            }
+        }
+
+        &.local-popover > button {
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            width: 26px;
+            height: 26px;
+            flex: 0 0 auto;
+        }
+
+        &.local-popover > button .icon {
+            width: 18px;
+            height: 18px;
         }
 
         @supports (anchor-name: --test) {
             > div {
                 margin: 0;
                 position: absolute;
-                left: calc(anchor(right) + 5px);
-                align-self: anchor-center;
+                position-area: right;
             }
         }
 
         > div {
-            border: 1px solid #ccc;
+            border: 1px solid var(--mitmweb-border);
             border-radius: 4px;
             padding: 10px 15px;
-            background-color: #f9f9f9;
+            background-color: var(--mitmweb-bg);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 
             &:popover-open {
@@ -307,14 +372,14 @@
             }
             > .mode-input {
                 text-align: right;
-                background-color: white;
+                background-color: var(--mitmweb-bg);
                 margin: 0;
             }
         }
     }
 
     .missing-mode-container {
-        color: #b2b2b2;
+        color: var(--mitmweb-gray);
 
         .title-icon-container {
             display: flex;

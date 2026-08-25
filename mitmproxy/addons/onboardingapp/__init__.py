@@ -46,7 +46,7 @@ def magisk():
 
     return cert, {
         "Content-Type": "application/zip",
-        "Content-Disposition": f"attachment; filename={filename}",
+        "Content-Disposition": f"attachment; {filename=!s}",
     }
 
 
@@ -59,5 +59,5 @@ def read_cert(ext, content_type):
 
     return cert, {
         "Content-Type": content_type,
-        "Content-Disposition": f"attachment; filename={filename}",
+        "Content-Disposition": f"attachment; {filename=!s}",
     }

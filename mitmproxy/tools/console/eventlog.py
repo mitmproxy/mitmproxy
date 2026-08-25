@@ -48,7 +48,7 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
             entry.level
         ):
             return
-        txt = f"{entry.level}: {str(entry.msg)}"
+        txt = f"{entry.level}: {entry.msg}"
         if entry.level in ("error", "warn", "alert"):
             e = urwid.Text((entry.level, txt))
         else:

@@ -15,70 +15,86 @@
     table {
         width: 100%;
         table-layout: fixed;
+        border-collapse: collapse;
+        border-spacing: 0;
     }
 
     thead tr {
-        background-color: #f2f2f2;
-        border-bottom: solid #bebebe 1px;
+        background-color: var(--mitmweb-bg-alt);
+        border-bottom: solid var(--mitmweb-border) 1px;
         line-height: 23px;
     }
 
     th {
         font-weight: normal;
+        text-align: left;
+        vertical-align: bottom;
         position: relative !important;
+        padding: 0;
         padding-left: 1px;
         .user-select(none);
 
         &.sort-asc,
         &.sort-desc {
-            background-color: lighten(#f2f2f2, 3%);
+            background-color: var(--mitmweb-th-sorted-bg);
+            padding-right: 18px;
         }
 
-        &.sort-asc:after,
-        &.sort-desc:after {
-            font: normal normal normal 14px/1 FontAwesome;
+        .th-content {
+            display: block;
+            min-height: 23px;
+        }
+
+        .sort-indicator {
             position: absolute;
             right: 3px;
-            top: 3px;
-            padding: 2px;
-            background-color: fadeout(lighten(#f2f2f2, 3%), 20%);
-        }
-
-        &.sort-asc:after {
-            content: "\f0de";
-        }
-
-        &.sort-desc:after {
-            content: "\f0dd";
+            top: 4px;
+            width: 14px;
+            height: 14px;
+            background-color: color-mix(
+                in srgb,
+                var(--mitmweb-th-sorted-bg) 80%,
+                transparent
+            );
         }
     }
 
     tr {
         cursor: pointer;
 
-        background-color: white;
-
-        &:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-
-        &.selected {
-            background-color: #e0ebf5 !important;
-        }
-        &.selected.highlighted {
-            background-color: #7bbefc !important;
+        & {
+            background-color: var(--mitmweb-bg);
+            &:nth-child(even) {
+                background-color: var(--mitmweb-bg-alt);
+            }
         }
 
         &.highlighted {
-            background-color: #ffeb99;
+            background-color: var(--mitmweb-row-highlight);
+            &:nth-child(even) {
+                background-color: var(--mitmweb-row-highlight-alt);
+            }
         }
 
-        &.highlighted:nth-child(even) {
-            background-color: #ffe57f;
+        &.selected {
+            background-color: var(--mitmweb-row-selected) !important;
+            &:nth-child(even) {
+                background-color: var(--mitmweb-row-selected-alt) !important;
+            }
+        }
+
+        &.selected.highlighted {
+            background-color: var(--mitmweb-row-selected-highlight) !important;
+            &:nth-child(even) {
+                background-color: var(
+                    --mitmweb-row-selected-highlight-alt
+                ) !important;
+            }
         }
     }
 
     td {
+        padding: 0;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
@@ -101,7 +117,7 @@
         }
     }
 
-    .fa {
+    .icon {
         line-height: inherit;
     }
 
@@ -119,28 +135,34 @@
     }
 
     .col-icon {
-        width: 32px;
+        width: 24px;
+        color: var(--mitmweb-fg-muted);
+
+        .icon {
+            display: block;
+            margin: 0 auto;
+        }
     }
 
     .col-path {
         .marker {
         }
 
-        .fa {
+        .icon {
             margin-left: 0;
             font-size: 16px;
         }
 
-        .fa-repeat {
+        .icon-replay {
             color: green;
         }
 
-        .fa-pause {
+        .icon-pause {
             color: @interceptorange;
         }
 
-        .fa-exclamation,
-        .fa-times {
+        .icon-warning,
+        .icon-close {
             color: darkred;
         }
     }
@@ -154,7 +176,7 @@
     }
 
     .col-status {
-        width: 50px;
+        width: 80px;
     }
 
     .col-size {
@@ -207,19 +229,13 @@
             height: 32px;
             width: 32px;
             border-radius: 16px;
-            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
 
             &:hover {
                 background-color: rgba(0, 0, 0, 5%);
             }
         }
-    }
-
-    .col-quickactions .fa-play {
-        transform: translate(1px, 2px);
-    }
-
-    .col-quickactions .fa-repeat {
-        transform: translate(-0px, 2px);
     }
 }

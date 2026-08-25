@@ -9,15 +9,22 @@ import WebSocketBackend from "./backends/websocket";
 import StaticBackend from "./backends/static";
 import { store } from "./ducks";
 
-useUrlState(store);
-// @ts-expect-error custom property on window
+// Extend the Window interface to avoid TS errors
+declare global {
+    interface Window {
+        MITMWEB_STATIC?: boolean;
+    }
+}
+
 if (window.MITMWEB_STATIC) {
-    // @ts-expect-error new property on window for debugging
+    // @ts-expect-error this is not declared above as it should not be used.
     window.backend = new StaticBackend(store);
 } else {
-    // @ts-expect-error new property on window for debugging
+    // @ts-expect-error this is not declared above as it should not be used.
     window.backend = new WebSocketBackend(store);
 }
+
+useUrlState(store);
 
 window.addEventListener("error", (e: ErrorEvent) => {
     store.dispatch(addLog(`${e.message}\n${e.error.stack}`));

@@ -10,3 +10,12 @@ export enum ReverseProxyProtocols {
     DNS = "dns",
     QUIC = "quic",
 }
+
+export enum SyntaxHighlight {
+    CSS = "css",
+    JAVASCRIPT = "javascript",
+    XML = "xml",
+    YAML = "yaml",
+    NONE = "none",
+    ERROR = "error",
+}

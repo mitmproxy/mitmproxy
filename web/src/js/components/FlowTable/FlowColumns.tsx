@@ -1,24 +1,30 @@
-import React, { ReactElement } from "react";
-import { useAppDispatch, useAppSelector } from "../../ducks";
+import type { ReactElement } from "react";
+import React, { type JSX } from "react";
+import { useAppDispatch } from "../../ducks";
 import classnames from "classnames";
+import type { ResourceType, sortFunctions } from "../../flow/utils";
 import {
     canReplay,
     endTime,
     getTotalSize,
     startTime,
-    sortFunctions,
-    getIcon,
+    getResourceType,
     mainPath,
+    statusClass,
     statusCode,
     getMethod,
     getVersion,
 } from "../../flow/utils";
 import { formatSize, formatTimeDelta, formatTimeStamp } from "../../utils";
 import * as flowActions from "../../ducks/flows";
-import { Flow } from "../../flow";
+import type { Flow } from "../../flow";
+import type { IconName } from "../common/Icon";
+import Icon from "../common/Icon";
+import Badge from "../common/Badge";
 
 type FlowColumnProps = {
     flow: Flow;
+    rowNumber: number;
 };
 
 interface FlowColumn {
@@ -28,29 +34,44 @@ interface FlowColumn {
 }
 
 export const tls: FlowColumn = ({ flow }) => {
+    const secure = flow.client_conn.tls_established;
     return (
         <td
             className={classnames(
                 "col-tls",
-                flow.client_conn.tls_established
-                    ? "col-tls-https"
-                    : "col-tls-http",
+                secure ? "col-tls-https" : "col-tls-http",
             )}
+            title={secure ? "TLS encrypted" : "Plaintext"}
         />
     );
 };
 tls.headerName = "";
 
-export const index: FlowColumn = ({ flow }) => {
-    const index = useAppSelector((state) => state.flows.listIndex[flow.id]);
-    return <td className="col-index">{index + 1}</td>;
+export const index: FlowColumn = ({ rowNumber }) => {
+    return <td className="col-index">{rowNumber + 1}</td>;
 };
 index.headerName = "#";
 
+const RESOURCE_ICONS: Record<ResourceType, IconName> = {
+    plain: "file",
+    html: "code",
+    js: "braces",
+    css: "palette",
+    image: "image",
+    "not-modified": "fileCheck",
+    redirect: "redirect",
+    websocket: "swap",
+    tcp: "cable",
+    udp: "send",
+    dns: "globe",
+    quic: "zap",
+};
+
 export const icon: FlowColumn = ({ flow }) => {
+    const resourceType = getResourceType(flow);
     return (
-        <td className="col-icon">
-            <div className={classnames("resource-icon", getIcon(flow))} />
+        <td className="col-icon" title={resourceType}>
+            <Icon name={RESOURCE_ICONS[resourceType]} />
         </td>
     );
 };
@@ -60,19 +81,41 @@ export const path: FlowColumn = ({ flow }) => {
     let err;
     if (flow.error) {
         if (flow.error.msg === "Connection killed.") {
-            err = <i className="fa fa-fw fa-times pull-right" />;
+            err = (
+                <Icon
+                    name="close"
+                    className="float-right"
+                    title="Connection killed"
+                />
+            );
         } else {
-            err = <i className="fa fa-fw fa-exclamation pull-right" />;
+            err = (
+                <Icon
+                    name="warning"
+                    className="float-right"
+                    title={flow.error.msg}
+                />
+            );
         }
     }
     return (
         <td className="col-path">
             {flow.is_replay === "request" && (
-                <i className="fa fa-fw fa-repeat pull-right" />
+                <Icon
+                    name="replay"
+                    className="float-right"
+                    title="Replayed request"
+                />
             )}
-            {flow.intercepted && <i className="fa fa-fw fa-pause pull-right" />}
+            {flow.intercepted && (
+                <Icon
+                    name="pause"
+                    className="float-right"
+                    title="Intercepted — waiting to resume"
+                />
+            )}
             {err}
-            <span className="marker pull-right">{flow.marked}</span>
+            <span className="marker float-right">{flow.marked}</span>
             {mainPath(flow)}
         </td>
     );
@@ -80,7 +123,9 @@ export const path: FlowColumn = ({ flow }) => {
 path.headerName = "Path";
 
 export const method: FlowColumn = ({ flow }) => (
-    <td className="col-method">{getMethod(flow)}</td>
+    <td className="col-method">
+        <Badge className="method-badge">{getMethod(flow)}</Badge>
+    </td>
 );
 method.headerName = "Method";
 
@@ -90,38 +135,14 @@ export const version: FlowColumn = ({ flow }) => (
 version.headerName = "Version";
 
 export const status: FlowColumn = ({ flow }) => {
-    let color = "darkred";
-
-    if ((flow.type !== "http" && flow.type != "dns") || !flow.response)
-        return <td className="col-status" />;
-
-    if (100 <= flow.response.status_code && flow.response.status_code < 200) {
-        color = "green";
-    } else if (
-        200 <= flow.response.status_code &&
-        flow.response.status_code < 300
-    ) {
-        color = "darkgreen";
-    } else if (
-        300 <= flow.response.status_code &&
-        flow.response.status_code < 400
-    ) {
-        color = "lightblue";
-    } else if (
-        400 <= flow.response.status_code &&
-        flow.response.status_code < 500
-    ) {
-        color = "red";
-    } else if (
-        500 <= flow.response.status_code &&
-        flow.response.status_code < 600
-    ) {
-        color = "red";
-    }
+    const code = statusCode(flow);
+    if (code === undefined || code === "") return <td className="col-status" />;
 
     return (
-        <td className="col-status" style={{ color: color }}>
-            {statusCode(flow)}
+        <td className="col-status">
+            <Badge className={classnames("status-badge", statusClass(code))}>
+                {code}
+            </Badge>
         </td>
     );
 };
@@ -156,15 +177,15 @@ timestamp.headerName = "Start time";
 export const quickactions: FlowColumn = ({ flow }) => {
     const dispatch = useAppDispatch();
 
-    let resume_or_replay: ReactElement | null = null;
+    let resume_or_replay: ReactElement<any> | null = null;
     if (flow.intercepted) {
         resume_or_replay = (
             <a
                 href="#"
                 className="quickaction"
-                onClick={() => dispatch(flowActions.resume(flow))}
+                onClick={() => dispatch(flowActions.resume([flow]))}
             >
-                <i className="fa fa-fw fa-play text-success" />
+                <Icon name="resume" className="text-success" />
             </a>
         );
     } else if (canReplay(flow)) {
@@ -172,9 +193,9 @@ export const quickactions: FlowColumn = ({ flow }) => {
             <a
                 href="#"
                 className="quickaction"
-                onClick={() => dispatch(flowActions.replay(flow))}
+                onClick={() => dispatch(flowActions.replay([flow]))}
             >
-                <i className="fa fa-fw fa-repeat text-primary" />
+                <Icon name="replay" className="text-primary" />
             </a>
         );
     }

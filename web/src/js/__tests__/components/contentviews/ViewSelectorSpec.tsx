@@ -1,15 +1,17 @@
 import * as React from "react";
 import ViewSelector from "../../../components/contentviews/ViewSelector";
-import { fireEvent, render, screen } from "../../test-utils";
+import { act, fireEvent, render, screen } from "../../test-utils";
 
 test("ViewSelector", async () => {
     const onChange = jest.fn();
     const { asFragment } = render(
-        <ViewSelector value="Auto" onChange={onChange} />,
+        <ViewSelector value="auto" onChange={onChange} />,
     );
     expect(asFragment()).toMatchSnapshot();
-    fireEvent.click(screen.getByText("auto"));
+
+    await act(() => fireEvent.click(screen.getByText("auto")));
     expect(asFragment()).toMatchSnapshot();
-    fireEvent.click(screen.getByText("raw"));
+
+    await act(() => fireEvent.click(screen.getByText("raw")));
     expect(onChange).toBeCalledWith("Raw");
 });

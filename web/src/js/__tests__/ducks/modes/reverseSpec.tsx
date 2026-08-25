@@ -9,13 +9,9 @@ import reverseReducer, {
     addServer,
     removeServer,
 } from "../../../ducks/modes/reverse";
-import {
-    RECEIVE as STATE_RECEIVE,
-    BackendState,
-} from "../../../ducks/backendState";
+import { STATE_UPDATE } from "../../../ducks/backendState";
 import { TStore } from "../tutils";
 import { ReverseProxyProtocols } from "../../../backends/consts";
-import { PayloadAction } from "@reduxjs/toolkit";
 
 describe("reverseSlice", () => {
     it("should have working setters", async () => {
@@ -26,6 +22,7 @@ describe("reverseSlice", () => {
             active: false,
             protocol: ReverseProxyProtocols.HTTPS,
             destination: "example.com",
+            ui_id: store.getState().modes.reverse[0].ui_id,
         });
 
         const firstServer = store.getState().modes.reverse[0];
@@ -52,6 +49,7 @@ describe("reverseSlice", () => {
             listen_port: 4444,
             protocol: ReverseProxyProtocols.HTTPS,
             destination: "example.com:8085",
+            ui_id: store.getState().modes.reverse[0].ui_id,
         });
 
         expect(fetchMock).toHaveBeenCalledTimes(5);
@@ -129,7 +127,9 @@ describe("reverseSlice", () => {
         const firstServer = store.getState().modes.reverse[0];
         await store.dispatch(setActive({ value: true, server: firstServer }));
 
-        const consoleSpy = jest.spyOn(console, "error");
+        const consoleSpy = jest
+            .spyOn(console, "error")
+            .mockImplementation(() => {});
         await store.dispatch(removeServer(store.getState().modes.reverse[0]));
 
         expect(store.getState().modes.reverse.length).toBe(1);
@@ -140,25 +140,21 @@ describe("reverseSlice", () => {
     });
 
     it("should handle RECEIVE_STATE with an active reverse proxy", () => {
-        const action = {
-            type: STATE_RECEIVE.type,
-            payload: {
-                servers: {
-                    "reverse:tls://example.com:8085@localhost:8080": {
-                        description: "reverse proxy to tls://example.com:8085",
-                        full_spec:
-                            "reverse:tls://example.com:8085@localhost:8080",
-                        is_running: true,
-                        last_exception: null,
-                        listen_addrs: [
-                            ["127.0.0.1", 8080],
-                            ["::1", 8080, 0, 0],
-                        ],
-                        type: "reverse",
-                    },
+        const action = STATE_UPDATE({
+            servers: {
+                "reverse:tls://example.com:8085@localhost:8080": {
+                    description: "reverse proxy to tls://example.com:8085",
+                    full_spec: "reverse:tls://example.com:8085@localhost:8080",
+                    is_running: true,
+                    last_exception: null,
+                    listen_addrs: [
+                        ["127.0.0.1", 8080],
+                        ["::1", 8080, 0, 0],
+                    ],
+                    type: "reverse",
                 },
             },
-        } as PayloadAction<Partial<BackendState>>;
+        });
         const newState = reverseReducer(initialState, action);
         expect(newState).toEqual([
             {
@@ -173,12 +169,7 @@ describe("reverseSlice", () => {
     });
 
     it("should handle RECEIVE_STATE with no active reverse proxy", () => {
-        const action = {
-            type: STATE_RECEIVE.type,
-            payload: {
-                servers: {},
-            },
-        } as PayloadAction<Partial<BackendState>>;
+        const action = STATE_UPDATE({ servers: {} });
         const newState = reverseReducer(initialState, action);
         expect(newState).toEqual([
             {
@@ -191,24 +182,21 @@ describe("reverseSlice", () => {
     });
 
     it("should handle RECEIVE_STATE with an active reverse proxy and set protocol to HTTPS if destination is missing", () => {
-        const action = {
-            type: STATE_RECEIVE.type,
-            payload: {
-                servers: {
-                    "reverse:example.com:8085@localhost:8080": {
-                        description: "reverse proxy to example.com:8085",
-                        full_spec: "reverse:example.com:8085@localhost:8080",
-                        is_running: true,
-                        last_exception: null,
-                        listen_addrs: [
-                            ["127.0.0.1", 8080],
-                            ["::1", 8080, 0, 0],
-                        ],
-                        type: "reverse",
-                    },
+        const action = STATE_UPDATE({
+            servers: {
+                "reverse:example.com:8085@localhost:8080": {
+                    description: "reverse proxy to example.com:8085",
+                    full_spec: "reverse:example.com:8085@localhost:8080",
+                    is_running: true,
+                    last_exception: null,
+                    listen_addrs: [
+                        ["127.0.0.1", 8080],
+                        ["::1", 8080, 0, 0],
+                    ],
+                    type: "reverse",
                 },
             },
-        } as PayloadAction<Partial<BackendState>>;
+        });
         const newState = reverseReducer(initialState, action);
         expect(newState).toEqual([
             {

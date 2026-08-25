@@ -1,5 +1,6 @@
 import os
 import threading
+import typing
 from collections.abc import Callable
 from collections.abc import Iterable
 from enum import Enum
@@ -10,9 +11,12 @@ from typing import Any
 from typing import BinaryIO
 
 import certifi
-from OpenSSL import crypto
+import OpenSSL
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurve
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurveOID
+from cryptography.hazmat.primitives.asymmetric.ec import get_curve_for_oid
+from cryptography.x509 import ObjectIdentifier
 from OpenSSL import SSL
-from OpenSSL.crypto import X509
 
 from mitmproxy import certs
 
@@ -73,17 +77,41 @@ def is_supported_version(version: Version):
     # Without SECLEVEL, recent OpenSSL versions forbid old TLS versions.
     # https://github.com/pyca/cryptography/issues/9523
     client_ctx.set_cipher_list(b"@SECLEVEL=0:ALL")
-    client_ctx.set_min_proto_version(version.value)
-    client_ctx.set_max_proto_version(version.value)
-    client_conn = SSL.Connection(client_ctx)
-    client_conn.set_connect_state()
 
     try:
+        # On OpenSSL builds that have dropped a protocol version entirely
+        # (e.g. SSLv3 after POODLE/CVE-2014-3566), set_min/max_proto_version
+        # raises SSL.Error already at context-setup time, before recv().
+        client_ctx.set_min_proto_version(version.value)
+        client_ctx.set_max_proto_version(version.value)
+        client_conn = SSL.Connection(client_ctx)
+        client_conn.set_connect_state()
         client_conn.recv(4096)
     except SSL.WantReadError:
         return True
     except SSL.Error:
         return False
+
+
+EC_CURVES: dict[str, EllipticCurve] = {}
+for oid in EllipticCurveOID.__dict__.values():
+    if isinstance(oid, ObjectIdentifier):
+        curve = get_curve_for_oid(oid)()
+        EC_CURVES[curve.name] = curve
+
+
+@typing.overload
+def get_curve(name: str) -> EllipticCurve: ...
+
+
+@typing.overload
+def get_curve(name: None) -> None: ...
+
+
+def get_curve(name: str | None) -> EllipticCurve | None:
+    if name is None:
+        return None
+    return EC_CURVES[name]
 
 
 class MasterSecretLogger:
@@ -127,7 +155,7 @@ def _create_ssl_context(
     min_version: Version,
     max_version: Version,
     cipher_list: Iterable[str] | None,
-    ecdh_curve: str | None,
+    ecdh_curve: EllipticCurve | None,
 ) -> SSL.Context:
     context = SSL.Context(method.value)
 
@@ -145,7 +173,7 @@ def _create_ssl_context(
     # ECDHE for Key exchange
     if ecdh_curve is not None:
         try:
-            context.set_tmp_ecdh(crypto.get_elliptic_curve(ecdh_curve))
+            context.set_tmp_ecdh(ecdh_curve)
         except ValueError as e:
             raise RuntimeError(f"Elliptic curve specification error: {e}") from e
 
@@ -170,7 +198,7 @@ def create_proxy_server_context(
     min_version: Version,
     max_version: Version,
     cipher_list: tuple[str, ...] | None,
-    ecdh_curve: str | None,
+    ecdh_curve: EllipticCurve | None,
     verify: Verify,
     ca_path: str | None,
     ca_pemfile: str | None,
@@ -203,6 +231,9 @@ def create_proxy_server_context(
         except SSL.Error as e:
             raise RuntimeError(f"Cannot load TLS client certificate: {e}") from e
 
+        # https://github.com/mitmproxy/mitmproxy/discussions/7550
+        SSL._lib.SSL_CTX_set_post_handshake_auth(context._context, 1)  # type: ignore
+
     if legacy_server_connect:
         context.set_options(OP_LEGACY_SERVER_CONNECT)
 
@@ -216,7 +247,7 @@ def create_client_proxy_context(
     min_version: Version,
     max_version: Version,
     cipher_list: tuple[str, ...] | None,
-    ecdh_curve: str | None,
+    ecdh_curve: EllipticCurve | None,
     chain_file: Path | None,
     alpn_select_callback: Callable[[SSL.Connection, list[bytes]], Any] | None,
     request_client_cert: bool,
@@ -255,7 +286,7 @@ def create_client_proxy_context(
         context.set_verify(Verify.VERIFY_NONE.value, None)
 
     for i in extra_chain_certs:
-        context.add_extra_chain_cert(i.to_pyopenssl())
+        context.add_extra_chain_cert(i.to_cryptography())
 
     if dhparams:
         res = SSL._lib.SSL_CTX_set_tmp_dh(context._context, dhparams)  # type: ignore
@@ -266,7 +297,7 @@ def create_client_proxy_context(
 
 def accept_all(
     conn_: SSL.Connection,
-    x509: X509,
+    x509: OpenSSL.crypto.X509,
     errno: int,
     err_depth: int,
     is_cert_verified: int,

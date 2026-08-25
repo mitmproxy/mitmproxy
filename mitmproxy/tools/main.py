@@ -58,6 +58,7 @@ def run(
         logging.getLogger("tornado").setLevel(logging.WARNING)
         logging.getLogger("asyncio").setLevel(logging.WARNING)
         logging.getLogger("hpack").setLevel(logging.WARNING)
+        logging.getLogger("urwid").setLevel(logging.INFO)
         logging.getLogger("quic").setLevel(
             logging.WARNING
         )  # aioquic uses a different prefix...
@@ -90,6 +91,11 @@ def run(
             process_options(parser, opts, args)
 
             if args.options:
+                # Load custom addons so that their options are registered
+                if sl := master.addons.get("scriptloader"):
+                    for s in sl.addons:
+                        if s.ns is None:
+                            s.loadscript()
                 optmanager.dump_defaults(opts, sys.stdout)
                 sys.exit(0)
             if args.commands:
@@ -98,7 +104,7 @@ def run(
             if extra:
                 if args.filter_args:
                     logging.info(
-                        f"Only processing flows that match \"{' & '.join(args.filter_args)}\""
+                        f'Only processing flows that match "{" & ".join(args.filter_args)}"'
                     )
                 opts.update(**extra(args))
 

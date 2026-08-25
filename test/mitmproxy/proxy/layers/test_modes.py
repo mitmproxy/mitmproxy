@@ -153,9 +153,7 @@ def test_reverse_proxy(tctx, keep_host_header):
     tctx.options.keep_host_header = keep_host_header
     assert (
         Playbook(modes.ReverseProxy(tctx), hooks=False)
-        >> DataReceived(
-            tctx.client, b"GET /foo HTTP/1.1\r\n" b"Host: example.com\r\n\r\n"
-        )
+        >> DataReceived(tctx.client, b"GET /foo HTTP/1.1\r\nHost: example.com\r\n\r\n")
         << NextLayerHook(Placeholder(NextLayer))
         >> reply_next_layer(lambda ctx: http.HttpLayer(ctx, HTTPMode.transparent))
         << OpenConnection(server)

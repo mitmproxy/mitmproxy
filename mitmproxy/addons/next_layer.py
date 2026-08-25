@@ -320,19 +320,25 @@ class NextLayer:
                         return ch
                 return None
             case "udp":
-                try:
-                    return quic_parse_client_hello_from_datagrams([data_client])
-                except ValueError:
-                    pass
+                if _starts_like_quic(data_client, context.server.address):
+                    try:
+                        ch = quic_parse_client_hello_from_datagrams([data_client])
+                    except ValueError:
+                        pass
+                    else:
+                        if ch is None:
+                            raise NeedsMoreData
+                        return ch
 
-                try:
-                    ch = dtls_parse_client_hello(data_client)
-                except ValueError:
-                    pass
-                else:
-                    if ch is None:
-                        raise NeedsMoreData
-                    return ch
+                if starts_like_dtls_record(data_client):
+                    try:
+                        ch = dtls_parse_client_hello(data_client)
+                    except ValueError:
+                        pass
+                    else:
+                        if ch is None:
+                            raise NeedsMoreData
+                        return ch
                 return None
             case _:  # pragma: no cover
                 assert_never(context.client.transport_protocol)

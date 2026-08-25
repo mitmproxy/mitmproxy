@@ -73,11 +73,14 @@ class ModifyBody:
                 if flow.response:
                     flow.response.content = re.sub(
                         spec.subject,
-                        replacement,
+                        lambda _: replacement,
                         flow.response.content,
                         flags=re.DOTALL,
                     )
                 else:
                     flow.request.content = re.sub(
-                        spec.subject, replacement, flow.request.content, flags=re.DOTALL
+                        spec.subject,
+                        lambda _: replacement,
+                        flow.request.content,
+                        flags=re.DOTALL,
                     )

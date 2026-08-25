@@ -1,4 +1,5 @@
 from . import base
+from .editors import CommentEditor
 from .editors import CookieAttributeEditor
 from .editors import CookieEditor
 from .editors import DataViewer
@@ -22,6 +23,7 @@ __all__ = [
     "CookieEditor",
     "CookieAttributeEditor",
     "SetCookieEditor",
+    "CommentEditor",
     "OptionsEditor",
     "DataViewer",
 ]

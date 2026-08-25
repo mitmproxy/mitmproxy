@@ -1,9 +1,11 @@
 import * as React from "react";
 import classnames from "classnames";
-import * as columns from "./FlowColumns";
+import FlowColumns from "./FlowColumns";
+import Icon from "../common/Icon";
 
 import { setSort } from "../../ducks/flows";
 import { useAppDispatch, useAppSelector } from "../../ducks";
+import { isValidColumnName } from "../../flow/utils";
 
 export default React.memo(function FlowTableHead() {
     const dispatch = useAppDispatch();
@@ -15,31 +17,41 @@ export default React.memo(function FlowTableHead() {
 
     const sortType = sortDesc ? "sort-desc" : "sort-asc";
     const displayColumns = displayColumnNames
-        .map((x) => columns[x])
-        .filter((x) => x)
-        .concat(columns.quickactions);
+        .filter(isValidColumnName)
+        .concat("quickactions");
 
     return (
         <tr>
-            {displayColumns.map((Column) => (
+            {displayColumns.map((colName) => (
                 <th
                     className={classnames(
-                        `col-${Column.name}`,
-                        sortColumn === Column.name && sortType,
+                        `col-${colName}`,
+                        sortColumn === colName && sortType,
                     )}
-                    key={Column.name}
+                    key={colName}
                     onClick={() =>
                         dispatch(
-                            setSort(
-                                Column.name === sortColumn && sortDesc
-                                    ? undefined
-                                    : Column.name,
-                                Column.name !== sortColumn ? false : !sortDesc,
-                            ),
+                            setSort({
+                                column:
+                                    colName === sortColumn && sortDesc
+                                        ? undefined
+                                        : colName,
+                                desc:
+                                    colName !== sortColumn ? false : !sortDesc,
+                            }),
                         )
                     }
                 >
-                    {Column.headerName}
+                    <span className="th-content">
+                        {FlowColumns[colName].headerName}
+                    </span>
+                    {sortColumn === colName && (
+                        <Icon
+                            strokeWidth={3}
+                            name={sortDesc ? "chevronDown" : "chevronUp"}
+                            className="sort-indicator"
+                        />
+                    )}
                 </th>
             ))}
         </tr>

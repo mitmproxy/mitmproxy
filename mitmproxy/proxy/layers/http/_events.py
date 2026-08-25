@@ -1,8 +1,11 @@
+import enum
+import typing
 from dataclasses import dataclass
 
 from ._base import HttpEvent
 from mitmproxy import http
 from mitmproxy.http import HTTPFlow
+from mitmproxy.net.http import status_codes
 
 
 @dataclass
@@ -75,12 +78,62 @@ class ResponseEndOfMessage(HttpEvent):
         self.stream_id = stream_id
 
 
+class ErrorCode(enum.Enum):
+    GENERIC_CLIENT_ERROR = 1
+    GENERIC_SERVER_ERROR = 2
+    REQUEST_TOO_LARGE = 3
+    RESPONSE_TOO_LARGE = 4
+    CONNECT_FAILED = 5
+    PASSTHROUGH_CLOSE = 6
+    KILL = 7
+    HTTP_1_1_REQUIRED = 8
+    """Client should fall back to HTTP/1.1 to perform request."""
+    DESTINATION_UNKNOWN = 9
+    """Proxy does not know where to send request to."""
+    CLIENT_DISCONNECTED = 10
+    """Client disconnected before receiving entire response."""
+    CANCEL = 11
+    """Client or server cancelled h2/h3 stream."""
+    REQUEST_VALIDATION_FAILED = 12
+    RESPONSE_VALIDATION_FAILED = 13
+
+    def http_status_code(self) -> int | None:
+        match self:
+            # Client Errors
+            case (
+                ErrorCode.GENERIC_CLIENT_ERROR
+                | ErrorCode.REQUEST_VALIDATION_FAILED
+                | ErrorCode.DESTINATION_UNKNOWN
+            ):
+                return status_codes.BAD_REQUEST
+            case ErrorCode.REQUEST_TOO_LARGE:
+                return status_codes.PAYLOAD_TOO_LARGE
+            case (
+                ErrorCode.CONNECT_FAILED
+                | ErrorCode.GENERIC_SERVER_ERROR
+                | ErrorCode.RESPONSE_VALIDATION_FAILED
+                | ErrorCode.RESPONSE_TOO_LARGE
+            ):
+                return status_codes.BAD_GATEWAY
+            case (
+                ErrorCode.PASSTHROUGH_CLOSE
+                | ErrorCode.KILL
+                | ErrorCode.HTTP_1_1_REQUIRED
+                | ErrorCode.CLIENT_DISCONNECTED
+                | ErrorCode.CANCEL
+            ):
+                return None
+            case other:  # pragma: no cover
+                typing.assert_never(other)
+
+
 @dataclass
 class RequestProtocolError(HttpEvent):
     message: str
-    code: int = 400
+    code: ErrorCode = ErrorCode.GENERIC_CLIENT_ERROR
 
-    def __init__(self, stream_id: int, message: str, code: int = 400):
+    def __init__(self, stream_id: int, message: str, code: ErrorCode):
+        assert isinstance(code, ErrorCode)
         self.stream_id = stream_id
         self.message = message
         self.code = code
@@ -89,15 +142,17 @@ class RequestProtocolError(HttpEvent):
 @dataclass
 class ResponseProtocolError(HttpEvent):
     message: str
-    code: int = 502
+    code: ErrorCode = ErrorCode.GENERIC_SERVER_ERROR
 
-    def __init__(self, stream_id: int, message: str, code: int = 502):
+    def __init__(self, stream_id: int, message: str, code: ErrorCode):
+        assert isinstance(code, ErrorCode)
         self.stream_id = stream_id
         self.message = message
         self.code = code
 
 
 __all__ = [
+    "ErrorCode",
     "HttpEvent",
     "RequestHeaders",
     "RequestData",

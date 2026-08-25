@@ -1,18 +1,32 @@
 import * as React from "react";
-import renderer from "react-test-renderer";
-import { Provider } from "react-redux";
 import OptionMenu from "../../../components/Header/OptionMenu";
-import { TStore } from "../../ducks/tutils";
+import { fireEvent, render, screen, waitFor } from "../../test-utils";
+import { enableFetchMocks } from "jest-fetch-mock";
+
+enableFetchMocks();
 
 describe("OptionMenu Component", () => {
     it("should render correctly", () => {
-        const store = TStore();
-        const provider = renderer.create(
-            <Provider store={store}>
-                <OptionMenu />
-            </Provider>,
+        const { asFragment } = render(<OptionMenu />);
+        expect(asFragment()).toMatchSnapshot();
+    });
+
+    it("should update the web_theme option from the theme selector", async () => {
+        fetchMock.mockResponseOnce("");
+
+        render(<OptionMenu />);
+        fireEvent.change(screen.getByDisplayValue("system"), {
+            target: { value: "dark" },
+        });
+
+        await waitFor(() =>
+            expect(fetchMock).toHaveBeenCalledWith(
+                "./options",
+                expect.objectContaining({
+                    method: "PUT",
+                    body: JSON.stringify({ web_theme: "dark" }),
+                }),
+            ),
         );
-        const tree = provider.toJSON();
-        expect(tree).toMatchSnapshot();
     });
 });

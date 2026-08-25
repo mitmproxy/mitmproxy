@@ -10,7 +10,7 @@ exports[`LocalDropdown - initial render and filtering 1`] = `
     >
       <input
         class="autocomplete-input"
-        placeholder="(all applications)"
+        placeholder="all applications"
         type="text"
         value=""
       />
@@ -18,15 +18,28 @@ exports[`LocalDropdown - initial render and filtering 1`] = `
         class="mode-popover local-popover"
       >
         <button
-          popovertarget=":r0:"
+          popovertarget="«r0»"
         >
-          <i
+          <svg
             aria-hidden="true"
-            class="fa fa-chevron-down"
-          />
+            class="lucide lucide-chevron-down icon icon-chevronDown"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="m6 9 6 6 6-6"
+            />
+          </svg>
         </button>
         <div
-          id=":r0:"
+          id="«r0»"
           popover="auto"
         >
           <h4>
@@ -35,6 +48,43 @@ exports[`LocalDropdown - initial render and filtering 1`] = `
           <ul
             class="dropdown-list"
           >
+            <li
+              class="dropdown-item selected"
+              role="menuitem"
+            >
+              <div
+                class="process-details"
+              >
+                <div
+                  class="process-icon"
+                />
+                <span
+                  class="process-name"
+                >
+                  All applications
+                </span>
+              </div>
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-check icon icon-confirm"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M20 6 9 17l-5-5"
+                />
+              </svg>
+            </li>
+            <hr
+              class="process-separator"
+            />
             <li
               class="dropdown-item "
               role="menuitem"

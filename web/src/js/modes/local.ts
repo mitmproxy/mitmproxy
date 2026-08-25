@@ -1,4 +1,4 @@
-import { ModeState, RawSpecParts } from ".";
+import type { ModeState, RawSpecParts } from ".";
 
 export interface LocalState extends ModeState {
     selectedProcesses?: string;

@@ -23,7 +23,7 @@ def genrsa(cert: str):
     do(f"openssl genrsa -out {cert}.key 2048")
 
 
-def sign(cert: str, subject: str, ip: bool):
+def sign(cert: str, *exts: str):
     with open(f"openssl-{cert}.conf", "w") as f:
         f.write(
             textwrap.dedent(
@@ -31,9 +31,9 @@ def sign(cert: str, subject: str, ip: bool):
         authorityKeyIdentifier=keyid,issuer
         basicConstraints=CA:FALSE
         keyUsage = digitalSignature, keyEncipherment
-        subjectAltName = {"IP" if ip else "DNS" }:{subject}
         """
             )
+            + "\n".join(exts)
         )
     do(
         f"openssl x509 -req -in {cert}.csr "
@@ -48,16 +48,16 @@ def sign(cert: str, subject: str, ip: bool):
     os.remove(f"openssl-{cert}.conf")
 
 
-def mkcert(cert, subject, ip: bool):
+def mkcert(cert, subject: str, *exts: str):
     genrsa(cert)
     do(
         f"openssl req -new -nodes -batch "
         f"-key {cert}.key "
         f"-subj /CN={subject}/O=mitmproxy "
-        f'-addext "subjectAltName = {"IP" if ip else "DNS" }:{subject}" '
-        f"-out {cert}.csr"
+        + "".join(f'-addext "{ext}" ' for ext in exts)
+        + f"-out {cert}.csr"
     )
-    sign(cert, subject, ip)
+    sign(cert, *exts)
     os.remove(f"{cert}.csr")
 
 
@@ -72,9 +72,20 @@ do(
 h = do("openssl x509 -hash -noout -in trusted-root.crt").decode("ascii").strip()
 shutil.copyfile("trusted-root.crt", f"{h}.0")
 
-# create trusted leaf cert.
-mkcert("trusted-leaf", SUBJECT, False)
-mkcert("trusted-leaf-ip", "192.0.2.42", True)
+# create trusted leaf certs.
+mkcert(
+    "trusted-leaf",
+    SUBJECT,
+    f"subjectAltName = DNS:{SUBJECT}",
+    "crlDistributionPoints = URI:https://trusted-root/example.crl",
+)
+mkcert("trusted-leaf-ip", "192.0.2.42", f"subjectAltName = IP:192.0.2.42")
+mkcert(
+    "trusted-client-cert",
+    "client.mitmproxy.org",
+    "subjectAltName = DNS:client.mitmproxy.org",
+    "extendedKeyUsage = clientAuth",
+)
 
 # create self-signed cert
 genrsa("self-signed")
@@ -86,7 +97,13 @@ do(
     "-out self-signed.crt"
 )
 
-for x in ["self-signed", "trusted-leaf", "trusted-leaf-ip", "trusted-root"]:
+for x in [
+    "self-signed",
+    "trusted-leaf",
+    "trusted-leaf-ip",
+    "trusted-root",
+    "trusted-client-cert",
+]:
     with open(f"{x}.crt") as crt, open(f"{x}.key") as key, open(f"{x}.pem", "w") as pem:
         pem.write(crt.read())
         pem.write(key.read())
@@ -111,3 +128,6 @@ with (
 with open(f"trusted-leaf.pem") as crt1, open(f"trusted-chain-invalid.pem", "w") as pem:
     pem.write(crt1.read())
     pem.write("-----BEGIN CERTIFICATE-----\nnotacert\n-----END CERTIFICATE-----\n")
+
+mkcert("invalid-crl", SUBJECT, "crlDistributionPoints = URI://[")
+os.remove("invalid-crl.key")

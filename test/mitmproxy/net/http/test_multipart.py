@@ -14,18 +14,14 @@ def test_decode():
         "value2\n"
         "--{0}--".format(boundary).encode()
     )
-    form = multipart.decode_multipart(
-        f"multipart/form-data; boundary={boundary}", content
-    )
+    form = multipart.decode_multipart(f"multipart/form-data; {boundary=!s}", content)
 
     assert len(form) == 2
     assert form[0] == (b"field1", b"value1")
     assert form[1] == (b"field2", b"value2")
 
     boundary = "boundary茅莽"
-    result = multipart.decode_multipart(
-        f"multipart/form-data; boundary={boundary}", content
-    )
+    result = multipart.decode_multipart(f"multipart/form-data; {boundary=!s}", content)
     assert result == []
 
     assert multipart.decode_multipart("", content) == []

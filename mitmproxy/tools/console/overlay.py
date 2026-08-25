@@ -20,6 +20,11 @@ class SimpleOverlay(urwid.Overlay, layoutwidget.LayoutWidget):
     def keyctx(self):
         return getattr(self.widget, "keyctx")
 
+    # mypy: Cannot override writeable attribute with read-only property
+    @keyctx.setter
+    def keyctx(self, value):
+        raise RuntimeError  # pragma: no cover
+
     def key_responder(self):
         return self.widget.key_responder()
 

@@ -1,9 +1,10 @@
 import React, { Component } from "react";
-import PropTypes from "prop-types";
 import * as autoscroll from "../helpers/AutoScroll";
-import { calcVScroll, VScroll } from "../helpers/VirtualScroll";
-import { EventLogItem } from "../../ducks/eventLog";
+import type { VScroll } from "../helpers/VirtualScroll";
+import { calcVScroll } from "../helpers/VirtualScroll";
+import { LogLevel, type EventLogItem } from "../../ducks/eventLog";
 import { shallowEqual } from "react-redux";
+import Icon, { type IconName } from "../common/Icon";
 
 type EventLogListProps = {
     events: EventLogItem[];
@@ -17,11 +18,6 @@ export default class EventLogList extends Component<
     EventLogListProps,
     EventLogListState
 > {
-    static propTypes = {
-        events: PropTypes.array.isRequired,
-        rowHeight: PropTypes.number,
-    };
-
     static defaultProps = {
         rowHeight: 18,
     };
@@ -30,7 +26,7 @@ export default class EventLogList extends Component<
 
     viewport = React.createRef<HTMLPreElement>();
 
-    constructor(props) {
+    constructor(props: EventLogListProps) {
         super(props);
 
         this.heights = {};
@@ -52,11 +48,30 @@ export default class EventLogList extends Component<
         return autoscroll.isAtBottom(this.viewport);
     }
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
+    componentDidUpdate(
+        prevProps: EventLogListProps,
+        _prevState: EventLogListState,
+        snapshot: boolean,
+    ) {
         if (snapshot) {
             autoscroll.adjustScrollTop(this.viewport);
         }
-        this.onViewportUpdate();
+        // Only recompute the virtual-scroll window when the event list or the
+        // row height actually changed. Calling onViewportUpdate on every
+        // update (including the setState it produces itself) let
+        // setState -> componentDidUpdate -> setState spin without converging
+        // once measured row heights differed from the assumed rowHeight,
+        // surfacing as "Maximum update depth exceeded" while scrolling the
+        // event log. The same fix was applied to FlowTable in #8233. The
+        // other call sites still drive updates as needed: componentDidMount,
+        // the resize listener, the viewport onScroll, and setHeight when a
+        // row is first measured.
+        if (
+            prevProps.events !== this.props.events ||
+            prevProps.rowHeight !== this.props.rowHeight
+        ) {
+            this.onViewportUpdate();
+        }
     }
 
     onViewportUpdate() {
@@ -77,7 +92,7 @@ export default class EventLogList extends Component<
         }
     }
 
-    setHeight(id, node) {
+    setHeight(id: string, node: HTMLDivElement | null) {
         if (node && !this.heights[id]) {
             const height = node.offsetHeight;
             if (this.heights[id] !== height) {
@@ -97,7 +112,9 @@ export default class EventLogList extends Component<
                 {events.slice(vScroll.start, vScroll.end).map((event) => (
                     <div
                         key={event.id}
-                        ref={(node) => this.setHeight(event.id, node)}
+                        ref={(node) => {
+                            this.setHeight(event.id, node);
+                        }}
                     >
                         <LogIcon event={event} />
                         {event.message}
@@ -110,12 +127,13 @@ export default class EventLogList extends Component<
 }
 
 function LogIcon({ event }: { event: EventLogItem }) {
-    const icon =
-        {
-            web: "html5",
-            debug: "bug",
-            warn: "exclamation-triangle",
-            error: "ban",
-        }[event.level] || "info";
-    return <i className={`fa fa-fw fa-${icon}`} />;
+    const iconsByLevel: Record<LogLevel, IconName> = {
+        [LogLevel.web]: "browser",
+        [LogLevel.debug]: "debug",
+        [LogLevel.info]: "info",
+        [LogLevel.warn]: "warning",
+        [LogLevel.error]: "error",
+    };
+    const icon = iconsByLevel[event.level] ?? "info";
+    return <Icon name={icon} />;
 }

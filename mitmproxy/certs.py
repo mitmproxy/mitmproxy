@@ -27,11 +27,21 @@ from cryptography.x509 import NameOID
 
 from mitmproxy.coretypes import serializable
 
+if sys.version_info < (3, 13):  # pragma: no cover
+    from typing_extensions import deprecated
+else:
+    from warnings import deprecated
+
 logger = logging.getLogger(__name__)
 
 # Default expiry must not be too long: https://github.com/mitmproxy/mitmproxy/issues/815
+# Note that expiry will be offset by `CERT_VALIDITY_OFFSET`, i.e. the cert will be
+# backdated a bit to account for clients with incorrect clocks.
 CA_EXPIRY = datetime.timedelta(days=10 * 365)
-CERT_EXPIRY = datetime.timedelta(days=365)
+CERT_EXPIRY = datetime.timedelta(days=199)
+CRL_EXPIRY = datetime.timedelta(days=7)
+
+CERT_VALIDITY_OFFSET = datetime.timedelta(days=-2)
 
 # Generated with "openssl dhparam". It's too slow to generate this on startup.
 DEFAULT_DHPARAM = b"""
@@ -92,8 +102,12 @@ class Cert(serializable.Serializable):
     def from_pyopenssl(self, x509: OpenSSL.crypto.X509) -> "Cert":
         return Cert(x509.to_cryptography())
 
-    def to_pyopenssl(self) -> OpenSSL.crypto.X509:
+    @deprecated("Use `to_cryptography` instead.")
+    def to_pyopenssl(self) -> OpenSSL.crypto.X509:  # pragma: no cover
         return OpenSSL.crypto.X509.from_cryptography(self._cert)
+
+    def to_cryptography(self) -> x509.Certificate:
+        return self._cert
 
     def public_key(self) -> CertificatePublicKeyTypes:
         return self._cert.public_key()
@@ -112,18 +126,18 @@ class Cert(serializable.Serializable):
             return self._cert.not_valid_before_utc  # type: ignore
         except AttributeError:  # pragma: no cover
             # cryptography < 42.0
-            return self._cert.not_valid_before.replace(tzinfo=datetime.timezone.utc)
+            return self._cert.not_valid_before.replace(tzinfo=datetime.UTC)
 
     @property
     def notafter(self) -> datetime.datetime:
         try:
             return self._cert.not_valid_after_utc  # type: ignore
         except AttributeError:  # pragma: no cover
-            return self._cert.not_valid_after.replace(tzinfo=datetime.timezone.utc)
+            return self._cert.not_valid_after.replace(tzinfo=datetime.UTC)
 
     def has_expired(self) -> bool:
         if sys.version_info < (3, 11):  # pragma: no cover
-            return datetime.datetime.now(datetime.timezone.utc) > self.notafter
+            return datetime.datetime.now(datetime.UTC) > self.notafter
         return datetime.datetime.now(datetime.UTC) > self.notafter
 
     @property
@@ -189,6 +203,22 @@ class Cert(serializable.Serializable):
         else:
             return x509.GeneralNames(sans)
 
+    @property
+    def crl_distribution_points(self) -> list[str]:
+        try:
+            ext = self._cert.extensions.get_extension_for_class(
+                x509.CRLDistributionPoints
+            ).value
+        except x509.ExtensionNotFound:
+            return []
+        else:
+            return [
+                dist_point.full_name[0].value
+                for dist_point in ext
+                if dist_point.full_name
+                and isinstance(dist_point.full_name[0], x509.UniformResourceIdentifier)
+            ]
+
 
 def _name_to_keyval(name: x509.Name) -> list[tuple[str, str]]:
     parts = []
@@ -219,8 +249,8 @@ def create_ca(
     builder = x509.CertificateBuilder()
     builder = builder.serial_number(x509.random_serial_number())
     builder = builder.subject_name(name)
-    builder = builder.not_valid_before(now - datetime.timedelta(days=2))
-    builder = builder.not_valid_after(now + CA_EXPIRY)
+    builder = builder.not_valid_before(now + CERT_VALIDITY_OFFSET)
+    builder = builder.not_valid_after(now + CERT_VALIDITY_OFFSET + CA_EXPIRY)
     builder = builder.issuer_name(name)
     builder = builder.public_key(private_key.public_key())
     builder = builder.add_extension(
@@ -278,7 +308,7 @@ def _fix_legacy_sans(sans: Iterable[x509.GeneralName] | list[str]) -> x509.Gener
                 ss.append(x509.IPAddress(ip))
         return x509.GeneralNames(ss)
     else:
-        return x509.GeneralNames(sans)
+        return x509.GeneralNames(cast(Iterable[x509.GeneralName], sans))
 
 
 def dummy_cert(
@@ -287,6 +317,7 @@ def dummy_cert(
     commonname: str | None,
     sans: Iterable[x509.GeneralName],
     organization: str | None = None,
+    crl_url: str | None = None,
 ) -> Cert:
     """
     Generates a dummy certificate.
@@ -296,6 +327,7 @@ def dummy_cert(
     commonname: Common name for the generated certificate.
     sans: A list of Subject Alternate Names.
     organization: Organization name for the generated certificate.
+    crl_url: URL of CRL distribution point
 
     Returns cert if operation succeeded, None if not.
     """
@@ -307,8 +339,8 @@ def dummy_cert(
     builder = builder.public_key(cacert.public_key())
 
     now = datetime.datetime.now()
-    builder = builder.not_valid_before(now - datetime.timedelta(days=2))
-    builder = builder.not_valid_after(now + CERT_EXPIRY)
+    builder = builder.not_valid_before(now + CERT_VALIDITY_OFFSET)
+    builder = builder.not_valid_after(now + CERT_VALIDITY_OFFSET + CERT_EXPIRY)
 
     subject = []
     is_valid_commonname = commonname is not None and len(commonname) < 64
@@ -328,17 +360,72 @@ def dummy_cert(
     )
 
     # https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.1
-    builder = builder.add_extension(
-        x509.AuthorityKeyIdentifier.from_issuer_public_key(cacert.public_key()),
-        critical=False,
-    )
+    # Per RFC 5280 §4.2.1.2, the AKI's keyIdentifier in a child certificate
+    # MUST be byte-equal to the issuer's stored SubjectKeyIdentifier. If we
+    # recompute it from the public key with `from_issuer_public_key()`, we
+    # always derive a SHA-1 digest, which mismatches whenever the issuer's
+    # SKI was generated by a different method (RFC 7093 truncated
+    # SHA-256/384/512, hardware-rooted CAs, or any custom value). This
+    # mismatch is rejected by strict TLS chain builders (`X509_V_FLAG_X509_STRICT`,
+    # Python `ssl`, Go `crypto/x509`) with "authority and subject key
+    # identifier mismatch". Most notably, cert-manager >=1.18 / Go >=1.25
+    # default to truncated SHA-256 SKIs for FIPS 140-3 compliance.
+    try:
+        issuer_ski = cacert.extensions.get_extension_for_class(
+            x509.SubjectKeyIdentifier
+        ).value
+        aki = x509.AuthorityKeyIdentifier.from_issuer_subject_key_identifier(issuer_ski)
+    except x509.ExtensionNotFound:
+        # Fall back when the issuer cert has no SKI extension at all (legacy
+        # CAs predating RFC 5280 conformance).
+        aki = x509.AuthorityKeyIdentifier.from_issuer_public_key(cacert.public_key())  # type: ignore
+    builder = builder.add_extension(aki, critical=False)
     # If CA and leaf cert have the same Subject Key Identifier, SChannel breaks in funny ways,
     # see https://github.com/mitmproxy/mitmproxy/issues/6494.
     # https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.2 states
     # that SKI is optional for the leaf cert, so we skip that.
 
+    if crl_url:
+        builder = builder.add_extension(
+            x509.CRLDistributionPoints(
+                [
+                    x509.DistributionPoint(
+                        [x509.UniformResourceIdentifier(crl_url)],
+                        relative_name=None,
+                        crl_issuer=None,
+                        reasons=None,
+                    )
+                ]
+            ),
+            critical=False,
+        )
+
     cert = builder.sign(private_key=privkey, algorithm=hashes.SHA256())  # type: ignore
     return Cert(cert)
+
+
+def dummy_crl(
+    privkey: rsa.RSAPrivateKey,
+    cacert: x509.Certificate,
+) -> bytes:
+    """
+    Generates an empty CRL signed with the CA key
+
+    privkey: CA private key
+    cacert: CA certificate
+
+    Returns a CRL DER encoded
+    """
+    builder = x509.CertificateRevocationListBuilder()
+    builder = builder.issuer_name(cacert.issuer)
+
+    now = datetime.datetime.now()
+    builder = builder.last_update(now + CERT_VALIDITY_OFFSET)
+    builder = builder.next_update(now + CERT_VALIDITY_OFFSET + CRL_EXPIRY)
+
+    builder = builder.add_extension(x509.CRLNumber(1000), False)  # meaningless number
+    crl = builder.sign(private_key=privkey, algorithm=hashes.SHA256())
+    return crl.public_bytes(serialization.Encoding.DER)
 
 
 @dataclass(frozen=True)
@@ -375,11 +462,13 @@ class CertStore:
         default_privatekey: rsa.RSAPrivateKey,
         default_ca: Cert,
         default_chain_file: Path | None,
+        default_crl: bytes,
         dhparams: DHParams,
     ):
         self.default_privatekey = default_privatekey
         self.default_ca = default_ca
         self.default_chain_file = default_chain_file
+        self.default_crl = default_crl
         self.default_chain_certs = (
             [
                 Cert(c)
@@ -448,11 +537,12 @@ class CertStore:
         dh = cls.load_dhparam(dhparam_file)
         certs = x509.load_pem_x509_certificates(raw)
         ca = Cert(certs[0])
+        crl = dummy_crl(key, ca._cert)
         if len(certs) > 1:
             chain_file: Path | None = ca_file
         else:
             chain_file = None
-        return cls(key, ca, chain_file, dh)
+        return cls(key, ca, chain_file, crl, dh)
 
     @staticmethod
     @contextlib.contextmanager
@@ -593,6 +683,7 @@ class CertStore:
         commonname: str | None,
         sans: Iterable[x509.GeneralName],
         organization: str | None = None,
+        crl_url: str | None = None,
     ) -> CertStoreEntry:
         """
         commonname: Common name for the generated certificate. Must be a
@@ -601,6 +692,8 @@ class CertStore:
         sans: A list of Subject Alternate Names.
 
         organization: Organization name for the generated certificate.
+
+        crl_url: URL of CRL distribution point
         """
         sans = _fix_legacy_sans(sans)
 
@@ -623,6 +716,7 @@ class CertStore:
                     commonname,
                     sans,
                     organization,
+                    crl_url,
                 ),
                 privatekey=self.default_privatekey,
                 chain_file=self.default_chain_file,

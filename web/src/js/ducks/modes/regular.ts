@@ -1,10 +1,8 @@
-import {
-    RECEIVE as RECEIVE_STATE,
-    UPDATE as UPDATE_STATE,
-} from "../backendState";
+import { STATE_RECEIVE, STATE_UPDATE } from "../backendState";
 import { addSetter, createModeUpdateThunk, updateState } from "./utils";
 import { createSlice } from "@reduxjs/toolkit";
-import { parseRaw, RegularState } from "../../modes/regular";
+import type { RegularState } from "../../modes/regular";
+import { parseRaw } from "../../modes/regular";
 
 export const setActive = createModeUpdateThunk<boolean>(
     "modes/regular/setActive",
@@ -31,8 +29,8 @@ export const regularSlice = createSlice({
         addSetter(builder, "active", setActive);
         addSetter(builder, "listen_host", setListenHost);
         addSetter(builder, "listen_port", setListenPort);
-        builder.addCase(RECEIVE_STATE, updateState("regular", parseRaw));
-        builder.addCase(UPDATE_STATE, updateState("regular", parseRaw));
+        builder.addCase(STATE_RECEIVE, updateState("regular", parseRaw));
+        builder.addCase(STATE_UPDATE, updateState("regular", parseRaw));
     },
 });
 

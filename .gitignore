@@ -28,7 +28,6 @@ bower_components
 *.map
 sslkeylogfile.log
 .tox/
-.python-version
 coverage.xml
 web/coverage/
 .mypy_cache/

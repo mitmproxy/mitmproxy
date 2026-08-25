@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import binascii
+import pathlib
 import weakref
 from abc import ABC
 from abc import abstractmethod
@@ -8,7 +9,6 @@ from collections.abc import MutableMapping
 from typing import Optional
 
 import ldap3
-import passlib.apache
 
 from mitmproxy import connection
 from mitmproxy import ctx
@@ -17,6 +17,7 @@ from mitmproxy import http
 from mitmproxy.net.http import status_codes
 from mitmproxy.proxy import mode_specs
 from mitmproxy.proxy.layers import modes
+from mitmproxy.utils import htpasswd
 
 REALM = "mitmproxy"
 
@@ -201,11 +202,13 @@ class SingleUser(Validator):
 
 class Htpasswd(Validator):
     def __init__(self, proxyauth: str):
-        path = proxyauth[1:]
+        path = pathlib.Path(proxyauth[1:]).expanduser()
         try:
-            self.htpasswd = passlib.apache.HtpasswdFile(path)
-        except (ValueError, OSError):
-            raise exceptions.OptionsError(f"Could not open htpasswd file: {path}")
+            self.htpasswd = htpasswd.HtpasswdFile.from_file(path)
+        except (ValueError, OSError) as e:
+            raise exceptions.OptionsError(
+                f"Could not open htpasswd file: {path}"
+            ) from e
 
     def __call__(self, username: str, password: str) -> bool:
         return self.htpasswd.check_password(username, password)
@@ -278,10 +281,14 @@ class Ldap(Validator):
         except ValueError:
             raise exceptions.OptionsError(f"Invalid LDAP specification: {spec}")
 
+    def make_search_filter(self, username: str) -> str:
+        username = ldap3.utils.conv.escape_filter_chars(username)
+        return f"({self.filter_key}={username})"
+
     def __call__(self, username: str, password: str) -> bool:
         if not username or not password:
             return False
-        self.conn.search(self.dn_subtree, f"({self.filter_key}={username})")
+        self.conn.search(self.dn_subtree, self.make_search_filter(username))
         if self.conn.response:
             c = ldap3.Connection(
                 self.server, self.conn.response[0]["dn"], password, auto_bind=True

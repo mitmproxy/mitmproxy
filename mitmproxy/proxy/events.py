@@ -23,7 +23,7 @@ class Event:
     """
 
     def __repr__(self):
-        return f"{type(self).__name__}({repr(self.__dict__)})"
+        return f"{type(self).__name__}({self.__dict__!r})"
 
 
 class Start(Event):
@@ -94,10 +94,10 @@ class CommandCompleted(Event):
                 f"Two conflicting subclasses for {command_cls}: {cls} and {other}",
                 RuntimeWarning,
             )
-        command_reply_subclasses[command_cls] = cls
+        command_reply_subclasses[command_cls] = cls  # type: ignore
 
     def __repr__(self):
-        return f"Reply({repr(self.command)}, {repr(self.reply)})"
+        return f"Reply({self.command!r}, {self.reply!r})"
 
 
 command_reply_subclasses: dict[commands.Command, type[CommandCompleted]] = {}

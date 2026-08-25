@@ -1,7 +1,9 @@
 import enum
 import struct
 from dataclasses import dataclass
+from typing import Self
 
+from ...utils import strutils
 from . import domain_names
 
 """
@@ -30,6 +32,9 @@ class SVCParamKeys(enum.Enum):
     IPV6HINT = 6
 
 
+type HTTPSRecordJSON = dict[str | int, str | int]
+
+
 @dataclass
 class HTTPSRecord:
     priority: int
@@ -37,14 +42,35 @@ class HTTPSRecord:
     params: dict[int, bytes]
 
     def __repr__(self):
-        params = {}
-        for param_type, param_value in self.params.items():
+        return str(self.to_json())
+
+    def to_json(self) -> HTTPSRecordJSON:
+        ret: HTTPSRecordJSON = {
+            "target_name": self.target_name,
+            "priority": self.priority,
+        }
+        typ: str | int
+        for typ, val in self.params.items():
             try:
-                name = SVCParamKeys(param_type).name.lower()
+                typ = SVCParamKeys(typ).name.lower()
             except ValueError:
-                name = f"key{param_type}"
-            params[name] = param_value
-        return f"priority: {self.priority} target_name: '{self.target_name}' {params}"
+                pass
+            ret[typ] = strutils.bytes_to_escaped_str(val)
+        return ret
+
+    @classmethod
+    def from_json(cls, data: HTTPSRecordJSON) -> Self:
+        target_name = data.pop("target_name")
+        assert isinstance(target_name, str)
+        priority = data.pop("priority")
+        assert isinstance(priority, int)
+        params: dict[int, bytes] = {}
+        for k, v in data.items():
+            if isinstance(k, str):
+                k = SVCParamKeys[k.upper()].value
+            assert isinstance(v, str)
+            params[k] = strutils.escaped_str_to_bytes(v)
+        return cls(target_name=target_name, priority=priority, params=params)
 
 
 def _unpack_params(data: bytes, offset: int) -> dict[int, bytes]:

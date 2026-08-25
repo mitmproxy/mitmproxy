@@ -8,8 +8,8 @@ import Modes from "./Modes";
 import { Tab } from "../ducks/ui/tabs";
 
 export default function MainView() {
-    const hasSelection = useAppSelector(
-        (state) => !!state.flows.byId[state.flows.selected[0]],
+    const hasOneFlowSelected = useAppSelector(
+        (state) => state.flows.selected.length === 1,
     );
     const hasFlows = useAppSelector((state) => state.flows.list.length > 0);
     const currentTab = useAppSelector((state) => state.ui.tabs.current);
@@ -21,8 +21,12 @@ export default function MainView() {
             ) : (
                 <>
                     {hasFlows ? <FlowTable /> : <CaptureSetup />}
-                    {hasSelection && <Splitter key="splitter" />}
-                    {hasSelection && <FlowView key="flowDetails" />}
+                    {hasOneFlowSelected && (
+                        <>
+                            <Splitter key="splitter" />
+                            <FlowView key="flowDetails" />
+                        </>
+                    )}
                 </>
             )}
         </div>

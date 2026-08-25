@@ -152,4 +152,8 @@ def request_to_flow(request_json: dict) -> http.HTTPFlow:
         case _:
             new_flow.response.http_version = "HTTP/1.1"
 
+    # Remove compression because that may generate different sizes between versions
+    new_flow.request.decode()
+    new_flow.response.decode()
+
     return new_flow

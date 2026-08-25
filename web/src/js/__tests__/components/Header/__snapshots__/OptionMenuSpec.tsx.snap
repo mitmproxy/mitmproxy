@@ -1,129 +1,261 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`OptionMenu Component should render correctly 1`] = `
-<div>
-  <div
-    className="menu-group"
-  >
+<DocumentFragment>
+  <div>
     <div
-      className="menu-content"
-    >
-      <button
-        className="btn btn-default"
-        onClick={[Function]}
-        title="Open Options"
-      >
-        <i
-          className="fa fa-cogs text-primary"
-        />
-         
-        Edit Options 
-        <sup>
-          alpha
-        </sup>
-      </button>
-    </div>
-    <div
-      className="menu-legend"
-    >
-      Options Editor
-    </div>
-  </div>
-  <div
-    className="menu-group"
-  >
-    <div
-      className="menu-content"
+      class="menu-group"
     >
       <div
-        className="menu-entry"
+        class="menu-content"
       >
-        <label>
-          <input
-            checked={false}
-            onChange={[Function]}
-            type="checkbox"
-          />
-          Strip cache headers
-           
-          <a
-            href="https://docs.mitmproxy.org/stable/overview-features/#anticache"
-            rel="noreferrer"
-            target="_blank"
+        <button
+          class="btn btn-default"
+          title="Open Options"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-settings icon icon-settings text-primary"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <i
-              className="fa fa-question-circle"
+            <path
+              d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"
             />
-          </a>
-        </label>
+            <circle
+              cx="12"
+              cy="12"
+              r="3"
+            />
+          </svg>
+           Edit Options
+        </button>
       </div>
       <div
-        className="menu-entry"
+        class="menu-legend"
       >
-        <label>
-          <input
-            checked={false}
-            onChange={[Function]}
-            type="checkbox"
-          />
-          Use host header for display
-        </label>
-      </div>
-      <div
-        className="menu-entry"
-      >
-        <label>
-          <input
-            checked={false}
-            onChange={[Function]}
-            type="checkbox"
-          />
-          Don't verify server certificates
-        </label>
+        Options Editor
       </div>
     </div>
     <div
-      className="menu-legend"
+      class="menu-group"
     >
-      Quick Options
+      <div
+        class="menu-content"
+      >
+        <div
+          class="menu-entry"
+        >
+          <label>
+            <input
+              type="checkbox"
+            />
+            Strip cache headers 
+            <a
+              class="docs-link"
+              href="https://docs.mitmproxy.org/stable/overview/features/#anticache"
+              rel="noreferrer"
+              target="_blank"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-circle-question-mark icon icon-help"
+                fill="none"
+                height="14"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="14"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                />
+                <path
+                  d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"
+                />
+                <path
+                  d="M12 17h.01"
+                />
+              </svg>
+            </a>
+          </label>
+        </div>
+        <div
+          class="menu-entry"
+        >
+          <label>
+            <input
+              type="checkbox"
+            />
+            Use host header for display 
+            <a
+              class="docs-link"
+              href="https://docs.mitmproxy.org/stable/concepts/options/#showhost"
+              rel="noreferrer"
+              target="_blank"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-circle-question-mark icon icon-help"
+                fill="none"
+                height="14"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="14"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                />
+                <path
+                  d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"
+                />
+                <path
+                  d="M12 17h.01"
+                />
+              </svg>
+            </a>
+          </label>
+        </div>
+        <div
+          class="menu-entry"
+        >
+          <label>
+            <input
+              type="checkbox"
+            />
+            Don't verify server certificates 
+            <a
+              class="docs-link"
+              href="https://docs.mitmproxy.org/stable/concepts/options/#ssl_insecure"
+              rel="noreferrer"
+              target="_blank"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-circle-question-mark icon icon-help"
+                fill="none"
+                height="14"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="14"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                />
+                <path
+                  d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"
+                />
+                <path
+                  d="M12 17h.01"
+                />
+              </svg>
+            </a>
+          </label>
+        </div>
+      </div>
+      <div
+        class="menu-legend"
+      >
+        Quick Options
+      </div>
+    </div>
+    <div
+      class="menu-group"
+    >
+      <div
+        class="menu-content"
+      >
+        <div
+          class="menu-entry"
+        >
+          <label>
+            <input
+              checked=""
+              type="checkbox"
+            />
+            Display Event Log
+          </label>
+        </div>
+        <div
+          class="menu-entry"
+        >
+          <label>
+            <input
+              type="checkbox"
+            />
+            Display Command Bar
+          </label>
+        </div>
+      </div>
+      <div
+        class="menu-legend"
+      >
+        View Options
+      </div>
+    </div>
+    <div
+      class="menu-group"
+    >
+      <div
+        class="menu-content"
+      >
+        <div
+          class="menu-entry"
+        >
+          <label>
+            Theme
+            <select
+              class="theme-select"
+            >
+              <option
+                value="system"
+              >
+                system
+              </option>
+              <option
+                value="dark"
+              >
+                dark
+              </option>
+              <option
+                value="light"
+              >
+                light
+              </option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div
+        class="menu-legend"
+      >
+        Appearance
+      </div>
     </div>
   </div>
-  <div
-    className="menu-group"
-  >
-    <div
-      className="menu-content"
-    >
-      <div
-        className="menu-entry"
-      >
-        <label>
-          <input
-            checked={true}
-            onChange={[Function]}
-            type="checkbox"
-          />
-          Display Event Log
-        </label>
-      </div>
-      <div
-        className="menu-entry"
-      >
-        <label>
-          <input
-            checked={false}
-            onChange={[Function]}
-            type="checkbox"
-          />
-          Display Command Bar
-        </label>
-      </div>
-    </div>
-    <div
-      className="menu-legend"
-    >
-      View Options
-    </div>
-  </div>
-</div>
+</DocumentFragment>
 `;

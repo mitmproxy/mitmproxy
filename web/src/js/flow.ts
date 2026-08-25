@@ -39,7 +39,8 @@ export interface Error {
     timestamp: number;
 }
 
-export type Address = [string, number];
+// IPv6 has flowinfo and scope_id (currently not correctly typed on the Python side)
+export type Address = [string, number] | [string, number, number, number];
 
 export interface Connection {
     id: string;
@@ -132,7 +133,7 @@ export interface DNSResourceRecord {
     type: string;
     class: string;
     ttl: number;
-    data: string;
+    data: string | { [key: string | number]: string };
 }
 
 export interface DNSMessage {
@@ -150,7 +151,7 @@ export interface DNSMessage {
     authorities: DNSResourceRecord[];
     additionals: DNSResourceRecord[];
     size: number;
-    timestamp: number;
+    timestamp?: number;
 }
 
 export interface DNSFlow extends _Flow {

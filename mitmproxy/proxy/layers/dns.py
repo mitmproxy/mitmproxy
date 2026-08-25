@@ -1,4 +1,5 @@
 import struct
+import time
 from dataclasses import dataclass
 from typing import List
 from typing import Literal
@@ -43,7 +44,7 @@ class DnsErrorHook(commands.StartHook):
 
 
 def pack_message(
-    message: dns.Message, transport_protocol: Literal["tcp", "udp"]
+    message: dns.DNSMessage, transport_protocol: Literal["tcp", "udp"]
 ) -> bytes:
     packed = message.packed
     if transport_protocol == "tcp":
@@ -68,7 +69,7 @@ class DNSLayer(layer.Layer):
         self.resp_buf = bytearray()
 
     def handle_request(
-        self, flow: dns.DNSFlow, msg: dns.Message
+        self, flow: dns.DNSFlow, msg: dns.DNSMessage
     ) -> layer.CommandGenerator[None]:
         flow.request = msg  # if already set, continue and query upstream again
         yield DnsRequestHook(flow)
@@ -91,7 +92,7 @@ class DNSLayer(layer.Layer):
             yield commands.SendData(self.context.server, packed)
 
     def handle_response(
-        self, flow: dns.DNSFlow, msg: dns.Message
+        self, flow: dns.DNSFlow, msg: dns.DNSMessage
     ) -> layer.CommandGenerator[None]:
         flow.response = msg
         yield DnsResponseHook(flow)
@@ -108,13 +109,13 @@ class DNSLayer(layer.Layer):
             pack_message(servfail, flow.client_conn.transport_protocol),
         )
 
-    def unpack_message(self, data: bytes, from_client: bool) -> List[dns.Message]:
-        msgs: List[dns.Message] = []
+    def unpack_message(self, data: bytes, from_client: bool) -> List[dns.DNSMessage]:
+        msgs: List[dns.DNSMessage] = []
 
         buf = self.req_buf if from_client else self.resp_buf
 
         if self.context.client.transport_protocol == "udp":
-            msgs.append(dns.Message.unpack(data))
+            msgs.append(dns.DNSMessage.unpack(data, timestamp=time.time()))
         elif self.context.client.transport_protocol == "tcp":
             buf.extend(data)
             size = len(buf)
@@ -134,7 +135,7 @@ class DNSLayer(layer.Layer):
 
                 data = bytes(buf[offset : expected_size + offset])
                 offset += expected_size
-                msgs.append(dns.Message.unpack(data))
+                msgs.append(dns.DNSMessage.unpack(data, timestamp=time.time()))
 
             del buf[:offset]
         return msgs
@@ -150,7 +151,7 @@ class DNSLayer(layer.Layer):
         from_client = event.connection is self.context.client
 
         if isinstance(event, events.DataReceived):
-            msgs: List[dns.Message] = []
+            msgs: List[dns.DNSMessage] = []
             try:
                 msgs = self.unpack_message(event.data, from_client)
             except struct.error as e:

@@ -1,8 +1,6 @@
-import { parseRaw, SocksState } from "../../modes/socks";
-import {
-    RECEIVE as RECEIVE_STATE,
-    UPDATE as UPDATE_STATE,
-} from "../backendState";
+import type { SocksState } from "../../modes/socks";
+import { parseRaw } from "../../modes/socks";
+import { STATE_RECEIVE, STATE_UPDATE } from "../backendState";
 import { addSetter, createModeUpdateThunk, updateState } from "./utils";
 import { createSlice } from "@reduxjs/toolkit";
 
@@ -31,8 +29,8 @@ export const socksSlice = createSlice({
         addSetter(builder, "active", setActive);
         addSetter(builder, "listen_host", setListenHost);
         addSetter(builder, "listen_port", setListenPort);
-        builder.addCase(RECEIVE_STATE, updateState("socks5", parseRaw));
-        builder.addCase(UPDATE_STATE, updateState("socks5", parseRaw));
+        builder.addCase(STATE_RECEIVE, updateState("socks5", parseRaw));
+        builder.addCase(STATE_UPDATE, updateState("socks5", parseRaw));
     },
 });
 

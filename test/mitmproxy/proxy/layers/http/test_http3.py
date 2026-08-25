@@ -396,7 +396,7 @@ def test_fail_without_header(tctx: context.Context):
         >> cff.receive_init()
         << cff.send_encoder()
         >> cff.receive_encoder()
-        >> http.ResponseProtocolError(0, "first message", http.status_codes.NO_RESPONSE)
+        >> http.ResponseProtocolError(0, "first message", http.ErrorCode.KILL)
         << cff.send_reset(ErrorCode.H3_INTERNAL_ERROR)
         << cff.send_stop(ErrorCode.H3_INTERNAL_ERROR)
     )
@@ -683,9 +683,7 @@ def test_http3_client_aborts(tctx: context.Context, stream: str, when: str, how:
             >> tutils.reply(side_effect=enable_request_streaming, to=request_headers)
             << commands.OpenConnection(server)
             >> tutils.reply(None)
-            << commands.SendData(
-                server, b"GET / HTTP/1.1\r\n" b"Host: example.com\r\n\r\n"
-            )
+            << commands.SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
         )
     else:
         assert playbook >> tutils.reply(to=request_headers)
@@ -729,7 +727,7 @@ def test_http3_client_aborts(tctx: context.Context, stream: str, when: str, how:
         >> tutils.reply()
         << commands.OpenConnection(server)
         >> tutils.reply(None)
-        << commands.SendData(server, b"GET / HTTP/1.1\r\n" b"Host: example.com\r\n\r\n")
+        << commands.SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
         >> events.DataReceived(
             server, b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\n123"
         )
@@ -1088,7 +1086,7 @@ class TestClient:
             << http.ReceiveHttp(tutils.Placeholder(http.ResponseHeaders))
             << frame_factory.send_decoder()  # for receive_headers
             >> http.RequestProtocolError(
-                1, "cancelled", code=http.status_codes.CLIENT_CLOSED_REQUEST
+                1, "cancelled", code=http.ErrorCode.CLIENT_DISCONNECTED
             )
             << frame_factory.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
             << frame_factory.send_stop(ErrorCode.H3_REQUEST_CANCELLED)

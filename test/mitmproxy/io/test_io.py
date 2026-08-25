@@ -18,6 +18,7 @@ class TestFlowReader:
     @given(binary())
     @example(b"51:11:12345678901#4:this,8:true!0:~,4:true!0:]4:\\x00,~}")
     @example(b"0:")
+    @example(b"0:~")
     def test_fuzz(self, data):
         f = io.BytesIO(data)
         reader = FlowReader(f)

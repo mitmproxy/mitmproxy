@@ -21,6 +21,7 @@ from mitmproxy.proxy.layers import tls as proxy_tls
 from mitmproxy.test import taddons
 from test.mitmproxy.proxy.layers import test_tls
 from test.mitmproxy.proxy.layers.quic import test__stream_layers as test_quic
+from test.mitmproxy.test_flow import tflow
 
 
 def test_alpn_select_callback():
@@ -511,6 +512,58 @@ class TestTlsConfig:
         with taddons.context(ta):
             ta.configure(["confdir"])
             assert "The mitmproxy certificate authority has expired" in caplog.text
+
+    @pytest.mark.parametrize(
+        "cert,expect_crl",
+        [
+            pytest.param(
+                "mitmproxy/net/data/verificationcerts/trusted-leaf.crt",
+                True,
+                id="with-crl",
+            ),
+            pytest.param(
+                "mitmproxy/net/data/verificationcerts/trusted-root.crt",
+                False,
+                id="without-crl",
+            ),
+            pytest.param(
+                "mitmproxy/net/data/verificationcerts/invalid-crl.crt",
+                False,
+                id="invalid-crl",
+            ),
+        ],
+    )
+    def test_crl_substitution(self, tdata, cert, expect_crl) -> None:
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            ta.configure(["confdir"])
+            ctx = _ctx(tctx.options)
+            with open(tdata.path(cert), "rb") as f:
+                ctx.server.certificate_list = [certs.Cert.from_pem(f.read())]
+
+            crt = ta.get_cert(ctx)
+
+            if expect_crl:
+                assert crt.cert.crl_distribution_points[0].endswith(ta.crl_path())
+            else:
+                assert not crt.cert.crl_distribution_points
+
+    def test_crl_request(self):
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta):
+            ta.configure(["confdir"])
+
+            f = tflow.tflow(req=tflow.treq(path="/other.crl"))
+            ta.request(f)
+            assert not f.response
+
+            f = tflow.tflow(req=tflow.treq(path=ta.crl_path()))
+            ta.request(f)
+            assert f.response
+
+            f = tflow.tflow(req=tflow.treq(path=ta.crl_path()), live=False)
+            ta.request(f)
+            assert not f.response
 
 
 def test_default_ciphers():

@@ -1,12 +1,12 @@
 import * as React from "react";
 import { useEffect, useRef } from "react";
-import { ServerInfo } from "../../ducks/backendState";
+import type { ServerInfo } from "../../ducks/backendState";
 import { formatAddress } from "../../utils";
 import QRCode from "qrcode";
 
 export default function CaptureSetup() {
     return (
-        <div style={{ padding: "1em 2em" }}>
+        <div className="capture-setup" style={{ padding: "1em 2em" }}>
             <h3>mitmproxy is running.</h3>
             <p>
                 No flows have been recorded yet.

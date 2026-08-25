@@ -1,9 +1,6 @@
 ---
 title: "Replay Flows"
 weight: 5
-menu:
-  web-tutorial:
-    weight: 5
 ---
 
 # Replay Flows

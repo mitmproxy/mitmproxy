@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import asyncio
+import functools
 import hashlib
 import json
 import logging
+import mimetypes
 import os.path
 import re
 import secrets
@@ -10,8 +13,12 @@ import sys
 from collections.abc import Callable
 from collections.abc import Sequence
 from io import BytesIO
-from itertools import islice
+from typing import Any
+from typing import Awaitable
 from typing import ClassVar
+from typing import Concatenate
+from typing import Literal
+from typing import Optional
 
 import tornado.escape
 import tornado.web
@@ -31,21 +38,29 @@ from mitmproxy import optmanager
 from mitmproxy import version
 from mitmproxy.dns import DNSFlow
 from mitmproxy.http import HTTPFlow
-from mitmproxy.net.http import status_codes
 from mitmproxy.tcp import TCPFlow
 from mitmproxy.tcp import TCPMessage
+from mitmproxy.tools.web.webaddons import WebAuth
 from mitmproxy.udp import UDPFlow
 from mitmproxy.udp import UDPMessage
 from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils.emoji import emoji
 from mitmproxy.utils.strutils import always_str
+from mitmproxy.utils.strutils import cut_after_n_lines
 from mitmproxy.websocket import WebSocketMessage
+
+# Fix for Windows systems where .js files may have text/plain MIME type in registry.
+# Modern browsers with ES6 module scripts require proper JavaScript MIME types.
+# See: https://github.com/mitmproxy/mitmproxy/issues/7971
+mimetypes.add_type("text/javascript", ".js")
 
 TRANSPARENT_PNG = (
     b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08"
     b"\x04\x00\x00\x00\xb5\x1c\x0c\x02\x00\x00\x00\x0bIDATx\xdac\xfc\xff\x07"
     b"\x00\x02\x00\x01\xfc\xa8Q\rh\x00\x00\x00\x00IEND\xaeB`\x82"
 )
+
+logger = logging.getLogger(__name__)
 
 
 def cert_to_json(certs: Sequence[certs.Cert]) -> dict | None:
@@ -206,8 +221,73 @@ class APIError(tornado.web.HTTPError):
     pass
 
 
-class RequestHandler(tornado.web.RequestHandler):
+class AuthRequestHandler(tornado.web.RequestHandler):
+    AUTH_COOKIE_VALUE = b"y"
+
+    def __init_subclass__(cls, **kwargs):
+        """Automatically wrap all request handlers with `_require_auth`."""
+        for method in cls.SUPPORTED_METHODS:
+            method = method.lower()
+            fn = getattr(cls, method)
+            if fn is not tornado.web.RequestHandler._unimplemented_method:
+                setattr(cls, method, AuthRequestHandler._require_auth(fn))
+
+    def auth_fail(self, invalid_password: bool) -> None:
+        """
+        Will be called when returning a 403.
+        May write a login form as the response.
+        """
+
+    @staticmethod
+    def _require_auth[**P, R](
+        fn: Callable[Concatenate[AuthRequestHandler, P], R],
+    ) -> Callable[Concatenate[AuthRequestHandler, P], R | None]:
+        @functools.wraps(fn)
+        def wrapper(
+            self: AuthRequestHandler, *args: P.args, **kwargs: P.kwargs
+        ) -> R | None:
+            if not self.current_user:
+                password = ""
+                if auth_header := self.request.headers.get("Authorization"):
+                    auth_scheme, _, auth_params = auth_header.partition(" ")
+                    if auth_scheme == "Bearer":
+                        password = auth_params
+
+                if not password:
+                    password = self.get_argument("token", default="")
+
+                if not self.settings["is_valid_password"](password):
+                    self.set_status(403)
+                    self.auth_fail(bool(password))
+                    return None
+                self.set_signed_cookie(
+                    self.settings["auth_cookie_name"](),
+                    self.AUTH_COOKIE_VALUE,
+                    expires_days=400,
+                    httponly=True,
+                    samesite="Strict",
+                )
+            return fn(self, *args, **kwargs)
+
+        return wrapper
+
+    def get_current_user(self) -> bool:
+        return (
+            self.get_signed_cookie(self.settings["auth_cookie_name"](), min_version=2)
+            == self.AUTH_COOKIE_VALUE
+        )
+
+
+class RequestHandler(AuthRequestHandler):
     application: Application
+
+    def prepare(self):
+        if (
+            self.request.method not in ("GET", "HEAD", "OPTIONS")
+            and "Sec-Fetch-Site" in self.request.headers
+            and self.request.headers["Sec-Fetch-Site"] not in ("same-origin", "none")
+        ):
+            raise tornado.httpclient.HTTPError(403)
 
     def write(self, chunk: str | bytes | dict | list):
         # Writing arrays on the top level is ok nowadays.
@@ -227,6 +307,7 @@ class RequestHandler(tornado.web.RequestHandler):
             "Content-Security-Policy",
             "default-src 'self'; "
             "connect-src 'self' ws:; "
+            "img-src 'self' data:; "
             "style-src   'self' 'unsafe-inline'",
         )
 
@@ -239,7 +320,7 @@ class RequestHandler(tornado.web.RequestHandler):
         try:
             return json.loads(self.request.body.decode())
         except Exception as e:
-            raise APIError(400, f"Malformed JSON: {str(e)}")
+            raise APIError(400, f"Malformed JSON: {e}")
 
     @property
     def filecontents(self):
@@ -278,19 +359,13 @@ class RequestHandler(tornado.web.RequestHandler):
 
 
 class IndexHandler(RequestHandler):
-    def _is_fetch_mode_navigate(self) -> bool:
-        # Forbid access for non-navigate fetch modes so that they can't obtain xsrf_token.
-        return self.request.headers.get("Sec-Fetch-Mode", "navigate") == "navigate"
+    def auth_fail(self, invalid_password: bool) -> None:
+        self.render("login.html", invalid_password=invalid_password)
 
     def get(self):
-        # Forbid access for non-navigate fetch modes so that they can't obtain xsrf_token.
-        if self._is_fetch_mode_navigate():
-            self.render("index.html", xsrf_token=self.xsrf_token)
-        else:
-            raise APIError(
-                status_codes.PRECONDITION_FAILED,
-                f"Unexpected Sec-Fetch-Mode header: {self.request.headers.get('Sec-Fetch-Mode')}",
-            )
+        self.render("../index.html")
+
+    post = get  # login form
 
 
 class FilterHelp(RequestHandler):
@@ -298,42 +373,128 @@ class FilterHelp(RequestHandler):
         self.write(dict(commands=flowfilter.help))
 
 
-class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
+class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler, AuthRequestHandler):
     # raise an error if inherited class doesn't specify its own instance.
     connections: ClassVar[set[WebSocketEventBroadcaster]]
 
+    _send_queue: asyncio.Queue[bytes]
+    _send_task: asyncio.Task[None]
+
+    def prepare(self) -> Optional[Awaitable[None]]:
+        token = self.xsrf_token  # https://github.com/tornadoweb/tornado/issues/645
+        assert token
+        return None
+
     def open(self, *args, **kwargs):
         self.connections.add(self)
+        self._send_queue = asyncio.Queue()
+        # Python 3.13+: use _send_queue.shutdown() and we can use keep_ref=True here.
+        self._send_task = asyncio_utils.create_task(
+            self.send_task(),
+            name="WebSocket send task",
+            keep_ref=False,
+        )
 
     def on_close(self):
         self.connections.discard(self)
-
-    @classmethod
-    def send(cls, conn: WebSocketEventBroadcaster, message: bytes) -> None:
-        async def wrapper():
-            try:
-                await conn.write_message(message)
-            except tornado.websocket.WebSocketClosedError:
-                cls.connections.discard(conn)
-
-        asyncio_utils.create_task(
-            wrapper(),
-            name="WebSocketEventBroadcaster",
-            keep_ref=True,
-        )
+        self._send_task.cancel()
 
     @classmethod
     def broadcast(cls, **kwargs):
-        message = json.dumps(kwargs, ensure_ascii=False).encode(
-            "utf8", "surrogateescape"
-        )
+        message = cls._json_dumps(kwargs)
+        for conn in cls.connections:
+            conn.send(message)
 
-        for conn in cls.connections.copy():
-            cls.send(conn, message)
+    def send(self, message: bytes):
+        self._send_queue.put_nowait(message)
+
+    async def send_task(self):
+        while True:
+            message = await self._send_queue.get()
+            try:
+                await self.write_message(message)
+            except tornado.websocket.WebSocketClosedError:
+                self.on_close()
+
+    @staticmethod
+    def _json_dumps(d):
+        return json.dumps(d, ensure_ascii=False).encode("utf8", "surrogateescape")
 
 
 class ClientConnection(WebSocketEventBroadcaster):
-    connections: ClassVar[set] = set()
+    connections: ClassVar[set[ClientConnection]] = set()  # type: ignore
+    application: Application
+
+    def __init__(self, application: Application, request, **kwargs):
+        super().__init__(application, request, **kwargs)
+        self.filters: dict[str, flowfilter.TFilter] = {}  # filters per connection
+
+    @classmethod
+    def broadcast_flow_reset(cls) -> None:
+        for conn in cls.connections:
+            conn.send(cls._json_dumps({"type": "flows/reset"}))
+            for name, expr in conn.filters.copy().items():
+                conn.update_filter(name, expr.pattern)
+
+    @classmethod
+    def broadcast_flow(
+        cls,
+        type: Literal["flows/add", "flows/update"],
+        f: mitmproxy.flow.Flow,
+    ) -> None:
+        flow_json = flow_to_json(f)
+        for conn in cls.connections:
+            conn._broadcast_flow(type, f, flow_json)
+
+    def _broadcast_flow(
+        self,
+        type: Literal["flows/add", "flows/update"],
+        f: mitmproxy.flow.Flow,
+        flow_json: dict,  # Passing the flow_json dictionary to avoid recalculating it for each client
+    ) -> None:
+        filters = {name: bool(expr(f)) for name, expr in self.filters.items()}
+        message = self._json_dumps(
+            {
+                "type": type,
+                "payload": {
+                    "flow": flow_json,
+                    "matching_filters": filters,
+                },
+            },
+        )
+        self.send(message)
+
+    def update_filter(self, name: str, expr: str) -> None:
+        if expr:
+            filt = flowfilter.parse(expr)
+            self.filters[name] = filt
+            matching_flow_ids = [f.id for f in self.application.master.view if filt(f)]
+        else:
+            self.filters.pop(name, None)
+            matching_flow_ids = None
+
+        message = self._json_dumps(
+            {
+                "type": "flows/filterUpdate",
+                "payload": {
+                    "name": name,
+                    "matching_flow_ids": matching_flow_ids,
+                },
+            },
+        )
+        self.send(message=message)
+
+    async def on_message(self, message: str | bytes):
+        try:
+            data = json.loads(message)
+            match data["type"]:
+                case "flows/updateFilter":
+                    self.update_filter(data["payload"]["name"], data["payload"]["expr"])
+                case other:
+                    raise ValueError(f"Unsupported command: {other}")
+        except Exception as e:
+            logger.error(f"Error processing message from {self}: {e}")
+            self.close(code=1011, reason="Internal server error.")
 
 
 class Flows(RequestHandler):
@@ -447,8 +608,10 @@ class FlowHandler(RequestHandler):
                 elif a == "response" and hasattr(flow, "response"):
                     response: mitmproxy.http.Response = flow.response
                     for k, v in b.items():
-                        if k in ["msg", "http_version"]:
-                            setattr(response, k, str(v))
+                        if k == "reason":
+                            response.reason = str(v)
+                        elif k == "http_version":
+                            response.http_version = str(v)
                         elif k == "code":
                             response.status_code = int(v)
                         elif k == "headers":
@@ -517,7 +680,7 @@ class FlowContent(RequestHandler):
             filename = self.flow.request.path.split("?")[0].split("/")[-1]
 
         filename = re.sub(r'[^-\w" .()]', "", filename)
-        cd = f"attachment; filename={filename}"
+        cd = f"attachment; {filename=!s}"
         self.set_header("Content-Disposition", cd)
         self.set_header("Content-Type", "application/text")
         self.set_header("X-Content-Type-Options", "nosniff")
@@ -528,23 +691,30 @@ class FlowContent(RequestHandler):
 class FlowContentView(RequestHandler):
     def message_to_json(
         self,
-        viewname: str,
+        view_name: str,
         message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
         flow: HTTPFlow | TCPFlow | UDPFlow,
         max_lines: int | None = None,
+        from_client: bool | None = None,
+        timestamp: float | None = None,
     ):
-        description, lines, error = contentviews.get_message_content_view(
-            viewname, message, flow
-        )
-        if error:
-            logging.error(error)
+        if view_name and view_name.lower() == "auto":
+            view_name = "auto"
+        pretty = contentviews.prettify_message(message, flow, view_name=view_name)
         if max_lines:
-            lines = islice(lines, max_lines)
+            pretty.text = cut_after_n_lines(pretty.text, max_lines)
 
-        return dict(
-            lines=list(lines),
-            description=description,
+        ret: dict[str, Any] = dict(
+            text=pretty.text,
+            view_name=pretty.view_name,
+            syntax_highlight=pretty.syntax_highlight,
+            description=pretty.description,
         )
+        if from_client is not None:
+            ret["from_client"] = from_client
+        if timestamp is not None:
+            ret["timestamp"] = timestamp
+        return ret
 
     def get(self, flow_id, message, content_view) -> None:
         flow = self.flow
@@ -565,12 +735,18 @@ class FlowContentView(RequestHandler):
                 raise APIError(400, f"This flow has no messages.")
             msgs = []
             for m in messages:
-                d = self.message_to_json(content_view, m, flow, max_lines)
-                d["from_client"] = m.from_client
-                d["timestamp"] = m.timestamp
+                d = self.message_to_json(
+                    view_name=content_view,
+                    message=m,
+                    flow=flow,
+                    max_lines=max_lines,
+                    from_client=m.from_client,
+                    timestamp=m.timestamp,
+                )
                 msgs.append(d)
                 if max_lines:
-                    max_lines -= len(d["lines"])
+                    max_lines -= d["text"].count("\n") + 1
+                    assert max_lines is not None
                     if max_lines <= 0:
                         break
             self.write(msgs)
@@ -647,22 +823,15 @@ class SaveOptions(RequestHandler):
         pass
 
 
-class DnsRebind(RequestHandler):
-    def get(self):
-        raise tornado.web.HTTPError(
-            403,
-            reason="To protect against DNS rebinding, mitmweb can only be accessed by IP at the moment. "
-            "(https://github.com/mitmproxy/mitmproxy/issues/3234)",
-        )
-
-
 class State(RequestHandler):
     # Separate method for testability.
     @staticmethod
     def get_json(master: mitmproxy.tools.web.master.WebMaster):
         return {
             "version": version.VERSION,
-            "contentViews": [v.name for v in contentviews.views if v.name != "Query"],
+            "contentViews": [
+                v for v in contentviews.registry.available_views() if v != "query"
+            ],
             "servers": {
                 s.mode.full_spec: s.to_json() for s in master.proxyserver.servers
             },
@@ -681,7 +850,7 @@ class ProcessList(RequestHandler):
         return [
             {
                 "is_visible": process.is_visible,
-                "executable": process.executable,
+                "executable": str(process.executable),
                 "is_system": process.is_system,
                 "display_name": process.display_name,
             }
@@ -717,6 +886,34 @@ class GZipContentAndFlowFiles(tornado.web.GZipContentEncoding):
     }
 
 
+handlers = [
+    (r"/", IndexHandler),
+    (r"/filter-help(?:\.json)?", FilterHelp),
+    (r"/updates", ClientConnection),
+    (r"/commands(?:\.json)?", Commands),
+    (r"/commands/(?P<cmd>[a-z.]+)", ExecuteCommand),
+    (r"/events(?:\.json)?", Events),
+    (r"/flows(?:\.json)?", Flows),
+    (r"/flows/dump", DumpFlows),
+    (r"/flows/resume", ResumeFlows),
+    (r"/flows/kill", KillFlows),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)", FlowHandler),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/resume", ResumeFlow),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/kill", KillFlow),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response|messages)/content.data", FlowContent),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response|messages)/content/(?P<content_view>[0-9a-zA-Z\-\_%]+)(?:\.json)?", FlowContentView),
+    (r"/clear", ClearAll),
+    (r"/options(?:\.json)?", Options),
+    (r"/options/save", SaveOptions),
+    (r"/state(?:\.json)?", State),
+    (r"/processes", ProcessList),
+    (r"/executable-icon", ProcessImage),
+]  # fmt: skip
+
+
 class Application(tornado.web.Application):
     master: mitmproxy.tools.web.master.WebMaster
 
@@ -724,53 +921,21 @@ class Application(tornado.web.Application):
         self, master: mitmproxy.tools.web.master.WebMaster, debug: bool
     ) -> None:
         self.master = master
+        auth_addon: WebAuth = master.addons.get("webauth")
         super().__init__(
-            default_host="dns-rebind-protection",
+            handlers=handlers,  # type: ignore  # https://github.com/tornadoweb/tornado/pull/3455
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
             xsrf_cookies=True,
-            xsrf_cookie_kwargs=dict(httponly=True, samesite="Strict"),
+            # https://github.com/mitmproxy/mitmproxy/issues/8194
+            # 2026-05: We can move back to the default cookie name in a few years.
+            xsrf_cookie_name="_mitmproxy_xsrf",
+            xsrf_cookie_kwargs=dict(samesite="Strict"),
             cookie_secret=secrets.token_bytes(32),
             debug=debug,
             autoreload=False,
             transforms=[GZipContentAndFlowFiles],
-        )
-
-        self.add_handlers("dns-rebind-protection", [(r"/.*", DnsRebind)])
-        self.add_handlers(
-            # make mitmweb accessible by IP only to prevent DNS rebinding.
-            r"^(localhost|[0-9.]+|\[[0-9a-fA-F:]+\])$",
-            [
-                (r"/", IndexHandler),
-                (r"/filter-help(?:\.json)?", FilterHelp),
-                (r"/updates", ClientConnection),
-                (r"/commands(?:\.json)?", Commands),
-                (r"/commands/(?P<cmd>[a-z.]+)", ExecuteCommand),
-                (r"/events(?:\.json)?", Events),
-                (r"/flows(?:\.json)?", Flows),
-                (r"/flows/dump", DumpFlows),
-                (r"/flows/resume", ResumeFlows),
-                (r"/flows/kill", KillFlows),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)", FlowHandler),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/resume", ResumeFlow),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/kill", KillFlow),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
-                (
-                    r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response|messages)/content.data",
-                    FlowContent,
-                ),
-                (
-                    r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response|messages)/"
-                    r"content/(?P<content_view>[0-9a-zA-Z\-\_%]+)(?:\.json)?",
-                    FlowContentView,
-                ),
-                (r"/clear", ClearAll),
-                (r"/options(?:\.json)?", Options),
-                (r"/options/save", SaveOptions),
-                (r"/state(?:\.json)?", State),
-                (r"/processes", ProcessList),
-                (r"/executable-icon", ProcessImage),
-            ],
+            is_valid_password=auth_addon.is_valid_password,
+            auth_cookie_name=auth_addon.auth_cookie_name,
+            compiled_template_cache=False,  # Vite
         )

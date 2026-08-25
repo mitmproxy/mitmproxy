@@ -1,11 +1,54 @@
 .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    display: block;
+    float: left;
+    min-width: 160px;
+    padding: 5px 0;
+    margin: 2px 0 0;
+    list-style: none;
+    font-size: 14px;
+    text-align: left;
+    background-color: var(--mitmweb-bg);
+    border: 1px solid var(--mitmweb-border);
+    border-radius: 4px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 17.5%);
+    background-clip: padding-box;
+
     // setting a margin is not compatible with popper.
     margin: 0 !important;
 
+    > li {
+        display: block;
+    }
+
     > li > a {
+        display: block;
         padding: 3px 10px;
+        clear: both;
+        font-weight: 400;
+        line-height: 1.42857143;
+        color: var(--mitmweb-fg);
+        white-space: nowrap;
+        text-decoration: none;
+    }
+
+    > li > a:hover,
+    > li > a:focus {
+        text-decoration: none;
+        color: var(--mitmweb-fg-strong);
+        background-color: var(--mitmweb-bg-muted);
     }
 
     max-height: 250px;
     overflow-y: scroll;
+}
+
+.menu-divider {
+    height: 1px;
+    margin: 9px 0;
+    overflow: hidden;
+    background-color: var(--mitmweb-border-lighter);
 }

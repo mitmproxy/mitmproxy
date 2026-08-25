@@ -60,6 +60,7 @@ if __name__ == "__main__":
             env={
                 **os.environ,
                 "AWS_REGION": "auto",
+                "AWS_DEFAULT_REGION": "auto",
                 "AWS_ACCESS_KEY_ID": os.environ["R2_ACCESS_KEY_ID"],
                 "AWS_SECRET_ACCESS_KEY": os.environ["R2_SECRET_ACCESS_KEY"],
             },

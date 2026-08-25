@@ -129,6 +129,10 @@ class Proxyserver(ServerManager):
     def __repr__(self):
         return f"Proxyserver({len(self.connections)} active conns)"
 
+    @command.command("proxyserver.active_connections")
+    def active_connections(self) -> int:
+        return len(self.connections)
+
     @contextmanager
     def register_connection(
         self, connection_id: tuple | str, handler: ProxyConnectionHandler
@@ -140,6 +144,13 @@ class Proxyserver(ServerManager):
             del self.connections[connection_id]
 
     def load(self, loader):
+        loader.add_option(
+            "store_streamed_bodies",
+            bool,
+            False,
+            "Store HTTP request and response bodies when streamed (see `stream_large_bodies`). "
+            "This increases memory consumption, but makes it possible to inspect streamed bodies.",
+        )
         loader.add_option(
             "connection_strategy",
             str,
@@ -155,10 +166,10 @@ class Proxyserver(ServerManager):
             Optional[str],
             None,
             """
-            Stream data to the client if response body exceeds the given
+            Stream data to the client if request or response body exceeds the given
             threshold. If streamed, the body will not be stored in any way,
             and such responses cannot be modified. Understands k/m/g
-            suffixes, i.e. 3m for 3 megabytes.
+            suffixes, i.e. 3m for 3 megabytes. To store streamed bodies, see `store_streamed_bodies`.
             """,
         )
         loader.add_option(
@@ -327,6 +338,7 @@ class Proxyserver(ServerManager):
     ):
         if not isinstance(flow, http.HTTPFlow) or not flow.websocket:
             logger.warning("Cannot inject WebSocket messages into non-WebSocket flows.")
+            return
 
         msg = websocket.WebSocketMessage(
             Opcode.TEXT if is_text else Opcode.BINARY, not to_client, message
@@ -341,6 +353,7 @@ class Proxyserver(ServerManager):
     def inject_tcp(self, flow: Flow, to_client: bool, message: bytes):
         if not isinstance(flow, tcp.TCPFlow):
             logger.warning("Cannot inject TCP messages into non-TCP flows.")
+            return
 
         event = TcpMessageInjected(flow, tcp.TCPMessage(not to_client, message))
         try:
@@ -352,6 +365,7 @@ class Proxyserver(ServerManager):
     def inject_udp(self, flow: Flow, to_client: bool, message: bytes):
         if not isinstance(flow, udp.UDPFlow):
             logger.warning("Cannot inject UDP messages into non-UDP flows.")
+            return
 
         event = UdpMessageInjected(flow, udp.UDPMessage(not to_client, message))
         try:
