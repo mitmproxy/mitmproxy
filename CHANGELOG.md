@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+- `decode_multipart()` no longer strips newline characters that are part of
+  a multipart field's value, and no longer raises an uncaught exception when
+  a part is missing its header/body separator.
+  ([#4466](https://github.com/mitmproxy/mitmproxy/issues/4466), @eliahu-frusin)
 - Bracket IPv6 target literals in the `CONNECT` request and `Host` header sent
   to an upstream proxy (`--mode upstream`), producing a valid `[2001:db8::1]:443`
   authority per RFC 3986 instead of the malformed `2001:db8::1:443`.

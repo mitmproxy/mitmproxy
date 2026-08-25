@@ -62,15 +62,46 @@ def decode_multipart(
 
         rx = re.compile(rb'\bname="([^"]+)"')
         r = []
+
         if content is not None:
             for i in content.split(b"--" + boundary):
-                parts = i.splitlines()
-                if len(parts) > 1 and parts[0][0:2] != b"--":
-                    match = rx.search(parts[1])
-                    if match:
-                        key = match.group(1)
-                        value = b"".join(parts[3 + parts[2:].index(b"") :])
-                        r.append((key, value))
+                if i.startswith(b"--") or not i:
+                    continue
+
+                if i.startswith(b"\r\n"):
+                    i = i[2:]
+                elif i.startswith(b"\n"):
+                    i = i[1:]
+
+                header_end = i.find(b"\r\n\r\n")
+                delimiter_len = 4
+
+                if header_end == -1:
+                    header_end = i.find(b"\n\n")
+                    delimiter_len = 2
+
+                if header_end == -1:
+                    continue
+
+                headers_part = i[:header_end]
+                value = i[header_end + delimiter_len :]
+
+                match = rx.search(headers_part)
+                if match:
+                    key = match.group(1)
+
+                    # 1. Check for encode_multipart's double-CRLF padding before boundary
+                    if value.endswith(b"\r\n\r\n"):
+                        value = value[:-4]
+                    # 2. Standard single CRLF boundary delimiter
+                    elif value.endswith(b"\r\n"):
+                        value = value[:-2]
+                    # 3. Standard single LF boundary delimiter
+                    elif value.endswith(b"\n"):
+                        value = value[:-1]
+
+                    r.append((key, value))
+
         return r
     return []
 
