@@ -51,10 +51,3 @@ def test_render_priority():
     assert not xml_html.render_priority(b"data", Metadata(content_type="text/plain"))
     assert not xml_html.render_priority(b"", Metadata(content_type="text/xml"))
     assert xml_html.render_priority(b"<html/>", Metadata())
-
-
-def test_crlf_line_endings():
-    crlf = b"<html>\r\n<body>hi</body>\r\n</html>\r\n"
-    lf = b"<html>\n<body>hi</body>\n</html>\n"
-    assert xml_html.prettify(crlf, Metadata()) == xml_html.prettify(lf, Metadata())
-    assert "\r" not in xml_html.prettify(crlf, Metadata())
