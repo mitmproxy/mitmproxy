@@ -37,9 +37,9 @@ def test_parse():
     with pytest.raises(ValueError):
         url.parse(b"https://foo:bar")
 
-    # Invalid IDNA
+    # Invalid IDNA - lone surrogate not valid IDNA (was \xfafoo which now punycodes to xn--foo-7na)
     with pytest.raises(ValueError):
-        url.parse("http://\xfafoo")
+        url.parse("http://test\udcff")
     # Invalid PATH
     with pytest.raises(ValueError):
         url.parse("http:/\xc6/localhost:56121")

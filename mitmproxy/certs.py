@@ -302,7 +302,11 @@ def _fix_legacy_sans(sans: Iterable[x509.GeneralName] | list[str]) -> x509.Gener
             try:
                 ip = ipaddress.ip_address(x)
             except ValueError:
-                x = x.encode("idna").decode()
+                try:
+                    x = x.encode("idna").decode()
+                except UnicodeError:
+                    # Fallback for invalid IDNA - see #7829
+                    pass
                 ss.append(x509.DNSName(x))
             else:
                 ss.append(x509.IPAddress(ip))

@@ -58,10 +58,32 @@ def parse(url: str | bytes) -> tuple[bytes, bytes, int, bytes]:
         try:
             host = parsed.hostname.encode("idna")
         except UnicodeError:
-            # Fallback for emoji/invalid IDNA hostnames (e.g., emoji hostname) - see #7829
+            # Fallback for invalid IDNA hostnames (e.g., lone surrogate) - see #7829
+            # This will be rejected by is_valid_host below, raising ValueError.
             host = parsed.hostname.encode("utf-8", "surrogateescape")
 
-    parsed_b: urllib.parse.ParseResultBytes = parsed.encode("ascii")  # type: ignore
+    try:
+        parsed_b: urllib.parse.ParseResultBytes = parsed.encode("ascii")  # type: ignore
+    except UnicodeEncodeError:
+        # url contains non-ascii hostname (e.g., emoji) that was punycoded above.
+        # Rebuild bytes version from parts using the idna host.
+        host_str = host.decode()
+        netloc = host_str
+        if parsed.port:
+            netloc += f":{parsed.port}"
+        if parsed.username:
+            userinfo = parsed.username
+            if parsed.password:
+                userinfo += f":{parsed.password}"
+            netloc = f"{userinfo}@{netloc}"
+        parsed_b = urllib.parse.ParseResultBytes(
+            scheme=parsed.scheme.encode(),
+            netloc=netloc.encode(),
+            path=parsed.path.encode("utf-8", "surrogateescape"),
+            params=parsed.params.encode("utf-8", "surrogateescape"),
+            query=parsed.query.encode("utf-8", "surrogateescape"),
+            fragment=parsed.fragment.encode("utf-8", "surrogateescape"),
+        )
 
     port = parsed_b.port
     if not port:
@@ -186,7 +208,11 @@ def parse_authority(authority: AnyStr, check: bool) -> tuple[str, int | None]:
             m = _authority_re.match(authority)
             if not m:
                 raise ValueError
-            host = m.group("host")
+            try:
+                # try idna round-trip for consistency with bytes path
+                host = m.group("host").encode("idna").decode("idna")
+            except UnicodeError:
+                host = m.group("host")
 
         if host.startswith("[") and host.endswith("]"):
             host = host[1:-1]
