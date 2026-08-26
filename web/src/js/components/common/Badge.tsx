@@ -1,16 +1,8 @@
 import * as React from "react";
 import classnames from "classnames";
 
-type BadgeProps = {
-    className?: string;
-    children: React.ReactNode;
-    title?: string;
-};
+type BadgeProps = React.ComponentPropsWithoutRef<"span">;
 
-export default function Badge({ className, children, title }: BadgeProps) {
-    return (
-        <span className={classnames("badge", className)} title={title}>
-            {children}
-        </span>
-    );
+export default function Badge({ className, ...props }: BadgeProps) {
+    return <span {...props} className={classnames("badge", className)} />;
 }

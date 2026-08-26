@@ -12,7 +12,7 @@
         //font-family: Lato;
 
         &:hover,
-        &:focus {
+        &:focus-visible {
             color: var(--mitmweb-accent-hover);
         }
 
@@ -44,16 +44,12 @@
             border-color 120ms ease;
 
         &:not(.active):not(.special):hover,
-        &:not(.active):not(.special):focus {
+        &:not(.active):not(.special):focus-visible {
             background-color: var(--mitmweb-bg-alt);
             border-bottom-color: var(--mitmweb-border-strong);
         }
 
-        &.active {
-            background-color: var(--mitmweb-bg);
-        }
-
-        &.special:focus {
+        &.special:focus-visible {
             background-color: var(--mitmweb-accent-active);
         }
     }

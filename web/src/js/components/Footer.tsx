@@ -4,6 +4,19 @@ import HideInStatic from "../components/common/HideInStatic";
 import { useAppSelector } from "../ducks";
 import Badge from "./common/Badge";
 
+type FooterBadgeProps = Omit<
+    React.ComponentProps<typeof Badge>,
+    "className"
+> & {
+    variant: "neutral" | "info" | "success" | "danger";
+};
+
+function FooterBadge({ variant, ...props }: FooterBadgeProps) {
+    return (
+        <Badge {...props} className={`footer-badge footer-badge-${variant}`} />
+    );
+}
+
 export default function Footer() {
     const version = useAppSelector((state) => state.backendState.version);
     const {
@@ -33,92 +46,63 @@ export default function Footer() {
     return (
         <footer>
             {mode && (mode.length !== 1 || mode[0] !== "regular") && (
-                <Badge className="footer-badge footer-badge-success">
-                    {mode.join(",")}
-                </Badge>
+                <FooterBadge variant="success">{mode.join(",")}</FooterBadge>
             )}
             {intercept && (
-                <Badge className="footer-badge footer-badge-success">
+                <FooterBadge variant="success">
                     Intercept: {intercept}
-                </Badge>
+                </FooterBadge>
             )}
             {ssl_insecure && (
-                <Badge className="footer-badge footer-badge-danger">
-                    ssl_insecure
-                </Badge>
+                <FooterBadge variant="danger">ssl_insecure</FooterBadge>
             )}
-            {showhost && (
-                <Badge className="footer-badge footer-badge-success">
-                    showhost
-                </Badge>
-            )}
+            {showhost && <FooterBadge variant="success">showhost</FooterBadge>}
             {!upstream_cert && (
-                <Badge className="footer-badge footer-badge-success">
-                    no-upstream-cert
-                </Badge>
+                <FooterBadge variant="success">no-upstream-cert</FooterBadge>
             )}
-            {!rawtcp && (
-                <Badge className="footer-badge footer-badge-success">
-                    no-raw-tcp
-                </Badge>
-            )}
-            {!http2 && (
-                <Badge className="footer-badge footer-badge-success">
-                    no-http2
-                </Badge>
-            )}
+            {!rawtcp && <FooterBadge variant="success">no-raw-tcp</FooterBadge>}
+            {!http2 && <FooterBadge variant="success">no-http2</FooterBadge>}
             {!websocket && (
-                <Badge className="footer-badge footer-badge-success">
-                    no-websocket
-                </Badge>
+                <FooterBadge variant="success">no-websocket</FooterBadge>
             )}
             {anticache && (
-                <Badge className="footer-badge footer-badge-success">
-                    anticache
-                </Badge>
+                <FooterBadge variant="success">anticache</FooterBadge>
             )}
-            {anticomp && (
-                <Badge className="footer-badge footer-badge-success">
-                    anticomp
-                </Badge>
-            )}
+            {anticomp && <FooterBadge variant="success">anticomp</FooterBadge>}
             {stickyauth && (
-                <Badge className="footer-badge footer-badge-success">
+                <FooterBadge variant="success">
                     stickyauth: {stickyauth}
-                </Badge>
+                </FooterBadge>
             )}
             {stickycookie && (
-                <Badge className="footer-badge footer-badge-success">
+                <FooterBadge variant="success">
                     stickycookie: {stickycookie}
-                </Badge>
+                </FooterBadge>
             )}
             {stream_large_bodies && (
-                <Badge className="footer-badge footer-badge-success">
+                <FooterBadge variant="success">
                     stream: {formatSize(stream_large_bodies)}
-                </Badge>
+                </FooterBadge>
             )}
             {totalFlowsLength > 0 && (
-                <Badge className="footer-badge footer-badge-neutral">
+                <FooterBadge variant="neutral">
                     {selectedFlowsLength} of {totalFlowsLength} flows selected
-                </Badge>
+                </FooterBadge>
             )}
             <div className="footer-meta">
                 <HideInStatic>
                     {server && (
-                        <Badge
-                            className="footer-badge footer-badge-info"
+                        <FooterBadge
+                            variant="info"
                             title="HTTP Proxy Server Address"
                         >
                             {listen_host || "*"}:{listen_port || 8080}
-                        </Badge>
+                        </FooterBadge>
                     )}
                 </HideInStatic>
-                <Badge
-                    className="footer-badge footer-badge-neutral"
-                    title="Mitmproxy Version"
-                >
+                <FooterBadge variant="neutral" title="Mitmproxy Version">
                     mitmproxy {version}
-                </Badge>
+                </FooterBadge>
             </div>
         </footer>
     );

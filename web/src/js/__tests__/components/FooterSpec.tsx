@@ -1,14 +1,13 @@
 import * as React from "react";
 import { render, screen } from "../test-utils";
 import Footer from "../../components/Footer";
-import { TStore } from "../ducks/tutils";
+import { testState, TStore } from "../ducks/tutils";
 
 test("renders active options as badges", () => {
-    const state = TStore().getState();
     const store = TStore({
-        ...state,
+        ...testState,
         options: {
-            ...state.options,
+            ...testState.options,
             mode: ["regular", "upstream:https://example.com"],
             intercept: "~q",
             ssl_insecure: true,
@@ -48,4 +47,22 @@ test("renders active options as badges", () => {
         "127.0.0.1:9090",
         "mitmproxy 1.2.3",
     ].forEach((text) => expect(screen.getByText(text)).toBeVisible());
+
+    expect(screen.getByText("ssl_insecure")).toHaveClass("footer-badge-danger");
+    expect(screen.getByText("anticache")).toHaveClass("footer-badge-success");
+    expect(screen.getByText("127.0.0.1:9090")).toHaveClass("footer-badge-info");
+});
+
+test("does not render a badge for an enabled option", () => {
+    const store = TStore({
+        ...testState,
+        options: {
+            ...testState.options,
+            http2: true,
+        },
+    });
+
+    render(<Footer />, { store });
+
+    expect(screen.queryByText("no-http2")).not.toBeInTheDocument();
 });
