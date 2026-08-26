@@ -242,6 +242,9 @@ class TlsFailedServerHook(StartHook):
 class TLSLayer(tunnel.TunnelLayer):
     tls: SSL.Connection = None  # type: ignore
     """The OpenSSL connection object"""
+    # Nested TLS layers share Connection metadata, but not handshake state.
+    _handshake_complete: bool = False
+    _tls_failed: bool = False
 
     def __init__(self, context: context.Context, conn: connection.Connection):
         super().__init__(
@@ -353,6 +356,7 @@ class TLSLayer(tunnel.TunnelLayer):
                 err = f"OpenSSL {e!r}"
             return False, err
         else:
+            self._handshake_complete = True
             # Here we set all attributes that are only known *after* the handshake.
 
             # Get all peer certificates.
@@ -425,6 +429,7 @@ class TLSLayer(tunnel.TunnelLayer):
                 # which upon mistrusting a certificate still completes the handshake
                 # and then sends an alert in the next packet. At this point we have unfortunately
                 # already fired out `tls_established_client` hook.
+                self._tls_failed = True
                 yield commands.Log(f"TLS Error: {e}", WARNING)
                 break
 
@@ -450,6 +455,8 @@ class TLSLayer(tunnel.TunnelLayer):
             yield from super().receive_close()
 
     def send_data(self, data: bytes) -> layer.CommandGenerator[None]:
+        if self._tls_failed:
+            return
         try:
             self.tls.sendall(data)
         except (SSL.ZeroReturnError, SSL.SysCallError):
@@ -460,7 +467,17 @@ class TLSLayer(tunnel.TunnelLayer):
     def send_close(
         self, command: commands.CloseConnection
     ) -> layer.CommandGenerator[None]:
-        # We should probably shutdown the TLS connection properly here.
+        if (
+            self._handshake_complete
+            and not self._tls_failed
+            and not self.tls.get_shutdown() & SSL.SENT_SHUTDOWN
+        ):
+            try:
+                self.tls.shutdown()
+            except SSL.Error as e:
+                # A fatal TLS error may leave the tunnel open but prevent shutdown.
+                yield commands.Log(f"{self.proto_name} shutdown failed: {e}", WARNING)
+            yield from self.tls_interact()
         yield from super().send_close(command)
 
 

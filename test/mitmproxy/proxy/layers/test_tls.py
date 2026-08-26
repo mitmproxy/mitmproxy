@@ -3,6 +3,7 @@ import sys
 import time
 from logging import DEBUG
 from logging import WARNING
+from unittest.mock import patch
 
 import pytest
 from OpenSSL import SSL
@@ -170,7 +171,10 @@ class TlsEchoLayer(tutils.EchoLayer):
 
 
 def finish_handshake(
-    playbook: tutils.Playbook, conn: connection.Connection, tssl: SSLTest
+    playbook: tutils.Playbook,
+    conn: connection.Connection,
+    tssl: SSLTest,
+    expect_data: bool = True,
 ):
     data = tutils.Placeholder(bytes)
     tls_hook_data = tutils.Placeholder(TlsData)
@@ -178,29 +182,33 @@ def finish_handshake(
         established_hook = tls.TlsEstablishedClientHook(tls_hook_data)
     else:
         established_hook = tls.TlsEstablishedServerHook(tls_hook_data)
-    assert (
+    (
         playbook
         >> events.DataReceived(conn, tssl.bio_read())
         << established_hook
         >> tutils.reply()
-        << commands.SendData(conn, data)
     )
+    if expect_data:
+        playbook << commands.SendData(conn, data)
+    assert playbook
     assert tls_hook_data().conn.error is None
-    tssl.bio_write(data())
+    if expect_data:
+        tssl.bio_write(data())
 
 
-def reply_tls_start_client(alpn: bytes | None = None, *args, **kwargs) -> tutils.reply:
+def reply_tls_start_client(
+    alpn: bytes | None = None,
+    *args,
+    min_ver: ssl.TLSVersion = ssl.TLSVersion.TLSv1_3,
+    **kwargs,
+) -> tutils.reply:
     """
     Helper function to simplify the syntax for tls_start_client hooks.
     """
 
     def make_client_conn(tls_start: TlsData) -> None:
-        # ssl_context = SSL.Context(Method.TLS_METHOD)
-        # ssl_context.set_min_proto_version(SSL.TLS1_3_VERSION)
-        ssl_context = SSL.Context(SSL.SSLv23_METHOD)
-        ssl_context.set_options(
-            SSL.OP_NO_SSLv3 | SSL.OP_NO_TLSv1 | SSL.OP_NO_TLSv1_1 | SSL.OP_NO_TLSv1_2
-        )
+        ssl_context = SSL.Context(SSL.TLS_METHOD)
+        ssl_context.set_min_proto_version(min_ver)
         ssl_context.use_privatekey_file(
             tlsdata.path("../../net/data/verificationcerts/trusted-leaf.key")
         )
@@ -217,19 +225,19 @@ def reply_tls_start_client(alpn: bytes | None = None, *args, **kwargs) -> tutils
 
 
 def reply_tls_start_server(
-    alpn: bytes | None = None, client_cert: bool = False, *args, **kwargs
+    alpn: bytes | None = None,
+    client_cert: bool = False,
+    *args,
+    min_ver: ssl.TLSVersion = ssl.TLSVersion.TLSv1_3,
+    **kwargs,
 ) -> tutils.reply:
     """
     Helper function to simplify the syntax for tls_start_server hooks.
     """
 
     def make_server_conn(tls_start: TlsData) -> None:
-        # ssl_context = SSL.Context(Method.TLS_METHOD)
-        # ssl_context.set_min_proto_version(SSL.TLS1_3_VERSION)
-        ssl_context = SSL.Context(SSL.SSLv23_METHOD)
-        ssl_context.set_options(
-            SSL.OP_NO_SSLv3 | SSL.OP_NO_TLSv1 | SSL.OP_NO_TLSv1_1 | SSL.OP_NO_TLSv1_2
-        )
+        ssl_context = SSL.Context(SSL.TLS_METHOD)
+        ssl_context.set_min_proto_version(min_ver)
         ssl_context.load_verify_locations(
             cafile=tlsdata.path("../../net/data/verificationcerts/trusted-root.crt")
         )
@@ -286,28 +294,48 @@ class TestServerTLS:
             << commands.SendData(tctx.client, b"hello world")
         )
 
-    def test_simple(self, tctx):
-        playbook = tutils.Playbook(tls.ServerTLSLayer(tctx))
+    @pytest.mark.parametrize(
+        "tls_version", [ssl.TLSVersion.TLSv1_2, ssl.TLSVersion.TLSv1_3]
+    )
+    @pytest.mark.parametrize("close_after_eof", [False, True])
+    def test_simple(self, tctx, tls_version, close_after_eof):
+        server_layer = tls.ServerTLSLayer(tctx)
+        playbook = tutils.Playbook(server_layer)
         tctx.server.address = ("example.mitmproxy.org", 443)
         tctx.server.state = ConnectionState.OPEN
         tctx.server.sni = "example.mitmproxy.org"
 
-        tssl = SSLTest(server_side=True)
+        tssl = SSLTest(server_side=True, max_ver=tls_version)
 
         # send ClientHello, receive ClientHello
         data = tutils.Placeholder(bytes)
         assert (
             playbook
             << tls.TlsStartServerHook(tutils.Placeholder())
-            >> reply_tls_start_server()
+            >> reply_tls_start_server(min_ver=tls_version)
             << commands.SendData(tctx.server, data)
         )
         tssl.bio_write(data())
         with pytest.raises(ssl.SSLWantReadError):
             tssl.do_handshake()
 
+        if tls_version == ssl.TLSVersion.TLSv1_2:
+            data = tutils.Placeholder(bytes)
+            assert (
+                playbook
+                >> events.DataReceived(tctx.server, tssl.bio_read())
+                << commands.SendData(tctx.server, data)
+            )
+            tssl.bio_write(data())
+            tssl.do_handshake()
+
         # finish handshake (mitmproxy)
-        finish_handshake(playbook, tctx.server, tssl)
+        finish_handshake(
+            playbook,
+            tctx.server,
+            tssl,
+            expect_data=tls_version == ssl.TLSVersion.TLSv1_3,
+        )
 
         # finish handshake (locally)
         tssl.do_handshake()
@@ -316,6 +344,7 @@ class TestServerTLS:
         assert playbook
 
         assert tctx.server.tls_established
+        assert tssl.obj.version() == tls_version.name.replace("_", ".")
 
         # Echo
         assert (
@@ -329,13 +358,31 @@ class TestServerTLS:
 
         with pytest.raises(ssl.SSLWantReadError):
             tssl.obj.unwrap()
-        assert (
-            playbook
-            >> events.DataReceived(tctx.server, tssl.bio_read())
-            << commands.CloseConnection(tctx.server)
-            >> events.ConnectionClosed(tctx.server)
-            << None
-        )
+        close_notify = tutils.Placeholder(bytes)
+        if close_after_eof:
+            server_layer.child_layer = tutils.RecordLayer(tctx)
+            assert (
+                playbook
+                >> events.DataReceived(tctx.server, tssl.bio_read())
+                >> events.ConnectionClosed(tctx.server)
+            )
+            assert tctx.server.state is ConnectionState.CAN_WRITE
+            close = commands.CloseConnection(tctx.server)
+            assert tutils.eq(
+                list(server_layer.send_close(close)),
+                [commands.SendData(tctx.server, close_notify), close],
+            )
+        else:
+            assert (
+                playbook
+                >> events.DataReceived(tctx.server, tssl.bio_read())
+                << commands.SendData(tctx.server, close_notify)
+                << commands.CloseConnection(tctx.server)
+                >> events.ConnectionClosed(tctx.server)
+                << None
+            )
+        tssl.bio_write(close_notify())
+        tssl.obj.unwrap()
 
     def test_untrusted_cert(self, tctx):
         """If the certificate is not trusted, we should fail."""
@@ -534,9 +581,17 @@ def make_client_tls_layer(
 
 
 class TestClientTLS:
-    def test_client_only(self, tctx: context.Context):
+    @pytest.mark.parametrize(
+        "tls_version", [ssl.TLSVersion.TLSv1_2, ssl.TLSVersion.TLSv1_3]
+    )
+    @pytest.mark.parametrize(
+        "close_mode", ["full", "half", "nested", "bad_record", "shutdown_error"]
+    )
+    def test_client_only(self, tctx: context.Context, tls_version, close_mode):
         """Test TLS with client only"""
-        playbook, client_layer, tssl_client = make_client_tls_layer(tctx)
+        playbook, client_layer, tssl_client = make_client_tls_layer(
+            tctx, max_ver=tls_version
+        )
         client_layer.debug = "  "
         assert not tctx.client.tls_established
 
@@ -548,16 +603,22 @@ class TestClientTLS:
             << tls.TlsClienthelloHook(tutils.Placeholder())
             >> tutils.reply()
             << tls.TlsStartClientHook(tutils.Placeholder())
-            >> reply_tls_start_client()
+            >> reply_tls_start_client(min_ver=tls_version)
             << commands.SendData(tctx.client, data)
         )
         tssl_client.bio_write(data())
-        tssl_client.do_handshake()
+        if tls_version == ssl.TLSVersion.TLSv1_2:
+            with pytest.raises(ssl.SSLWantReadError):
+                tssl_client.do_handshake()
+        else:
+            tssl_client.do_handshake()
         # Finish Handshake
         finish_handshake(playbook, tctx.client, tssl_client)
+        tssl_client.do_handshake()
 
         assert tssl_client.obj.getpeercert(True)
         assert tctx.client.tls_established
+        assert tssl_client.obj.version() == tls_version.name.replace("_", ".")
 
         # Echo
         _test_echo(playbook, tssl_client, tctx.client)
@@ -567,6 +628,92 @@ class TestClientTLS:
             >> events.DataReceived(other_server, b"Plaintext")
             << commands.SendData(other_server, b"plaintext")
         )
+
+        if close_mode == "bad_record":
+            client_layer.debug = None
+            tssl_client.obj.write(b"bad record")
+            ciphertext = bytearray(tssl_client.bio_read())
+            ciphertext[-1] ^= 1
+            assert (
+                playbook
+                >> events.DataReceived(tctx.client, bytes(ciphertext))
+                << commands.Log(StrMatching("TLS Error: .*bad record mac"), WARNING)
+                << commands.SendData(tctx.client, Placeholder(bytes))
+            )
+            # A nested TLS layer may still send its shutdown alert through us.
+            assert list(client_layer.send_data(b"nested close_notify")) == []
+            assert (
+                playbook
+                >> events.ConnectionClosed(tctx.client)
+                << commands.CloseConnection(tctx.client)
+            )
+            return
+
+        if close_mode == "shutdown_error":
+            close = commands.CloseConnection(tctx.client)
+            with patch.object(
+                client_layer.tls, "shutdown", side_effect=SSL.Error("test error")
+            ):
+                assert tutils.eq(
+                    list(client_layer.send_close(close)),
+                    [commands.Log("TLS shutdown failed: test error", WARNING), close],
+                )
+            return
+
+        if close_mode == "nested":
+            # An inner TLS layer resets metadata shared with the outer layer.
+            client_layer.child_layer = tls.ClientTLSLayer(client_layer.context)
+            assert not tctx.client.tls_established
+
+        half_close = close_mode == "half"
+        data = Placeholder(bytes)
+        close_notify = Placeholder(bytes)
+        close = commands.CloseTcpConnection(tctx.client, half_close=half_close)
+        sent = [*client_layer.send_data(b"goodbye"), *client_layer.send_close(close)]
+        assert tutils.eq(
+            sent,
+            [
+                commands.SendData(tctx.client, data),
+                commands.SendData(tctx.client, close_notify),
+                close,
+            ],
+        )
+        assert sent[-1] is close
+        assert close.half_close == half_close
+        assert list(client_layer.send_close(close)) == [close]
+
+        if half_close:
+            recorder = tutils.RecordLayer(tctx)
+            client_layer.child_layer = recorder
+            tssl_client.obj.write(b"in-flight data")
+            assert playbook >> events.DataReceived(tctx.client, tssl_client.bio_read())
+            assert tutils.eq(
+                recorder.event_log,
+                [events.DataReceived(tctx.client, b"in-flight data")],
+            )
+
+        tssl_client.bio_write(data() + close_notify())
+        tssl_client.inc.write_eof()
+        assert tssl_client.obj.read() == b"goodbye"
+        assert tssl_client.obj.read() == b""
+
+    @pytest.mark.parametrize("started", [False, True])
+    def test_close_before_handshake(self, tctx: context.Context, started):
+        playbook, client_layer, tssl_client = make_client_tls_layer(tctx)
+        if started:
+            assert (
+                playbook
+                >> events.DataReceived(tctx.client, tssl_client.bio_read())
+                << tls.TlsClienthelloHook(Placeholder())
+                >> tutils.reply()
+                << tls.TlsStartClientHook(Placeholder())
+                >> reply_tls_start_client()
+                << commands.SendData(tctx.client, Placeholder(bytes))
+            )
+        else:
+            assert playbook
+        close = commands.CloseConnection(tctx.client)
+        assert list(client_layer.send_close(close)) == [close]
 
     @pytest.mark.parametrize("server_state", ["open", "closed"])
     def test_server_required(self, tctx, server_state):
