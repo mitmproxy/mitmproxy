@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Add `--set save_stream_compress` option to compress stream files on the fly with zstandard.
+  Reading compressed flow files is auto-detected via magic bytes.
+  ([#8287](https://github.com/mitmproxy/mitmproxy/pull/8287), @joelverhagen)
 - Replace deprecated pyparsing APIs with their snake_case equivalents to avoid
   `PyparsingDeprecationWarning` during command and flow-filter parsing.
   ([#8344](https://github.com/mitmproxy/mitmproxy/pull/8344), @Dnsayhey)
