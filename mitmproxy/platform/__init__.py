@@ -16,7 +16,7 @@ Get the original destination for the given socket.
 This function will be None if transparent mode is not supported.
 """
 
-if re.match(r"linux(?:2)?", sys.platform):
+if re.match(r"(?:linux(?:2)?|android)", sys.platform):
     from . import linux
 
     original_addr = linux.original_addr
