@@ -364,6 +364,16 @@ class ConsoleAddon:
         """
         signals.pop_view_state.send()
 
+    @command.command("q")
+    def quit(self) -> None:
+        """Vim-style alias for `console.view.pop`."""
+        self.view_pop()
+
+    @command.command("q!")
+    def quit_force(self) -> None:
+        """Vim-style alias for `console.exit`."""
+        self.exit()
+
     @command.command("console.bodyview")
     @command.argument("part", type=mitmproxy.types.Choice("console.bodyview.options"))
     def bodyview(self, flow: flow.Flow, part: str) -> None:

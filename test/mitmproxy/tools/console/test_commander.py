@@ -3,6 +3,8 @@ import pytest
 from mitmproxy import options
 from mitmproxy.addons import command_history
 from mitmproxy.test import taddons
+from mitmproxy.tools.console import consoleaddons
+from mitmproxy.tools.console import signals
 from mitmproxy.tools.console.commander import commander
 
 
@@ -380,3 +382,28 @@ class TestCommandBuffer:
                 ("commander_hint", "option "),
                 ("commander_hint", "*value "),
             ]
+
+
+class TestQuitAliases:
+    def test_aliases_registered(self, commander_tctx):
+        ca = consoleaddons.ConsoleAddon(commander_tctx.master)
+        commander_tctx.master.addons.add(ca)
+        cmds = commander_tctx.master.commands.commands
+        assert "q" in cmds
+        assert "q!" in cmds
+
+    def test_quit_alias(self, commander_tctx, monkeypatch):
+        ca = consoleaddons.ConsoleAddon(commander_tctx.master)
+        commander_tctx.master.addons.add(ca)
+        rec = []
+        monkeypatch.setattr(signals.pop_view_state, "send", lambda: rec.append(1))
+        commander_tctx.master.commands.execute("q")
+        assert rec
+
+    def test_quit_force_alias(self, commander_tctx, monkeypatch):
+        ca = consoleaddons.ConsoleAddon(commander_tctx.master)
+        commander_tctx.master.addons.add(ca)
+        rec = []
+        monkeypatch.setattr(commander_tctx.master, "shutdown", lambda: rec.append(1))
+        commander_tctx.master.commands.execute("q!")
+        assert rec
