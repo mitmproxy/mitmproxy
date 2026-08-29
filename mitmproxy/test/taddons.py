@@ -59,11 +59,23 @@ class context:
         Options object with the given keyword arguments, then calls the
         configure method on the addon with the updated value.
         """
+        # Options changes are normally broadcast to addons via the
+        # `options.changed` signal, which only reaches addons that are part
+        # of `self.master.addons.chain` (i.e. added with `.add()`, as the
+        # constructor does for `context(*addons)`). Addons obtained via
+        # `context.script()` are only `.register()`-ed, not chained, so that
+        # broadcast never reaches them and `configure()` is silently never
+        # called for them. Invoke it directly in that case.
+        chained = addon in self.master.addons.chain
         if addon not in self.master.addons:
             self.master.addons.register(addon)
         with self.options.rollback(kwargs.keys(), reraise=True):
             if kwargs:
                 self.options.update(**kwargs)
+                if not chained:
+                    self.master.addons.invoke_addon_sync(
+                        addon, hooks.ConfigureHook(set(kwargs.keys()))
+                    )
             else:
                 self.master.addons.invoke_addon_sync(addon, hooks.ConfigureHook(set()))
 
