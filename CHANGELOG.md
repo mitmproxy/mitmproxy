@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+- Add `launch_edge()` to the Browser addon, so `browser.start edge` can
+  launch an isolated, proxy-configured instance of Microsoft Edge, matching
+  the existing Chrome and Firefox support.
+  ([#8407](https://github.com/mitmproxy/mitmproxy/issues/8407), @eliahu-frusin)
 - Bracket IPv6 target literals in the `CONNECT` request and `Host` header sent
   to an upstream proxy (`--mode upstream`), producing a valid `[2001:db8::1]:443`
   authority per RFC 3986 instead of the malformed `2001:db8::1:443`.
