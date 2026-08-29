@@ -549,3 +549,110 @@ async def test_always_uses_current_instance(patched_local_redirector, monkeypatc
         monkeypatch.setattr(inst2, "handle_stream", handler := AsyncMock())
         await handle_stream(Mock())
         assert handler.await_count
+
+
+def _client_addrs_for(caplog, message: str) -> list:
+    """The `client` extra attached to every captured LogRecord whose message matches."""
+    return [
+        r.client
+        for r in caplog.records
+        if r.getMessage() == message and hasattr(r, "client")
+    ]
+
+
+async def test_proxy_protocol_scoped_to_configured_port(caplog_async):
+    """A PROXY v1 header is parsed and the spoofed client address is adopted,
+    but only on the port explicitly listed in the proxy_protocol option."""
+    caplog_async.set_level("INFO")
+    manager = MagicMock()
+
+    with taddons.context() as tctx:
+        inst = ServerInstance.make("regular@127.0.0.1:0", manager)
+        await inst.start()
+        assert await caplog_async.await_log("proxy listening")
+
+        host, port, *_ = inst.listen_addrs[0]
+        tctx.options.proxy_protocol = [str(port)]
+
+        reader, writer = await asyncio.open_connection(host, port)
+        writer.write(b"PROXY TCP4 203.0.113.9 198.51.100.1 51234 80\r\n")
+        writer.write(b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n")
+        await writer.drain()
+
+        assert await caplog_async.await_log("client connect")
+        assert _client_addrs_for(caplog_async.caplog, "client connect") == [
+            ("203.0.113.9", 51234)
+        ]
+
+        writer.close()
+        await writer.wait_closed()
+        await inst.stop()
+
+
+async def test_proxy_protocol_not_enabled_on_other_ports(caplog_async):
+    """Without the port listed in proxy_protocol, a normal HTTP request is
+    unaffected: the immediate peer's address is used as-is."""
+    caplog_async.set_level("INFO")
+    manager = MagicMock()
+
+    with taddons.context() as tctx:
+        inst = ServerInstance.make("regular@127.0.0.1:0", manager)
+        await inst.start()
+        assert await caplog_async.await_log("proxy listening")
+
+        host, port, *_ = inst.listen_addrs[0]
+        tctx.options.proxy_protocol = ["1"]  # some other, unrelated port
+
+        reader, writer = await asyncio.open_connection(host, port)
+        assert await caplog_async.await_log("client connect")
+        (client_addr,) = _client_addrs_for(caplog_async.caplog, "client connect")
+        assert client_addr[0] == "127.0.0.1"  # the real socket peer, unmodified
+
+        writer.close()
+        await writer.wait_closed()
+        await inst.stop()
+
+
+async def test_proxy_protocol_rejects_malformed_header(caplog_async):
+    caplog_async.set_level("INFO")
+    manager = MagicMock()
+
+    with taddons.context() as tctx:
+        inst = ServerInstance.make("regular@127.0.0.1:0", manager)
+        await inst.start()
+        assert await caplog_async.await_log("proxy listening")
+
+        host, port, *_ = inst.listen_addrs[0]
+        tctx.options.proxy_protocol = [str(port)]
+
+        reader, writer = await asyncio.open_connection(host, port)
+        writer.write(b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
+        await writer.drain()
+
+        assert await caplog_async.await_log("Rejecting connection")
+        assert await reader.read() == b""  # connection was closed
+
+        await inst.stop()
+
+
+async def test_proxy_protocol_misconfigured_on_non_tcp_listener(caplog_async):
+    """If a user lists a port whose mode never hands us an asyncio.StreamReader
+    (e.g. they meant a different listener), reject clearly instead of hanging
+    or misbehaving."""
+    caplog_async.set_level("INFO")
+    manager = MagicMock()
+
+    with taddons.context() as tctx:
+        inst = ServerInstance.make("regular@127.0.0.1:0", manager)
+        await inst.start()
+        host, port, *_ = inst.listen_addrs[0]
+        tctx.options.proxy_protocol = [str(port)]
+
+        reader = MagicMock()
+        writer = MagicMock()
+        await inst.handle_stream(reader, writer)
+
+        assert await caplog_async.await_log("never receives a PROXY protocol header")
+        writer.close.assert_called_once()
+
+        await inst.stop()
