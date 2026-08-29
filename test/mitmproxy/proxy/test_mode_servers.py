@@ -291,6 +291,25 @@ async def test_wireguard_invalid_conf(tmp_path):
         assert "Invalid configuration file" in repr(inst.last_exception)
 
 
+async def test_wireguard_start_error(tmp_path):
+    manager = MagicMock()
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.bind(("127.0.0.1", 0))
+    port = sock.getsockname()[1]
+
+    with taddons.context(Proxyserver()) as tctx:
+        tctx.options.confdir = str(tmp_path)
+        inst = WireGuardServerInstance.make(f"wireguard@127.0.0.1:{port}", manager)
+        with pytest.raises(
+            OSError,
+            match=f"WireGuard server failed to listen on 127\\.0\\.0\\.1:{port}",
+        ):
+            await inst.start()
+
+    sock.close()
+
+
 async def test_tcp_start_error():
     manager = MagicMock()
 

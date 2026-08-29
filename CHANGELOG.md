@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+- WireGuard mode now shows a clear, actionable error message when its port
+  is already in use (matching other modes), instead of a raw, unformatted
+  Rust error.
+  ([#7650](https://github.com/mitmproxy/mitmproxy/issues/7650), @eliahu-frusin)
 - Bracket IPv6 target literals in the `CONNECT` request and `Host` header sent
   to an upstream proxy (`--mode upstream`), producing a valid `[2001:db8::1]:443`
   authority per RFC 3986 instead of the malformed `2001:db8::1:443`.

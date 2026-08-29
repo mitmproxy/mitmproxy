@@ -381,14 +381,25 @@ class WireGuardServerInstance(AsyncioServerInstance[mode_specs.WireGuardMode]):
     async def start_udp_based_server(
         self, host, port
     ) -> mitmproxy_rs.wireguard.WireGuardServer:
-        return await mitmproxy_rs.wireguard.start_wireguard_server(
-            host,
-            port,
-            self.server_key,
-            [self.pubkey],
-            self.handle_stream,
-            self.handle_stream,
-        )
+        try:
+            return await mitmproxy_rs.wireguard.start_wireguard_server(
+                host,
+                port,
+                self.server_key,
+                [self.pubkey],
+                self.handle_stream,
+                self.handle_stream,
+            )
+        except RuntimeError as e:
+            # The Rust WireGuard binding raises a plain RuntimeError, not an
+            # OSError, so it wouldn't otherwise be caught by _start()'s
+            # `except OSError` handling below (which is what builds the
+            # "Try specifying a different port" message). Translate it to a
+            # proper OSError with the right errno here, at the source, so
+            # the existing shared logic in _start() just picks it up.
+            if "Address already in use" in str(e):
+                raise OSError(errno.EADDRINUSE, str(e)) from e
+            raise
 
     def client_conf(self) -> str | None:
         if not self._servers:
