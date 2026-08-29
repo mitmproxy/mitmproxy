@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Update cryptography to 50.0.0, incorporating fixes for CVE-2026-26007,
+  CVE-2026-34073, CVE-2026-39892, and CVE-2026-69247.
+  ([#8396](https://github.com/mitmproxy/mitmproxy/pull/8396), @nueces)
 - Replace deprecated pyparsing APIs with their snake_case equivalents to avoid
   `PyparsingDeprecationWarning` during command and flow-filter parsing.
   ([#8344](https://github.com/mitmproxy/mitmproxy/pull/8344), @Dnsayhey)
