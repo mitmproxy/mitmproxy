@@ -5,12 +5,17 @@ Utility functions for decoding response bodies.
 import codecs
 import collections
 import gzip
+import sys
 import zlib
 from io import BytesIO
 from typing import overload
 
 import brotli
-import zstandard as zstd
+
+if sys.version_info >= (3, 14):
+    from compression import zstd
+else:  # pragma: no cover
+    from backports import zstd
 
 # We have a shared single-element cache for encoding and decoding.
 # This is quite useful in practice, e.g.
@@ -182,14 +187,12 @@ def encode_brotli(content: bytes) -> bytes:
 def decode_zstd(content: bytes) -> bytes:
     if not content:
         return b""
-    zstd_ctx = zstd.ZstdDecompressor()
-    return zstd_ctx.stream_reader(BytesIO(content), read_across_frames=True).read()
+    return zstd.decompress(content)
 
 
 def encode_zstd(content: bytes) -> bytes:
     # Use level=1 for fastest compression speed.
-    zstd_ctx = zstd.ZstdCompressor(level=1)
-    return zstd_ctx.compress(content)
+    return zstd.compress(content, level=1)
 
 
 def decode_deflate(content: bytes) -> bytes:

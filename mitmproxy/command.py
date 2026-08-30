@@ -200,8 +200,8 @@ class CommandManager:
         Parse a possibly partial command. Return a sequence of ParseResults and a sequence of remainder type help items.
         """
 
-        parts: pyparsing.ParseResults = command_lexer.expr.parseString(
-            cmdstr, parseAll=True
+        parts: pyparsing.ParseResults = command_lexer.expr.parse_string(
+            cmdstr, parse_all=True
         )
 
         parsed: list[ParseResult] = []
