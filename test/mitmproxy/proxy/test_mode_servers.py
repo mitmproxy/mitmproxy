@@ -310,6 +310,49 @@ async def test_wireguard_start_error(tmp_path):
     sock.close()
 
 
+async def test_wireguard_start_error_windows_message(monkeypatch, tmp_path):
+    # Windows reports the same failure with completely different English
+    # wording than macOS/Linux -- simulate it directly, since we can't
+    # trigger the real OS-specific error on this platform. The fix must key
+    # off the numeric "(os error 10048)" code, not the English text.
+    async def _raise_windows_style(*args, **kwargs):
+        raise RuntimeError(
+            "Failed to bind UDP socket to 127.0.0.1:51820\n\n"
+            "Caused by:\n"
+            "    Only one usage of each socket address (protocol/network "
+            "address/port) is normally permitted. (os error 10048)"
+        )
+
+    monkeypatch.setattr(
+        mitmproxy_rs.wireguard, "start_wireguard_server", _raise_windows_style
+    )
+
+    manager = MagicMock()
+    with taddons.context(Proxyserver()) as tctx:
+        tctx.options.confdir = str(tmp_path)
+        inst = WireGuardServerInstance.make("wireguard@0", manager)
+        with pytest.raises(OSError, match="WireGuard server failed to listen"):
+            await inst.start()
+
+
+async def test_wireguard_start_error_unrelated(monkeypatch, tmp_path):
+    # A RuntimeError from the Rust binding that ISN'T a port conflict should
+    # propagate unchanged, not get misclassified as "address already in use".
+    async def _raise_unrelated(*args, **kwargs):
+        raise RuntimeError("Some other WireGuard startup failure")
+
+    monkeypatch.setattr(
+        mitmproxy_rs.wireguard, "start_wireguard_server", _raise_unrelated
+    )
+
+    manager = MagicMock()
+    with taddons.context(Proxyserver()) as tctx:
+        tctx.options.confdir = str(tmp_path)
+        inst = WireGuardServerInstance.make("wireguard@0", manager)
+        with pytest.raises(RuntimeError, match="Some other WireGuard startup failure"):
+            await inst.start()
+
+
 async def test_tcp_start_error():
     manager = MagicMock()
 
