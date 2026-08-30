@@ -14,6 +14,7 @@ expressions consist of the following operators:
 
 - Regexes are Python-style.
 - Regexes can be specified as quoted strings.
+- Regexes containing parentheses, whitespace, or the `~`, `'`, `"` characters must be quoted because these characters are reserved by the filter expression syntax. Otherwise, the expression may be parsed differently or rejected. For example, use ~u "get(Info|Routers)".
 - Regexes are case-insensitive by default.[^1]
 - Header matching (~h, ~hq, ~hs) is against a string of the form "name: value".
 - Strings with no operators are matched against the request URL.

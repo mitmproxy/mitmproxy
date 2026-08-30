@@ -740,7 +740,7 @@ def _make():
     parts = []
     for cls in filter_unary:
         f = pp.Literal(f"~{cls.code}") + pp.WordEnd()
-        f.setParseAction(cls.make)
+        f.set_parse_action(cls.make)
         parts.append(f)
 
     # This is a bit of a hack to simulate Word(pyparsing_unicode.printables),
@@ -749,27 +749,27 @@ def _make():
     unicode_words.skipWhitespace = True
     regex = (
         unicode_words
-        | pp.QuotedString('"', escChar="\\")
-        | pp.QuotedString("'", escChar="\\")
+        | pp.QuotedString('"', esc_char="\\")
+        | pp.QuotedString("'", esc_char="\\")
     )
     for cls in filter_rex:
         f = pp.Literal(f"~{cls.code}") + pp.WordEnd() + regex.copy()
-        f.setParseAction(cls.make)
+        f.set_parse_action(cls.make)
         parts.append(f)
 
     for cls in filter_int:
         f = pp.Literal(f"~{cls.code}") + pp.WordEnd() + pp.Word(pp.nums)
-        f.setParseAction(cls.make)
+        f.set_parse_action(cls.make)
         parts.append(f)
 
     # A naked rex is a URL rex:
     f = regex.copy()
-    f.setParseAction(FUrl.make)
+    f.set_parse_action(FUrl.make)
     parts.append(f)
 
     atom = pp.MatchFirst(parts)
     expr = pp.OneOrMore(
-        pp.infixNotation(
+        pp.infix_notation(
             atom,
             [
                 (pp.Literal("!").suppress(), 1, pp.opAssoc.RIGHT, lambda x: FNot(*x)),
@@ -778,7 +778,7 @@ def _make():
             ],
         )
     )
-    return expr.setParseAction(lambda x: FAnd(x) if len(x) != 1 else x)
+    return expr.set_parse_action(lambda x: FAnd(x) if len(x) != 1 else x)
 
 
 bnf = _make()
@@ -802,7 +802,7 @@ def parse(s: str) -> TFilter:
     if not s:
         raise ValueError("Empty filter expression")
     try:
-        flt = bnf.parse_string(s, parseAll=True)[0]
+        flt = bnf.parse_string(s, parse_all=True)[0]
         flt.pattern = s
         return flt
     except (pp.ParseException, ValueError) as e:
