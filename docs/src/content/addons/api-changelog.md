@@ -31,10 +31,12 @@ This means that addons should now use standard logging functionality instead of 
 ```python
 # Deprecated:
 from mitmproxy import ctx
+
 ctx.log.info("hello world")
 
 # New:
 import logging
+
 logging.info("hello world")
 ```
 

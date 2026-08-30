@@ -2,3 +2,5 @@ mitmproxy/tools/web/static/**/* -diff linguist-vendored
 web/src/js/filt/filt.js -diff
 *.bin binary
 *.mitm binary
+test/mitmproxy/contentviews/test_css_data/** text eol=lf
+test/mitmproxy/contentviews/test_xml_html_data/** text eol=lf

@@ -207,7 +207,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
                 "content": "req",
             },
             "response": {
-                "msg": "Non-Authorisé",
+                "reason": "Non-Authorisé",
                 "code": 404,
                 "headers": [("bar", "baz")],
                 "trailers": [("foo", "bar")],
@@ -221,7 +221,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert f.request.port == 123
         assert f.request.headers["foo"] == "bar"
         assert f.request.text == "req"
-        assert f.response.msg == "Non-Authorisé"
+        assert f.response.reason == "Non-Authorisé"
         assert f.response.status_code == 404
         assert f.response.headers["bar"] == "baz"
         assert f.response.text == "resp"
@@ -253,6 +253,14 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             ).code
             == 400
         )
+
+    def test_flow_update_http_version_only(self):
+        f = self.view.get_by_id("42")
+        f.backup()
+        resp = self.put_json("/flows/42", {"response": {"http_version": "2.0"}})
+        assert resp.code == 200
+        assert f.response.http_version == "2.0"
+        f.revert()
 
     def test_flow_duplicate(self):
         resp = self.fetch("/flows/42/duplicate", method="POST")
