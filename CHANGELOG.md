@@ -9,6 +9,7 @@
 
 - mitmweb: Reject unmatched quotes in unquoted filter values before sending the
   filter to the backend, preventing the live connection from disconnecting.
+  ([#8413](https://github.com/mitmproxy/mitmproxy/pull/8413), @RRXXZZYY)
 - Replace deprecated pyparsing APIs with their snake_case equivalents to avoid
   `PyparsingDeprecationWarning` during command and flow-filter parsing.
   ([#8344](https://github.com/mitmproxy/mitmproxy/pull/8344), @Dnsayhey)
