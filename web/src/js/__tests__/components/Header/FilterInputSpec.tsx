@@ -91,7 +91,32 @@ describe("FilterInput Component", () => {
         const filterInput = dummyInput();
         // valid
         expect(filterInput.isValid("~u foo")).toBeTruthy();
+        expect(filterInput.isValid(`~u "Content-Type'"`)).toBeTruthy();
         expect(filterInput.isValid("~foo bar")).toBeFalsy();
+        expect(filterInput.isValid("~u Content-Type'")).toBeFalsy();
+    });
+
+    it("does not propagate filters with an unmatched trailing quote", () => {
+        const onChange = jest.fn();
+        const { getByPlaceholderText } = render(
+            <FilterInput
+                icon={FilterIcon.SEARCH}
+                color="red"
+                placeholder="Filter"
+                value=""
+                onChange={onChange}
+            />,
+        );
+        const input = getByPlaceholderText("Filter") as HTMLInputElement;
+
+        act(() =>
+            fireEvent.change(input, {
+                target: { value: "~u Content-Type'" },
+            }),
+        );
+
+        expect(input.value).toBe("~u Content-Type'");
+        expect(onChange).not.toHaveBeenCalled();
     });
 
     it("should handle getDesc", () => {

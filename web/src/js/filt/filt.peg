@@ -405,7 +405,7 @@ SingleStringChar
   / "\\" char:EscapeSequence { return char; }
 
 UnquotedStringChar
-  = !ws char:. { return char; }
+  = !ws !['"] char:. { return char; }
 
 EscapeSequence
   = ['"\\]
