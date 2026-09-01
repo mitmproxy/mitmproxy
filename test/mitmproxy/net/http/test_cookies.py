@@ -241,6 +241,20 @@ def test_get_expiration_ts(*args):
     assert F(CA([("Max-Age", "0")])) == now_ts
     assert F(CA([("Max-Age", "31")])) == now_ts + 31
 
+    # RFC 6265 4.1.2.2: Max-Age has precedence over Expires.
+    assert F(CA([("Expires", "Mon, 24-Aug-2133 00:00:00 GMT"), ("Max-Age", "0")])) == (
+        now_ts
+    )
+    assert F(CA([("Max-Age", "31"), ("Expires", "Thu, 01-Jan-1970 00:00:00 GMT")])) == (
+        now_ts + 31
+    )
+
+    # An unusable Max-Age falls back to Expires instead of discarding both.
+    assert (
+        F(CA([("Max-Age", "nan"), ("Expires", "Thu, 01-Jan-1970 00:00:00 GMT")])) == 0
+    )
+    assert F(CA([("Max-Age", None), ("Expires", "Thu, 01-Jan-1970 00:00:00 GMT")])) == 0
+
 
 def test_is_expired():
     CA = cookies.CookieAttrs
@@ -265,6 +279,20 @@ def test_is_expired():
 
     assert not cookies.is_expired(CA([("Max-Age", "nan")]))
     assert not cookies.is_expired(CA([("Expires", "false")]))
+
+    # RFC 6265 4.1.2.2: when the two attributes disagree, Max-Age decides.
+    # This is how a server deletes a cookie it previously set far in the future.
+    assert cookies.is_expired(
+        CA([("Expires", "Mon, 24-Aug-2133 00:00:00 GMT"), ("Max-Age", "0")])
+    )
+    assert not cookies.is_expired(
+        CA([("Expires", "Thu, 01-Jan-1970 00:00:00 GMT"), ("Max-Age", "99999")])
+    )
+
+    # An attribute with no value at all is stored as (name, None).
+    _, _, attrs = cookies.parse_set_cookie_header("foo=bar; Max-Age")[0]
+    assert attrs["max-age"] is None
+    assert not cookies.is_expired(attrs)
 
 
 def test_group_cookies():
