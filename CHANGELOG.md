@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix the `server_replay` option so that changing it at runtime (e.g. via the
+  mitmweb/mitmproxy Options UI) actually reloads the replay flows, instead of
+  silently having no effect after the first change.
+  ([#4508](https://github.com/mitmproxy/mitmproxy/issues/4508), @eliahu-frusin)
 - Replace deprecated pyparsing APIs with their snake_case equivalents to avoid
   `PyparsingDeprecationWarning` during command and flow-filter parsing.
   ([#8344](https://github.com/mitmproxy/mitmproxy/pull/8344), @Dnsayhey)
