@@ -34,9 +34,33 @@ def test_config(tmpdir):
         fpath = str(tmpdir.join("flows"))
         tdump(fpath, [tflow.tflow(resp=True)])
         tctx.configure(s, server_replay=[fpath])
-        s.configured = False
         with pytest.raises(exceptions.OptionsError):
             tctx.configure(s, server_replay=[str(tmpdir)])
+
+
+def test_server_replay_dynamic_update(tmpdir):
+    s = serverplayback.ServerPlayback()
+    with taddons.context(s) as tctx:
+        # 1. Create two distinct flow files
+        fpath1 = str(tmpdir.join("flows1"))
+        fpath2 = str(tmpdir.join("flows2"))
+
+        # File 1 has 1 flow, File 2 has 2 flows
+        tdump(fpath1, [tflow.tflow(resp=True)])
+        tdump(fpath2, [tflow.tflow(resp=True), tflow.tflow(resp=True)])
+
+        # 2. Configure server_replay with the first file
+        tctx.configure(s, server_replay=[fpath1])
+        assert s.count() == 1
+
+        # 3. Dynamically update server_replay to the second file
+        tctx.configure(s, server_replay=[fpath2])
+        assert s.count() == 2
+
+        # 4. Clear server_replay back to empty []
+        tctx.configure(s, server_replay=[])
+        assert s.count() == 0
+        assert s.flowmap == {}
 
 
 def test_server_playback():

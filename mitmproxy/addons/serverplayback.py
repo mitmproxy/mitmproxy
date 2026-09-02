@@ -28,11 +28,9 @@ HASH_OPTIONS = [
 
 class ServerPlayback:
     flowmap: dict[Hashable, list[http.HTTPFlow]]
-    configured: bool
 
     def __init__(self):
         self.flowmap = {}
-        self.configured = False
 
     def load(self, loader):
         loader.add_option(
@@ -257,8 +255,8 @@ class ServerPlayback:
             logger.error(
                 "server_replay_nopop has been renamed to server_replay_reuse, please update your config."
             )
-        if not self.configured and ctx.options.server_replay:
-            self.configured = True
+
+        if "server_replay" in updated:
             try:
                 flows = io.read_flows_from_paths(ctx.options.server_replay)
             except exceptions.FlowReadException as e:
