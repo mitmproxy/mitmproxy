@@ -102,22 +102,23 @@ class Palette:
                 highback = self.high["background"][1]
             lowback = self.low["background"][1]
 
-        for i in self._fields:
+        for i in ["", *self._fields]:
+            style = i or "text"
             if transparent and i == "background":
                 lst.append(["background", "default", "default"])
             else:
                 v: list[str | None] = [i]
-                low = list(self.low[i])
+                low = list(self.low[style])
                 if lowback and low[1] == "default":
                     low[1] = lowback
                 v.extend(low)
-                if self.high and i in self.high:
+                if self.high and style in self.high:
                     v.append(None)
-                    high: list[str | None] = list(self.high[i])
+                    high: list[str | None] = list(self.high[style])
                     if highback and high[1] == "default":
                         high[1] = highback
                     v.extend(high)
-                elif highback and self.low[i][1] == "default":
+                elif highback and self.low[style][1] == "default":
                     high = [None, low[0], highback]
                     v.extend(high)
                 lst.append(tuple(v))

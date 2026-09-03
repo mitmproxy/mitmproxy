@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Honor opaque console palettes for unstyled contentview text.
+  ([#8372](https://github.com/mitmproxy/mitmproxy/pull/8372), @tospakX)
 - Replace deprecated pyparsing APIs with their snake_case equivalents to avoid
   `PyparsingDeprecationWarning` during command and flow-filter parsing.
   ([#8344](https://github.com/mitmproxy/mitmproxy/pull/8344), @Dnsayhey)
