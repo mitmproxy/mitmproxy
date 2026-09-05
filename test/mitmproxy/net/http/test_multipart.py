@@ -113,3 +113,39 @@ def test_decode_preserves_trailing_newline_in_value():
     )
 
     assert form == [(b"field1", b"hello\nworld\n")]
+
+
+def test_decode_multipart_value_contains_non_boundary_double_dash():
+    content_type = "multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"
+
+    content = (
+        b"------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n"
+        b'Content-Disposition: form-data; name="username"\r\n'
+        b"\r\n"
+        b"a--xyz\r\n"
+        b"------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n"
+    )
+
+    assert multipart.decode_multipart(content_type, content) == [
+        (b"username", b"a--xyz")
+    ]
+
+
+def test_decode_multipart_value_contains_mid_line_boundary_token():
+    # RFC 2046 5.1.1: a boundary delimiter must begin a line. A value that
+    # happens to contain the exact boundary token mid-line is data, not a
+    # delimiter, and must be preserved in full.
+    boundary = b"abc123"
+    content_type = "multipart/form-data; boundary=abc123"
+
+    content = (
+        b"--" + boundary + b"\r\n"
+        b'Content-Disposition: form-data; name="field"\r\n'
+        b"\r\n"
+        b"prefix--abc123suffix\r\n"
+        b"--" + boundary + b"--\r\n"
+    )
+
+    assert multipart.decode_multipart(content_type, content) == [
+        (b"field", b"prefix--abc123suffix")
+    ]
