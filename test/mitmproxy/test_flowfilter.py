@@ -63,6 +63,11 @@ class TestParsing:
         a = flowfilter.parse(r'~u "foo \'bar"')
         assert a.expr == "foo 'bar"
 
+    @pytest.mark.parametrize("quote", ['"', "'"])
+    def test_quoted_regex_preserves_escapes(self, quote):
+        a = flowfilter.parse(f"~u {quote}\\.sign\\({quote}")
+        assert a.expr == r"\.sign\("
+
     def test_nesting(self):
         a = flowfilter.parse("(~u foobar & ~h voing)")
         assert a.lst[0].expr == "foobar"
