@@ -51,13 +51,23 @@ def request_content_for_console(request: http.Request) -> str:
         # shlex.quote doesn't support a bytes object
         # see https://github.com/python/cpython/pull/10871
         raise exceptions.CommandError("Request content must be valid unicode")
-    escape_control_chars = {chr(i): f"\\x{i:02x}" for i in range(32)}
-    escaped_text = "".join(escape_control_chars.get(x, x) for x in text)
-    if any(char in escape_control_chars for char in text):
-        # Escaped chars need to be unescaped by the shell to be properly inperpreted by curl and httpie
-        return f'"$(printf {shlex.quote(escaped_text)})"'
+    if not any(ord(char) < 32 for char in text):
+        return shlex.quote(text)
 
-    return shlex.quote(escaped_text)
+    # Control characters must be unescaped by the shell. ANSI-C quoting ($'...')
+    # does that byte for byte. printf would treat "%" and "\\" as format
+    # directives, and $(...) would strip trailing newlines.
+    escaped = []
+    for char in text:
+        if char == "\\":
+            escaped.append("\\\\")
+        elif char == "'":
+            escaped.append("\\'")
+        elif ord(char) < 32:
+            escaped.append(f"\\x{ord(char):02x}")
+        else:
+            escaped.append(char)
+    return "$'" + "".join(escaped) + "'"
 
 
 def curl_command(f: flow.Flow) -> str:

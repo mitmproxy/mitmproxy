@@ -124,8 +124,24 @@ class TestExportCurlCommand:
 
     def test_expand_escaped(self, export_curl, post_request):
         post_request.request.content = b"foo\nbar"
-        result = "curl -X POST http://address:22/path -d \"$(printf 'foo\\x0abar')\""
+        result = "curl -X POST http://address:22/path -d $'foo\\x0abar'"
         assert export_curl(post_request) == result
+
+    @pytest.mark.parametrize(
+        "content,quoted",
+        [
+            (b"foo\n", "$'foo\\x0a'"),
+            (b"a=100%\nb=2", "$'a=100%\\x0ab=2'"),
+            (b"C:\\new\\temp\nx", "$'C:\\\\new\\\\temp\\x0ax'"),
+            (b"it's\ta tab", "$'it\\'s\\x09a tab'"),
+        ],
+    )
+    def test_escaped_keeps_bytes(self, export_curl, post_request, content, quoted):
+        post_request.request.content = content
+        assert (
+            export_curl(post_request)
+            == f"curl -X POST http://address:22/path -d {quoted}"
+        )
 
     def test_no_expand_when_no_escaped(self, export_curl, post_request):
         post_request.request.content = b"foobar"
@@ -200,6 +216,11 @@ class TestExportHttpieCommand:
         command = export.httpie_command(request)
         assert shlex.split(command)[-2] == "<<<"
         assert shlex.split(command)[-1] == "'&#"
+
+    def test_expand_escaped(self, post_request):
+        post_request.request.content = b"a=100%\nb=2"
+        result = "http POST http://address:22/path <<< $'a=100%\\x0ab=2'"
+        assert export.httpie_command(post_request) == result
 
     # See comment in `TestExportCurlCommand.test_correct_host_used`. httpie
     # currently doesn't have a way of forcing connection to a particular IP, so
