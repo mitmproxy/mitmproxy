@@ -296,7 +296,9 @@ class LayeredH3Connection(H3Connection):
         # ensure we haven't sent something before
         with self._get_or_create_stream(stream_id) as stream:
             if stream.headers_send_state != HeadersState.INITIAL:
-                raise FrameUnexpected("initial HEADERS frame is not allowed in this state")
+                raise FrameUnexpected(
+                    "initial HEADERS frame is not allowed in this state"
+                )
         super().send_headers(stream_id, headers, end_stream)
         self._after_send(stream_id, end_stream)
 
@@ -306,7 +308,9 @@ class LayeredH3Connection(H3Connection):
         # ensure we got some headers first
         with self._get_or_create_stream(stream_id) as stream:
             if stream.headers_send_state != HeadersState.AFTER_HEADERS:
-                raise FrameUnexpected("trailing HEADERS frame is not allowed in this state")
+                raise FrameUnexpected(
+                    "trailing HEADERS frame is not allowed in this state"
+                )
         super().send_headers(stream_id, trailers, end_stream=True)
         self._after_send(stream_id, end_stream=True)
 
