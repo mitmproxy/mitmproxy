@@ -101,6 +101,8 @@ class Master:
         self.event_loop.call_soon_threadsafe(self.should_exit.set)
 
     async def running(self) -> None:
+        if self.options.deferred:
+            logger.warning(f"Unknown option(s): {', '.join(self.options.deferred)}")
         await self.addons.trigger_event(hooks.RunningHook())
 
     async def done(self) -> None:

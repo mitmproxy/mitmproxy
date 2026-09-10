@@ -31,3 +31,27 @@ async def test_exception_handler(caplog_async):
 
     master.shutdown()
     await running
+
+
+async def test_running_warns_for_unknown_option(caplog_async):
+    caplog_async.set_level("WARNING")
+
+    master = Master(None)
+    master.options.set("somebadname=value", defer=True)
+
+    await master.running()
+
+    assert "Unknown option(s): somebadname" in caplog_async.caplog.text
+
+
+async def test_running_does_not_warn_for_known_option(caplog_async):
+    caplog_async.set_level("WARNING")
+
+    master = Master(None)
+    master.options.set("server=false", defer=True)
+
+    assert not master.options.deferred
+
+    await master.running()
+
+    assert "Unknown option(s):" not in caplog_async.caplog.text

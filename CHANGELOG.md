@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Warn when a `--set` option isn't recognized by mitmproxy or any loaded
+  addon, instead of silently ignoring it forever.
+  ([#5371](https://github.com/mitmproxy/mitmproxy/issues/5371), @eliahu-frusin)
 - Add `launch_edge()` to the Browser addon, so `browser.start edge` can
   launch an isolated, proxy-configured instance of Microsoft Edge, matching
   the existing Chrome and Firefox support.
