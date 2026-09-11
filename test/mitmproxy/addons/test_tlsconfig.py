@@ -15,6 +15,7 @@ from mitmproxy import tls
 from mitmproxy.addons import tlsconfig
 from mitmproxy.net import tls as net_tls
 from mitmproxy.proxy import context
+from mitmproxy.proxy.layers import http as proxy_http
 from mitmproxy.proxy.layers import modes
 from mitmproxy.proxy.layers import quic
 from mitmproxy.proxy.layers import tls as proxy_tls
@@ -460,7 +461,8 @@ class TestTlsConfig:
 
     def test_no_h2_proxy(self, tdata):
         """Do not negotiate h2 on the client<->proxy connection in secure web proxy mode,
-        https://github.com/mitmproxy/mitmproxy/issues/4689"""
+        https://github.com/mitmproxy/mitmproxy/issues/4689,
+        https://github.com/mitmproxy/mitmproxy/issues/8192"""
 
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
@@ -472,11 +474,36 @@ class TestTlsConfig:
             )
 
             ctx = _ctx(tctx.options)
-            # mock up something that looks like a secure web proxy.
-            ctx.layers = [modes.HttpProxy(ctx), 123]
+            ctx.layers = [
+                modes.HttpProxy(ctx),
+                proxy_tls.ClientTLSLayer(ctx),
+                proxy_http.HttpLayer(ctx, proxy_http.HTTPMode.regular),
+            ]
             tls_start = tls.TlsData(ctx.client, context=ctx)
             ta.tls_start_client(tls_start)
             assert tls_start.ssl_conn.get_app_data()["client_alpn"] == b"http/1.1"
+
+            ctx = _ctx(tctx.options)
+            ctx.layers = [
+                modes.HttpUpstreamProxy(ctx),
+                proxy_tls.ClientTLSLayer(ctx),
+                proxy_http.HttpLayer(ctx, proxy_http.HTTPMode.upstream),
+            ]
+            tls_start = tls.TlsData(ctx.client, context=ctx)
+            ta.tls_start_client(tls_start)
+            assert tls_start.ssl_conn.get_app_data()["client_alpn"] == b"http/1.1"
+
+            # CONNECT-tunneled inner TLS: server.address is set, so h2 must be allowed.
+            ctx = _ctx(tctx.options)
+            ctx.server.address = ("example.com", 443)
+            ctx.layers = [
+                modes.HttpProxy(ctx),
+                proxy_http.HttpLayer(ctx, proxy_http.HTTPMode.regular),
+            ]
+            ctx.client.alpn = b"h2"
+            tls_start = tls.TlsData(ctx.client, context=ctx)
+            ta.tls_start_client(tls_start)
+            assert tls_start.ssl_conn.get_app_data()["client_alpn"] == b"h2"
 
     @pytest.mark.parametrize(
         "client_certs",
