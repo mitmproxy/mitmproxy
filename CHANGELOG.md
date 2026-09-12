@@ -11,6 +11,10 @@
   a multipart field's value, and no longer raises an uncaught exception when
   a part is missing its header/body separator.
   ([#4466](https://github.com/mitmproxy/mitmproxy/issues/4466), @eliahu-frusin)
+- Add `launch_edge()` to the Browser addon, so `browser.start edge` can
+  launch an isolated, proxy-configured instance of Microsoft Edge, matching
+  the existing Chrome and Firefox support.
+  ([#8407](https://github.com/mitmproxy/mitmproxy/issues/8407), @eliahu-frusin)
 - Replace deprecated pyparsing APIs with their snake_case equivalents to avoid
   `PyparsingDeprecationWarning` during command and flow-filter parsing.
   ([#8344](https://github.com/mitmproxy/mitmproxy/pull/8344), @Dnsayhey)
