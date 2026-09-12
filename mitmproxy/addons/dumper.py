@@ -95,7 +95,10 @@ class Dumper:
         if ident:
             text = indent(ident, text)
         text = self.style(text, **style)
-        print(text, file=self.outfp)
+        try:
+            print(text, file=self.outfp)
+        except OSError:
+            sys.exit(1)
 
     def _echo_headers(self, headers: http.Headers):
         for k, v in headers.fields:
@@ -275,7 +278,10 @@ class Dumper:
             msg = strutils.escape_control_characters(f.error.msg)
             self.echo(f" << {msg}", bold=True, fg="red")
 
-        self.outfp.flush()
+        try:
+            self.outfp.flush()
+        except OSError:
+            sys.exit(1)
 
     def match(self, f):
         if ctx.options.flow_detail == 0:

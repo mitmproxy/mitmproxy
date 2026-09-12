@@ -1,6 +1,7 @@
 import io
 import shutil
 from unittest import mock
+from unittest.mock import Mock
 
 import pytest
 
@@ -341,3 +342,30 @@ def test_styling():
 def test_has_styles_for_tags():
     missing = set(mitmproxy_rs.syntax_highlight.tags()) - set(CONTENTVIEW_STYLES)
     assert not missing, f"Missing styles for tags: {missing}"
+
+
+def test_echo_oserror_on_write():
+    mock_outfp = Mock()
+    mock_outfp.write.side_effect = OSError("Write error")
+
+    d = dumper.Dumper(mock_outfp)
+
+    with pytest.raises(SystemExit) as exc_info:
+        d.echo("test message")
+
+    assert exc_info.value.code == 1
+
+
+def test_response_oserror_on_flush():
+    mock_outfp = Mock()
+    mock_outfp.flush.side_effect = OSError("Flush error")
+
+    d = dumper.Dumper(mock_outfp)
+    f = tflow.tflow(resp=True)
+
+    with taddons.context(d) as ctx:
+        ctx.configure(d, flow_detail=1)
+        with pytest.raises(SystemExit) as exc_info:
+            d.response(f)
+
+    assert exc_info.value.code == 1

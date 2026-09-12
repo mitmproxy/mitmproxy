@@ -7,6 +7,11 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix `mitmdump` crashing with a scary "Errors logged during startup,
+  exiting..." message (and an `Addon error: BrokenPipeError` traceback)
+  when its output is piped to a program that exits before consuming all
+  of it (e.g. `mitmdump -nr file | head`). It now exits cleanly instead.
+  ([#3988](https://github.com/mitmproxy/mitmproxy/issues/3988), @eliahu-frusin)
 - Add `launch_edge()` to the Browser addon, so `browser.start edge` can
   launch an isolated, proxy-configured instance of Microsoft Edge, matching
   the existing Chrome and Firefox support.
