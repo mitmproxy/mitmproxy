@@ -95,3 +95,22 @@ async def test_browser_start_firefox_not_found(caplog):
         which.return_value = False
         browser.Browser().start("firefox")
         assert "platform is not supported" in caplog.text
+
+
+async def test_browser_start_edge():
+    with (
+        mock.patch("shutil.which") as which,
+        mock.patch("subprocess.Popen") as po,
+        taddons.context(),
+    ):
+        which.return_value = "edge"
+        browser.Browser().start("edge")
+        assert po.called
+
+
+async def test_browser_start_edge_not_found(caplog):
+    caplog.set_level("INFO")
+    with mock.patch("shutil.which") as which:
+        which.return_value = False
+        browser.Browser().start("edge")
+        assert "platform is not supported" in caplog.text
