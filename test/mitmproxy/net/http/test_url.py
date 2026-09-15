@@ -37,9 +37,9 @@ def test_parse():
     with pytest.raises(ValueError):
         url.parse(b"https://foo:bar")
 
-    # Invalid IDNA
+    # Invalid IDNA - lone surrogate not valid IDNA (was \xfafoo which now punycodes to xn--foo-7na)
     with pytest.raises(ValueError):
-        url.parse("http://\xfafoo")
+        url.parse("http://test\udcff")
     # Invalid PATH
     with pytest.raises(ValueError):
         url.parse("http:/\xc6/localhost:56121")
@@ -49,6 +49,31 @@ def test_parse():
     # Invalid IPv6 URL - see http://www.ietf.org/rfc/rfc2732.txt
     with pytest.raises(ValueError):
         url.parse("http://lo[calhost")
+
+
+def test_parse_idna_emoji():
+    # Valid emoji host punycodes - hits ascii rebuild path in url.parse
+    s, h, po, pa = url.parse("http://\U0001f4a9.example.com/test")
+    assert s == b"http"
+    assert h == b"xn--ls8h.example.com"
+    assert po == 80
+    assert pa == b"/test"
+    # With userinfo and port - hits username/password branches in rebuild
+    s, h, po, pa = url.parse("http://user:pass@\U0001f4a9.example.com:8080/test")
+    assert h == b"xn--ls8h.example.com"
+    assert po == 8080
+    # With port alone
+    s, h, po, pa = url.parse("http://\U0001f4a9.example.com:9000/")
+    assert po == 9000
+    # Same via parse_authority str path
+    h2, p2 = url.parse_authority("\U0001f4a9.example.com:8080", True)
+    assert h2 == "\U0001f4a9.example.com"
+    # Bytes authority with emoji - hits bytes fallback
+    h3, p3 = url.parse_authority(b"\xf0\x9f\x92\xa9.example.com:8080", True)
+    assert p3 == 8080
+    # Lone surrogate still invalid
+    with pytest.raises(ValueError):
+        url.parse_authority("test\udcff:80", True)
 
 
 def test_ascii_check():

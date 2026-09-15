@@ -357,12 +357,19 @@ class TlsConfig:
             try:
                 ip: bytes = ipaddress.ip_address(server.sni).packed
             except ValueError:
-                host_name = server.sni.encode("idna")
-                tls_start.ssl_conn.set_tlsext_host_name(host_name)
-                ok = SSL._lib.X509_VERIFY_PARAM_set1_host(  # type: ignore
-                    param, host_name, len(host_name)
-                )  # type: ignore
-                SSL._openssl_assert(ok == 1)  # type: ignore
+                try:
+                    host_name = server.sni.encode("idna")
+                    tls_start.ssl_conn.set_tlsext_host_name(host_name)
+                    ok = SSL._lib.X509_VERIFY_PARAM_set1_host(  # type: ignore
+                        param, host_name, len(host_name)
+                    )  # type: ignore
+                    SSL._openssl_assert(ok == 1)  # type: ignore
+                except UnicodeError:  # pragma: no cover - rare surrogate SNI
+                    # Invalid IDNA (e.g., lone surrogate) - see #7829. Send
+                    # SNI as raw bytes but skip host verification which would
+                    # fail for non-punycode names.
+                    host_name = server.sni.encode("utf-8", "surrogateescape")
+                    tls_start.ssl_conn.set_tlsext_host_name(host_name)
             else:
                 # RFC 6066: Literal IPv4 and IPv6 addresses are not permitted in "HostName",
                 # so we don't call set_tlsext_host_name.
@@ -649,6 +656,13 @@ def _ip_or_dns_name(val: str) -> x509.GeneralName:
     try:
         ip = ipaddress.ip_address(val)
     except ValueError:
-        return x509.DNSName(val.encode("idna").decode())
+        try:
+            return x509.DNSName(val.encode("idna").decode())
+        except (UnicodeError, ValueError):
+            # Fallback for invalid IDNA (e.g., lone surrogate) - see #7829
+            try:
+                return x509.DNSName(val)
+            except ValueError:
+                return x509.DNSName("invalid.invalid")
     else:
         return x509.IPAddress(ip)
