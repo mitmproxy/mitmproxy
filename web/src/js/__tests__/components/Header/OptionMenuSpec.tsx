@@ -53,6 +53,12 @@ describe("OptionMenu Component", () => {
         ).toBeDisabled();
     });
 
+    it("shows how many of the columns are visible", () => {
+        render(<OptionMenu />);
+
+        expect(screen.getByLabelText("Columns")).toHaveTextContent("7 of 11");
+    });
+
     it("lists the flow table columns behind the Columns dropdown, closed by default", () => {
         render(<OptionMenu />);
 
