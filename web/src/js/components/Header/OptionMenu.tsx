@@ -8,7 +8,10 @@ import HideInStatic from "../common/HideInStatic";
 import FlowColumns from "../FlowTable/FlowColumns";
 import * as modalActions from "../../ducks/ui/modal";
 import * as optionsActions from "../../ducks/options";
-import { resetColumnWidths } from "../../ducks/ui/columnWidths";
+import {
+    resetColumnWidths,
+    shareColumnWidths,
+} from "../../ducks/ui/columnWidths";
 import { sortFunctions } from "../../flow/utils";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 
@@ -140,6 +143,7 @@ function ColumnVisibility() {
                   (c) => c === col || visibleColumns.includes(c),
               );
         dispatch(optionsActions.update("web_columns", next));
+        dispatch(shareColumnWidths(visibleColumns, next));
     };
 
     return (

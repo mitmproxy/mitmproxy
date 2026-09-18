@@ -127,6 +127,27 @@ describe("OptionMenu Component", () => {
         );
     });
 
+    it("hands the width of a hidden column to the columns that stay", () => {
+        fetchMock.mockResponseOnce("");
+        const store = TStore({
+            ...testState,
+            options: { ...testState.options, web_columns: ["method", "size"] },
+            ui: {
+                ...testState.ui,
+                columnWidths: { method: 60, size: 60 },
+            },
+        });
+        render(<OptionMenu />, { store });
+        fireEvent.click(screen.getByText("Columns"));
+
+        fireEvent.click(screen.getByLabelText("Method"));
+
+        expect(store.getState().ui.columnWidths).toEqual({
+            method: 60,
+            size: 120,
+        });
+    });
+
     it("does not let the last visible column be unchecked", () => {
         const store = TStore({
             ...testState,

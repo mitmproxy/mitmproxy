@@ -4,6 +4,7 @@ import reducer, {
     loadColumnWidths,
     resetColumnWidths,
     setColumnWidths,
+    shareColumnWidths,
 } from "../../../ducks/ui/columnWidths";
 import { TStore } from "../tutils";
 
@@ -82,5 +83,65 @@ describe("column widths thunks", () => {
 
         expect(store.getState().ui.columnWidths).toEqual({ size: 70 });
         setItem.mockRestore();
+    });
+});
+
+describe("shareColumnWidths", () => {
+    const sized = () => {
+        const store = TStore();
+        store.dispatch(
+            commitColumnWidths({ method: 60, status: 80, size: 60 }),
+        );
+        return store;
+    };
+
+    it("hands the width of a hidden column to the columns that stay", () => {
+        const store = sized();
+
+        store.dispatch(
+            shareColumnWidths(["method", "status", "size"], ["method", "size"]),
+        );
+
+        expect(store.getState().ui.columnWidths).toEqual({
+            method: 100,
+            status: 80,
+            size: 100,
+        });
+    });
+
+    it("takes the width a column comes back with out of the others", () => {
+        const store = sized();
+
+        store.dispatch(
+            shareColumnWidths(["method", "size"], ["method", "status", "size"]),
+        );
+
+        expect(store.getState().ui.columnWidths).toEqual({
+            method: 20,
+            status: 80,
+            size: 20,
+        });
+    });
+
+    it("leaves the widths to the column that is stretched to fit", () => {
+        const store = sized();
+
+        store.dispatch(
+            shareColumnWidths(["path", "method", "status"], ["path", "method"]),
+        );
+
+        expect(store.getState().ui.columnWidths).toEqual({
+            method: 60,
+            status: 80,
+            size: 60,
+        });
+    });
+
+    it("has nothing to share out until a column is resized", () => {
+        const store = TStore();
+
+        store.dispatch(shareColumnWidths(["method", "status"], ["method"]));
+
+        expect(store.getState().ui.columnWidths).toEqual({});
     });
 });
