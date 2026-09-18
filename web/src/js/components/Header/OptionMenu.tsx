@@ -2,6 +2,7 @@ import * as React from "react";
 import { useEffect, useRef, useState } from "react";
 import { CommandBarToggle, EventlogToggle, OptionsToggle } from "./MenuToggle";
 import Button from "../common/Button";
+import Icon from "../common/Icon";
 import DocsLink from "../common/DocsLink";
 import HideInStatic from "../common/HideInStatic";
 import FlowColumns from "../FlowTable/FlowColumns";
@@ -142,14 +143,19 @@ function ColumnVisibility() {
     };
 
     return (
-        <div className="column-visibility" ref={ref}>
-            <Button
-                className="btn-sm"
-                icon="columns"
-                onClick={() => setOpen(!open)}
-            >
+        <div className="menu-entry column-visibility" ref={ref}>
+            <label>
                 Columns
-            </Button>
+                <button
+                    className="column-select"
+                    title="Choose the columns the flow table shows"
+                    aria-expanded={open}
+                    onClick={() => setOpen(!open)}
+                >
+                    {visibleColumns.length} of {TOGGLEABLE_COLUMNS.length}
+                    <Icon name="chevronDown" />
+                </button>
+            </label>
             {open && (
                 <ul className="dropdown-menu is-open">
                     {TOGGLEABLE_COLUMNS.map((col) => {

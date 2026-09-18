@@ -49,8 +49,7 @@ header {
         display: inline-block;
     }
     > .btn,
-    > a > .btn,
-    > .column-visibility > .btn {
+    > a > .btn {
         height: @menu-height - @menu-legend-height;
         text-align: center;
         margin: 0 1px;
@@ -65,8 +64,7 @@ header {
         }
     }
 
-    > .btn.btn-sm,
-    > .column-visibility > .btn.btn-sm {
+    > .btn.btn-sm {
         height: ((@menu-height - @menu-legend-height) / 3);
         padding: 0 5px;
         .icon {
@@ -95,11 +93,26 @@ header {
     input[type="checkbox"] {
         margin: 0;
     }
-    .theme-select {
+    .theme-select,
+    .column-select {
         font-size: 1.2rem;
         padding: 1px 2px;
         border: 1px solid var(--mitmweb-border);
         border-radius: 3px;
+    }
+
+    .column-select {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        cursor: pointer;
+        background-color: var(--mitmweb-bg);
+        color: var(--mitmweb-fg);
+
+        .icon {
+            width: 12px;
+            height: 12px;
+        }
     }
 }
 
