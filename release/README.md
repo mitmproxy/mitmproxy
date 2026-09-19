@@ -59,4 +59,4 @@
 ### Prepare for next release
 
 - Last but not least, bump the major version on main in
-   [https://github.com/mitmproxy/mitmproxy/blob/main/mitmproxy/version.py](mitmproxy/version.py) and add a `.dev` suffix.
+   [https://github.com/mitmproxy/mitmproxy/blob/main/mitmproxy/version.py](../mitmproxy/version.py) and add a `.dev` suffix.
