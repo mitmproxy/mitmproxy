@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+- Add WebSocket client replay support. After a successful HTTP upgrade,
+  `clientplayback` replays recorded client messages in order and waits for
+  matching server replies before sending the next client frame.
+  ([#5248](https://github.com/mitmproxy/mitmproxy/issues/5248))
 - Add `launch_edge()` to the Browser addon, so `browser.start edge` can
   launch an isolated, proxy-configured instance of Microsoft Edge, matching
   the existing Chrome and Firefox support.
