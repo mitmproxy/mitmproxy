@@ -3,6 +3,9 @@ import ssl
 from contextlib import asynccontextmanager
 
 import pytest
+import wsproto
+import wsproto.events
+from wsproto.frame_protocol import Opcode
 
 from mitmproxy.addons.clientplayback import ClientPlayback
 from mitmproxy.addons.clientplayback import ReplayHandler
@@ -14,6 +17,7 @@ from mitmproxy.exceptions import OptionsError
 from mitmproxy.options import Options
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
+from mitmproxy.websocket import WebSocketMessage
 
 
 @asynccontextmanager
@@ -203,6 +207,63 @@ def test_replay_handler_preserves_websocket_messages():
     handler = ReplayHandler(flow, Options())
     assert handler.recorded_websocket_messages == recorded
     assert flow.websocket is None
+
+
+async def test_finish_is_idempotent():
+    flow = tflow.tflow(live=False)
+    handler = ReplayHandler(flow, Options())
+    await handler._finish()
+    await handler._finish()
+    assert handler.done.is_set()
+
+
+async def test_playback_websocket():
+    received: list[bytes] = []
+
+    async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+        await reader.readuntil(b"\r\n\r\n")
+        writer.write(
+            b"HTTP/1.1 101 Switching Protocols\r\n"
+            b"Upgrade: websocket\r\n"
+            b"Connection: Upgrade\r\n"
+            b"\r\n"
+        )
+        await writer.drain()
+        ws = wsproto.Connection(wsproto.ConnectionType.SERVER)
+        while True:
+            data = await reader.read(65536)
+            if not data:
+                break
+            ws.receive_data(data)
+            for ev in ws.events():
+                if isinstance(ev, wsproto.events.BytesMessage) and ev.message_finished:
+                    received.append(ev.data)
+                elif isinstance(ev, wsproto.events.TextMessage) and ev.message_finished:
+                    received.append(ev.data.encode())
+
+    cp = ClientPlayback()
+    ps = Proxyserver()
+    with taddons.context(cp, ps):
+        async with tcp_server(handler) as addr:
+            cp.running()
+            flow = tflow.twebsocketflow()
+            flow.live = False
+            flow.websocket.messages.append(
+                WebSocketMessage(Opcode.TEXT, True, b"dropped", dropped=True)
+            )
+            flow.request.host, flow.request.port = addr
+            cp.start_replay([flow])
+            assert cp.count() == 1
+            await asyncio.wait_for(cp.queue.join(), 5)
+            while cp.replay_tasks:
+                await asyncio.sleep(0.001)
+        assert flow.response.status_code == 101
+        assert received == [b"hello binary", b"hello text"]
+        assert [m.content for m in flow.websocket.messages] == [
+            b"hello binary",
+            b"hello text",
+        ]
+        await cp.done()
 
 
 async def test_start_stop(caplog):

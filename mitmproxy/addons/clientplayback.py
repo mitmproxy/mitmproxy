@@ -8,6 +8,9 @@ from types import TracebackType
 from typing import cast
 from typing import Literal
 
+import wsproto
+import wsproto.events
+
 import mitmproxy.types
 from mitmproxy import command
 from mitmproxy import ctx
@@ -28,6 +31,7 @@ from mitmproxy.proxy import server
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layer import CommandGenerator
 from mitmproxy.proxy.layers.http import HTTPMode
+from mitmproxy.proxy.layers.websocket import WebsocketEndHook
 from mitmproxy.proxy.mode_specs import UpstreamMode
 from mitmproxy.utils import asyncio_utils
 
@@ -41,10 +45,17 @@ class MockServer(layers.http.HttpConnection):
     """
 
     flow: http.HTTPFlow
+    recorded_websocket_messages: list[websocket.WebSocketMessage]
 
-    def __init__(self, flow: http.HTTPFlow, context: Context):
+    def __init__(
+        self,
+        flow: http.HTTPFlow,
+        context: Context,
+        recorded_websocket_messages: list[websocket.WebSocketMessage] | None = None,
+    ):
         super().__init__(context, context.client)
         self.flow = flow
+        self.recorded_websocket_messages = recorded_websocket_messages or []
 
     def _handle_event(self, event: events.Event) -> CommandGenerator[None]:
         if isinstance(event, events.Start):
@@ -68,19 +79,35 @@ class MockServer(layers.http.HttpConnection):
                     layers.http.RequestTrailers(1, self.flow.request.trailers)
                 )
             yield layers.http.ReceiveHttp(layers.http.RequestEndOfMessage(1))
+        elif isinstance(event, layers.http.ResponseEndOfMessage):
+            # WebsocketLayer is running after the 101; inject captured client frames.
+            yield from self._replay_websocket_client_messages()
         elif isinstance(
             event,
             (
                 layers.http.ResponseHeaders,
                 layers.http.ResponseData,
                 layers.http.ResponseTrailers,
-                layers.http.ResponseEndOfMessage,
                 layers.http.ResponseProtocolError,
             ),
         ):
             pass
         else:  # pragma: no cover
             logger.warning(f"Unexpected event during replay: {event}")
+
+    def _replay_websocket_client_messages(self) -> CommandGenerator[None]:
+        if not self.flow.websocket or not self.recorded_websocket_messages:
+            return
+        encoder = wsproto.Connection(wsproto.ConnectionType.CLIENT)
+        for msg in self.recorded_websocket_messages:
+            if not msg.from_client or msg.dropped:
+                continue
+            if msg.is_text:
+                payload = encoder.send(wsproto.events.TextMessage(msg.text))
+            else:
+                payload = encoder.send(wsproto.events.BytesMessage(msg.content))
+            yield layers.http.ReceiveHttp(layers.http.RequestData(1, payload))
+        yield layers.http.ReceiveHttp(layers.http.RequestEndOfMessage(1))
 
 
 class ReplayHandler(server.ConnectionHandler):
@@ -103,19 +130,22 @@ class ReplayHandler(server.ConnectionHandler):
 
         super().__init__(context)
 
-        if options.mode and options.mode[0].startswith("upstream:"):
-            self.layer = layers.HttpLayer(context, HTTPMode.upstream)
-        else:
-            self.layer = layers.HttpLayer(context, HTTPMode.transparent)
-        self.layer.connections[client] = MockServer(flow, context.fork())
-        self.flow = flow
-        self.done = asyncio.Event()
         # HTTP upgrade recreates flow.websocket; keep the captured conversation for later replay.
         if flow.websocket:
             self.recorded_websocket_messages = list(flow.websocket.messages)
             flow.websocket = None
         else:
             self.recorded_websocket_messages = []
+
+        if options.mode and options.mode[0].startswith("upstream:"):
+            self.layer = layers.HttpLayer(context, HTTPMode.upstream)
+        else:
+            self.layer = layers.HttpLayer(context, HTTPMode.transparent)
+        self.layer.connections[client] = MockServer(
+            flow, context.fork(), self.recorded_websocket_messages
+        )
+        self.flow = flow
+        self.done = asyncio.Event()
 
     async def replay(self) -> None:
         await self.server_event(events.Start())
@@ -137,17 +167,27 @@ class ReplayHandler(server.ConnectionHandler):
         await ctx.master.addons.handle_lifecycle(hook)
         if isinstance(data, flow.Flow):
             await data.wait_for_resume()
-        if isinstance(hook, (layers.http.HttpResponseHook, layers.http.HttpErrorHook)):
-            if self.transports:
-                # close server connections
-                for x in self.transports.values():
-                    if x.handler:
-                        x.handler.cancel()
-                await asyncio.wait(
-                    [x.handler for x in self.transports.values() if x.handler]
-                )
-            # signal completion
-            self.done.set()
+        if isinstance(hook, layers.http.HttpErrorHook):
+            await self._finish()
+        elif isinstance(hook, layers.http.HttpResponseHook):
+            # WebSocket replay continues after the HTTP upgrade.
+            if not (self.flow.websocket and self.recorded_websocket_messages):
+                await self._finish()
+        elif isinstance(hook, WebsocketEndHook):
+            await self._finish()
+
+    async def _finish(self) -> None:
+        if self.done.is_set():
+            return
+        if self.transports:
+            # close server connections
+            for x in self.transports.values():
+                if x.handler:
+                    x.handler.cancel()
+            await asyncio.wait(
+                [x.handler for x in self.transports.values() if x.handler]
+            )
+        self.done.set()
 
 
 class ClientPlayback:
