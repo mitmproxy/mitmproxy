@@ -44,6 +44,20 @@ def _ws_send_close(ws: wsproto.Connection, code: int = 1000, reason: str = "") -
     return ws.send(wsproto.events.CloseConnection(code, reason))
 
 
+async def _read_ws_message(
+    reader: asyncio.StreamReader, ws: wsproto.Connection
+) -> bytes | None:
+    while True:
+        data = await reader.read(65536)
+        if not data:
+            return None
+        ws.receive_data(data)
+        for ev in ws.events():
+            payload = _ws_payload(ev)
+            if payload is not None:
+                return payload
+
+
 @asynccontextmanager
 async def tcp_server(handle_conn, **server_args) -> Address:
     """TCP server context manager that...
@@ -303,22 +317,9 @@ async def test_playback_websocket():
 async def test_playback_websocket_waits_for_server_reply():
     received: list[bytes] = []
 
-    async def read_message(
-        reader: asyncio.StreamReader, ws: wsproto.Connection
-    ) -> bytes | None:
-        while True:
-            data = await reader.read(65536)
-            if not data:
-                return None
-            ws.receive_data(data)
-            for ev in ws.events():
-                payload = _ws_payload(ev)
-                if payload is not None:
-                    return payload
-
     async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         ws = await _ws_upgrade(reader, writer)
-        first = await read_message(reader, ws)
+        first = await _read_ws_message(reader, ws)
         received.append(first)
         try:
             extra = await asyncio.wait_for(reader.read(65536), 0.1)
@@ -327,7 +328,7 @@ async def test_playback_websocket_waits_for_server_reply():
         assert extra == b""
         writer.write(ws.send(wsproto.events.TextMessage("pong1")))
         await writer.drain()
-        second = await read_message(reader, ws)
+        second = await _read_ws_message(reader, ws)
         received.append(second)
         writer.write(ws.send(wsproto.events.TextMessage("pong2")))
         writer.write(_ws_send_close(ws))
@@ -358,6 +359,94 @@ async def test_playback_websocket_waits_for_server_reply():
             b"ping2",
             b"pong2",
         ]
+        await cp.done()
+
+
+async def test_playback_websocket_waits_for_consecutive_server_messages():
+    received: list[bytes] = []
+
+    async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+        ws = await _ws_upgrade(reader, writer)
+        first = await _read_ws_message(reader, ws)
+        received.append(first)
+        writer.write(ws.send(wsproto.events.TextMessage("s1")))
+        await writer.drain()
+        try:
+            extra = await asyncio.wait_for(reader.read(65536), 0.1)
+        except TimeoutError:
+            extra = b""
+        assert extra == b""
+        writer.write(ws.send(wsproto.events.TextMessage("s2")))
+        await writer.drain()
+        second = await _read_ws_message(reader, ws)
+        received.append(second)
+        writer.write(_ws_send_close(ws))
+        await writer.drain()
+        while await reader.read(65536):
+            pass
+
+    cp = ClientPlayback()
+    ps = Proxyserver()
+    with taddons.context(cp, ps):
+        async with tcp_server(handler) as addr:
+            cp.running()
+            flow = tflow.twebsocketflow()
+            flow.live = False
+            flow.websocket.messages = [
+                WebSocketMessage(Opcode.TEXT, True, b"A"),
+                WebSocketMessage(Opcode.TEXT, False, b"dropped-s", dropped=True),
+                WebSocketMessage(Opcode.TEXT, False, b"s1"),
+                WebSocketMessage(Opcode.TEXT, False, b"s2"),
+                WebSocketMessage(Opcode.TEXT, True, b"B"),
+            ]
+            flow.request.host, flow.request.port = addr
+            cp.start_replay([flow])
+            await asyncio.wait_for(cp.queue.join(), 5)
+        assert received == [b"A", b"B"]
+        assert [m.content for m in flow.websocket.messages] == [
+            b"A",
+            b"s1",
+            b"s2",
+            b"B",
+        ]
+        await cp.done()
+
+
+async def test_playback_websocket_server_speaks_first():
+    received: list[bytes] = []
+
+    async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+        ws = await _ws_upgrade(reader, writer)
+        try:
+            extra = await asyncio.wait_for(reader.read(65536), 0.1)
+        except TimeoutError:
+            extra = b""
+        assert extra == b""
+        writer.write(ws.send(wsproto.events.TextMessage("welcome")))
+        await writer.drain()
+        msg = await _read_ws_message(reader, ws)
+        received.append(msg)
+        writer.write(_ws_send_close(ws))
+        await writer.drain()
+        while await reader.read(65536):
+            pass
+
+    cp = ClientPlayback()
+    ps = Proxyserver()
+    with taddons.context(cp, ps):
+        async with tcp_server(handler) as addr:
+            cp.running()
+            flow = tflow.twebsocketflow()
+            flow.live = False
+            flow.websocket.messages = [
+                WebSocketMessage(Opcode.TEXT, False, b"welcome"),
+                WebSocketMessage(Opcode.TEXT, True, b"hello"),
+            ]
+            flow.request.host, flow.request.port = addr
+            cp.start_replay([flow])
+            await asyncio.wait_for(cp.queue.join(), 5)
+        assert received == [b"hello"]
+        assert [m.content for m in flow.websocket.messages] == [b"welcome", b"hello"]
         await cp.done()
 
 
