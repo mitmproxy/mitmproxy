@@ -1,6 +1,7 @@
 import json
 import random
-import subprocess
+import shlex
+import subprocess  # nosec B404 - only used with shell=False and argv lists in this doc tooling
 import threading
 import time
 from typing import NamedTuple
@@ -48,7 +49,7 @@ class CliDirector:
                 "tmux attach -t asciinema_recorder",
                 filename,
             ]
-        )
+        )  # nosec B603 - fixed argv list, no shell, no untrusted input
         self.pause(1.5)
         self.record_start = time.time()
 
@@ -122,7 +123,7 @@ class CliDirector:
         time.sleep(seconds)
 
     def run_external(self, command: str) -> None:
-        subprocess.run(command, shell=True)
+        subprocess.run(shlex.split(command), shell=False)  # nosec B603 - no shell invocation, argv list only
 
     def message(
         self,
