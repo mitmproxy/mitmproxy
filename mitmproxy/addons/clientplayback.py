@@ -15,6 +15,7 @@ from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import io
+from mitmproxy import websocket
 from mitmproxy.connection import ConnectionState
 from mitmproxy.connection import Server
 from mitmproxy.hooks import UpdateHook
@@ -84,6 +85,7 @@ class MockServer(layers.http.HttpConnection):
 
 class ReplayHandler(server.ConnectionHandler):
     layer: layers.HttpLayer
+    recorded_websocket_messages: list[websocket.WebSocketMessage]
 
     def __init__(self, flow: http.HTTPFlow, options: Options) -> None:
         client = flow.client_conn.copy()
@@ -108,6 +110,12 @@ class ReplayHandler(server.ConnectionHandler):
         self.layer.connections[client] = MockServer(flow, context.fork())
         self.flow = flow
         self.done = asyncio.Event()
+        # HTTP upgrade recreates flow.websocket; keep the captured conversation for later replay.
+        if flow.websocket:
+            self.recorded_websocket_messages = list(flow.websocket.messages)
+            flow.websocket = None
+        else:
+            self.recorded_websocket_messages = []
 
     async def replay(self) -> None:
         await self.server_event(events.Start())
@@ -203,8 +211,6 @@ class ClientPlayback:
                 return "Can't replay flow with missing request."
             if f.request.raw_content is None:
                 return "Can't replay flow with missing content."
-            if f.websocket is not None:
-                return "Can't replay WebSocket flows."
         else:
             return "Can only replay HTTP flows."
         return None

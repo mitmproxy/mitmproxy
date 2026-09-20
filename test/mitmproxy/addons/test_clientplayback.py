@@ -11,6 +11,7 @@ from mitmproxy.addons.tlsconfig import TlsConfig
 from mitmproxy.connection import Address
 from mitmproxy.exceptions import CommandError
 from mitmproxy.exceptions import OptionsError
+from mitmproxy.options import Options
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 
@@ -190,8 +191,21 @@ def test_check():
         f.live = False
         assert "Can only replay HTTP" in cp.check(f)
 
+    f = tflow.twebsocketflow()
+    f.live = False
+    assert cp.check(f) is None
 
-async def test_start_stop(tdata, caplog_async):
+
+def test_replay_handler_preserves_websocket_messages():
+    flow = tflow.twebsocketflow()
+    flow.live = False
+    recorded = list(flow.websocket.messages)
+    handler = ReplayHandler(flow, Options())
+    assert handler.recorded_websocket_messages == recorded
+    assert flow.websocket is None
+
+
+async def test_start_stop(caplog):
     cp = ClientPlayback()
     with taddons.context(cp):
         cp.start_replay([tflow.tflow(live=False)])
@@ -200,8 +214,13 @@ async def test_start_stop(tdata, caplog_async):
         ws_flow = tflow.twebsocketflow()
         ws_flow.live = False
         cp.start_replay([ws_flow])
-        await caplog_async.await_log("Can't replay WebSocket flows.")
-        assert cp.count() == 1
+        assert cp.count() == 2
+
+        live = tflow.tflow()
+        live.live = True
+        cp.start_replay([live])
+        assert "Can't replay live flow." in caplog.text
+        assert cp.count() == 2
 
         cp.stop_replay()
         assert cp.count() == 0
