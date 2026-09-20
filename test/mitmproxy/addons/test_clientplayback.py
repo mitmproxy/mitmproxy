@@ -40,6 +40,10 @@ def _ws_payload(ev: wsproto.events.Event) -> bytes | None:
     return None
 
 
+def _ws_send_close(ws: wsproto.Connection, code: int = 1000, reason: str = "") -> bytes:
+    return ws.send(wsproto.events.CloseConnection(code, reason))
+
+
 @asynccontextmanager
 async def tcp_server(handle_conn, **server_args) -> Address:
     """TCP server context manager that...
@@ -226,6 +230,8 @@ def test_replay_handler_preserves_websocket_messages():
     recorded = list(flow.websocket.messages)
     handler = ReplayHandler(flow, Options())
     assert handler.recorded_websocket_messages == recorded
+    assert handler.recorded_closed_by_client is False
+    assert handler.recorded_close_code == 1000
     assert flow.websocket is None
 
 
@@ -235,6 +241,7 @@ async def test_finish_is_idempotent():
     await handler._finish()
     await handler._finish()
     await handler._send_next_client_burst()
+    await handler._finish_websocket_replay()
     assert handler.done.is_set()
 
 
@@ -254,6 +261,7 @@ async def test_playback_websocket():
                     received.append(payload)
                     if len(received) == 2:
                         writer.write(ws.send(wsproto.events.TextMessage("it's me")))
+                        writer.write(_ws_send_close(ws, 1000, "Close Reason"))
                         await writer.drain()
 
     cp = ClientPlayback()
@@ -282,6 +290,13 @@ async def test_playback_websocket():
             b"hello text",
             b"it's me",
         ]
+        assert [m.type for m in flow.websocket.messages] == [
+            Opcode.BINARY,
+            Opcode.TEXT,
+            Opcode.TEXT,
+        ]
+        assert flow.websocket.closed_by_client is False
+        assert flow.websocket.close_code == 1000
         await cp.done()
 
 
@@ -315,6 +330,7 @@ async def test_playback_websocket_waits_for_server_reply():
         second = await read_message(reader, ws)
         received.append(second)
         writer.write(ws.send(wsproto.events.TextMessage("pong2")))
+        writer.write(_ws_send_close(ws))
         await writer.drain()
         while await reader.read(65536):
             pass
@@ -342,6 +358,122 @@ async def test_playback_websocket_waits_for_server_reply():
             b"ping2",
             b"pong2",
         ]
+        await cp.done()
+
+
+async def test_playback_websocket_binary_and_client_close():
+    received: list[bytes] = []
+    close: list[wsproto.events.CloseConnection] = []
+
+    async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+        ws = await _ws_upgrade(reader, writer)
+        while True:
+            data = await reader.read(65536)
+            if not data:
+                break
+            ws.receive_data(data)
+            for ev in ws.events():
+                if isinstance(ev, wsproto.events.BytesMessage) and ev.message_finished:
+                    received.append(ev.data)
+                    writer.write(ws.send(wsproto.events.BytesMessage(b"\x02\x03")))
+                    await writer.drain()
+                elif isinstance(ev, wsproto.events.CloseConnection):
+                    close.append(ev)
+                    writer.write(ws.send(ev.response()))
+                    await writer.drain()
+                    return
+
+    cp = ClientPlayback()
+    ps = Proxyserver()
+    with taddons.context(cp, ps):
+        async with tcp_server(handler) as addr:
+            cp.running()
+            flow = tflow.twebsocketflow()
+            flow.live = False
+            flow.websocket.messages = [
+                WebSocketMessage(Opcode.BINARY, True, b"\x00\x01"),
+                WebSocketMessage(Opcode.BINARY, False, b"\x02\x03"),
+            ]
+            flow.websocket.closed_by_client = True
+            flow.websocket.close_code = 1001
+            flow.websocket.close_reason = "going away"
+            flow.request.host, flow.request.port = addr
+            cp.start_replay([flow])
+            await asyncio.wait_for(cp.queue.join(), 5)
+        assert received == [b"\x00\x01"]
+        assert close[0].code == 1001
+        assert close[0].reason == "going away"
+        assert [m.type for m in flow.websocket.messages] == [
+            Opcode.BINARY,
+            Opcode.BINARY,
+        ]
+        assert flow.websocket.closed_by_client is True
+        assert flow.websocket.close_code == 1001
+        await cp.done()
+
+
+async def test_playback_websocket_client_abnormal_close():
+    async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+        await _ws_upgrade(reader, writer)
+        while await reader.read(65536):
+            pass
+
+    cp = ClientPlayback()
+    ps = Proxyserver()
+    with taddons.context(cp, ps):
+        async with tcp_server(handler) as addr:
+            cp.running()
+            flow = tflow.twebsocketflow()
+            flow.live = False
+            flow.websocket.messages = []
+            flow.websocket.closed_by_client = True
+            flow.websocket.close_code = 1006
+            flow.request.host, flow.request.port = addr
+            cp.start_replay([flow])
+            await asyncio.wait_for(cp.queue.join(), 5)
+        assert flow.response.status_code == 101
+        assert flow.websocket.close_code == 1006
+        await cp.done()
+
+
+async def test_playback_websocket_failed_upgrade():
+    async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+        await reader.readuntil(b"\r\n\r\n")
+        writer.write(b"HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n")
+        await writer.drain()
+        assert not await reader.read()
+
+    cp = ClientPlayback()
+    ps = Proxyserver()
+    with taddons.context(cp, ps):
+        async with tcp_server(handler) as addr:
+            cp.running()
+            flow = tflow.twebsocketflow()
+            flow.live = False
+            flow.request.host, flow.request.port = addr
+            cp.start_replay([flow])
+            await asyncio.wait_for(cp.queue.join(), 5)
+        assert flow.response.status_code == 400
+        assert flow.websocket is None
+        await cp.done()
+
+
+async def test_playback_websocket_incomplete_upgrade():
+    async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+        return
+
+    cp = ClientPlayback()
+    ps = Proxyserver()
+    with taddons.context(cp, ps):
+        async with tcp_server(handler) as addr:
+            cp.running()
+            flow = tflow.twebsocketflow()
+            flow.live = False
+            flow.request.host, flow.request.port = addr
+            cp.start_replay([flow])
+            await asyncio.wait_for(cp.queue.join(), 5)
+        assert flow.response is None
+        assert flow.error
         await cp.done()
 
 

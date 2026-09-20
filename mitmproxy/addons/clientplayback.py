@@ -8,6 +8,9 @@ from types import TracebackType
 from typing import cast
 from typing import Literal
 
+import wsproto
+import wsproto.events
+
 import mitmproxy.types
 from mitmproxy import command
 from mitmproxy import ctx
@@ -83,12 +86,10 @@ class MockServer(layers.http.HttpConnection):
             yield layers.http.ReceiveHttp(layers.http.RequestEndOfMessage(1))
         elif isinstance(event, layers.http.ResponseEndOfMessage):
             # WebsocketLayer is in relay_messages after the 101; start wait-for-reply replay.
-            if (
-                self.replay_handler
-                and self.flow.websocket
-                and self.recorded_websocket_messages
-            ):
+            if self.replay_handler and self.flow.websocket:
                 self.replay_handler.on_websocket_established()
+        elif isinstance(event, events.DataReceived):
+            yield layers.http.ReceiveHttp(layers.http.RequestData(1, event.data))
         elif isinstance(event, events.ConnectionClosed):
             if self.flow.websocket:
                 yield layers.http.ReceiveHttp(layers.http.RequestEndOfMessage(1))
@@ -109,6 +110,9 @@ class MockServer(layers.http.HttpConnection):
 class ReplayHandler(server.ConnectionHandler):
     layer: layers.HttpLayer
     recorded_websocket_messages: list[websocket.WebSocketMessage]
+    recorded_closed_by_client: bool | None
+    recorded_close_code: int | None
+    recorded_close_reason: str
     _ws_index: int
     _waiting_for_server: int
     _sending_clients: bool
@@ -132,9 +136,15 @@ class ReplayHandler(server.ConnectionHandler):
         # HTTP upgrade recreates flow.websocket; keep the captured conversation for later replay.
         if flow.websocket:
             self.recorded_websocket_messages = list(flow.websocket.messages)
+            self.recorded_closed_by_client = flow.websocket.closed_by_client
+            self.recorded_close_code = flow.websocket.close_code
+            self.recorded_close_reason = flow.websocket.close_reason or ""
             flow.websocket = None
         else:
             self.recorded_websocket_messages = []
+            self.recorded_closed_by_client = None
+            self.recorded_close_code = None
+            self.recorded_close_reason = ""
         self._ws_index = 0
         self._waiting_for_server = 0
         self._sending_clients = False
@@ -200,8 +210,24 @@ class ReplayHandler(server.ConnectionHandler):
             if self._waiting_for_server > 0:
                 return
             if self._ws_index >= len(self.recorded_websocket_messages):
-                await self.server_event(events.ConnectionClosed(self.client))
+                await self._finish_websocket_replay()
                 return
+
+    async def _finish_websocket_replay(self) -> None:
+        if self.done.is_set():
+            return
+        if self.recorded_closed_by_client is False:
+            # Server closed originally; wait for WebsocketEndHook.
+            return
+        code = self.recorded_close_code or 1000
+        if code in (1005, 1006):
+            await self.server_event(events.ConnectionClosed(self.client))
+            return
+        encoder = wsproto.Connection(wsproto.ConnectionType.CLIENT)
+        payload = encoder.send(
+            wsproto.events.CloseConnection(code, self.recorded_close_reason)
+        )
+        await self.server_event(events.DataReceived(self.client, payload))
 
     async def handle_hook(self, hook: commands.StartHook) -> None:
         (data,) = hook.args()
@@ -211,8 +237,8 @@ class ReplayHandler(server.ConnectionHandler):
         if isinstance(hook, layers.http.HttpErrorHook):
             await self._finish()
         elif isinstance(hook, layers.http.HttpResponseHook):
-            # WebSocket replay continues after the HTTP upgrade.
-            if not (self.flow.websocket and self.recorded_websocket_messages):
+            # WebSocket replay continues after a successful HTTP upgrade.
+            if not self.flow.websocket:
                 await self._finish()
         elif isinstance(hook, WebsocketMessageHook):
             assert self.flow.websocket
