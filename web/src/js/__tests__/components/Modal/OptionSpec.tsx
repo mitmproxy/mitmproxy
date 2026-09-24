@@ -33,6 +33,30 @@ describe("NumberOption Component", () => {
     });
 });
 
+describe("FloatOption Component", () => {
+    const FloatOption = Options["float"];
+
+    it("should render correctly", () => {
+        const { asFragment } = render(
+            <FloatOption value={0.42} onChange={() => 0} />,
+        );
+        expect(asFragment()).toMatchSnapshot();
+    });
+
+    it("should parse floats", () => {
+        const onChangeFn = jest.fn();
+        render(<FloatOption value={0.42} onChange={onChangeFn} />);
+        const input = screen.getByRole("spinbutton");
+        expect(input).toHaveAttribute("step", "any");
+
+        fireEvent.change(input, { target: { value: "1.5" } });
+        expect(onChangeFn).toHaveBeenLastCalledWith(1.5);
+
+        fireEvent.change(input, { target: { value: "not-a-number" } });
+        expect(onChangeFn).toHaveBeenLastCalledWith(NaN);
+    });
+});
+
 describe("ChoiceOption Component", () => {
     const onChangeFn = jest.fn();
     const { asFragment } = render(
