@@ -126,5 +126,5 @@ header to all responses.
 mitmdump -ns examples/simple/add_header.py -r srcfile -w dstfile
 ```
 
-This command loads flows from srcfile, transforms it according to
-the specified script, then writes it back to dstfile.
+This command loads flows from **srcfile**, transforms it according to
+the specified script, then writes it back to **dstfile**.
