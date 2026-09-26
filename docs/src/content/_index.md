@@ -18,7 +18,7 @@ mitmproxy is a set of tools that provide an interactive, SSL/TLS-capable interce
 - Replay HTTP responses of a previously recorded server
 - Reverse proxy mode to forward traffic to a specified server
 - Transparent proxy mode on macOS and Linux
-- Make scripted changes to HTTP traffic using Python
+- Make [scripted changes to HTTP traffic using Python]({{< relref "/addons/overview">}})
 - SSL/TLS certificates for interception are generated on the fly
 - And [many, many more features...]({{< relref "/overview/features">}})
 
@@ -126,5 +126,5 @@ header to all responses.
 mitmdump -ns examples/simple/add_header.py -r srcfile -w dstfile
 ```
 
-This command loads flows from **srcfile**, transforms it according to
-the specified script, then writes it back to **dstfile**.
+This command loads flows from srcfile, transforms it according to
+the specified script, then writes it back to dstfile.
