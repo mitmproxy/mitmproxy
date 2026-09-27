@@ -19,6 +19,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from types import TracebackType
 from typing import Literal
+from typing import TypeVar
 
 from OpenSSL import SSL
 
@@ -41,6 +42,8 @@ from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils import human
 from mitmproxy.utils.data import pkg_data
+
+R = TypeVar("R")
 
 logger = logging.getLogger(__name__)
 
@@ -102,12 +105,14 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     max_conns: collections.defaultdict[Address, asyncio.Semaphore]
     layer: "layer.Layer"
     wakeup_timer: set[asyncio.Task]
+    command_tasks: set[asyncio.Task]
 
     def __init__(self, context: Context) -> None:
         self.client = context.client
         self.transports = {}
         self.max_conns = collections.defaultdict(lambda: asyncio.Semaphore(5))
         self.wakeup_timer = set()
+        self.command_tasks = set()
 
         # Ask for the first layer right away.
         # In a reverse proxy scenario, this is necessary as we would otherwise hang
@@ -164,6 +169,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         while self.wakeup_timer:
             timer = self.wakeup_timer.pop()
             timer.cancel()
+        while self.command_tasks:
+            task = self.command_tasks.pop()
+            task.cancel()
 
         self.log("client disconnect")
         self.client.timestamp_end = time.time()
@@ -327,19 +335,22 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         if cancelled:
             raise cancelled
 
-    async def drain_writers(self):
+    async def drain_writers(self) -> None:
         """
         Drain all writers to create some backpressure. We won't continue reading until there's space available in our
         write buffers, so if we cannot write fast enough our own read buffers run full and the TCP recv stream is throttled.
         """
         async with self._drain_lock:
-            for transport in list(self.transports.values()):
-                if transport.writer is not None:
-                    try:
-                        await transport.writer.drain()
-                    except OSError as e:
-                        if transport.handler is not None:
-                            transport.handler.cancel(f"Error sending data: {e}")
+            await self._drain_writers()
+
+    async def _drain_writers(self) -> None:
+        for transport in list(self.transports.values()):
+            if transport.writer is not None:
+                try:
+                    await transport.writer.drain()
+                except OSError as e:
+                    if transport.handler is not None:
+                        transport.handler.cancel(f"Error sending data: {e}")
 
     async def on_timeout(self) -> None:
         try:
@@ -357,6 +368,18 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         await self.handle_hook(hook)
         if hook.blocking:
             await self.server_event(events.HookCompleted(hook))
+
+    async def await_command(self, command: commands.Await[R]) -> None:
+        reply: tuple[R, None] | tuple[None, Exception]
+        try:
+            result = await command.awaitable
+        except Exception as e:
+            reply = (None, e)
+        else:
+            reply = (result, None)
+        async with self._drain_lock:
+            await self.server_event(events.AwaitCompleted(command, reply))
+            await self._drain_writers()
 
     @abc.abstractmethod
     async def handle_hook(self, hook: commands.StartHook) -> None:
@@ -408,6 +431,15 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                         )
                         assert task is not None
                         self.wakeup_timer.add(task)
+                    elif isinstance(command, commands.Await):
+                        task = asyncio_utils.create_task(
+                            self.await_command(command),
+                            name="await_command",
+                            keep_ref=False,
+                            client=self.client.peername,
+                        )
+                        self.command_tasks.add(task)
+                        task.add_done_callback(self.command_tasks.discard)
                     elif (
                         isinstance(command, commands.ConnectionCommand)
                         and command.connection not in self.transports

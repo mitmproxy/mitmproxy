@@ -9,7 +9,12 @@ The counterpart to commands are events.
 
 import logging
 import warnings
+from collections.abc import Awaitable
+from collections.abc import Generator
+from typing import Generic
+from typing import Self
 from typing import TYPE_CHECKING
+from typing import TypeVar
 from typing import Union
 
 import mitmproxy.hooks
@@ -18,6 +23,8 @@ from mitmproxy.connection import Server
 
 if TYPE_CHECKING:
     import mitmproxy.proxy.layer
+
+R = TypeVar("R")
 
 
 class Command:
@@ -53,6 +60,23 @@ class RequestWakeup(Command):
 
     def __init__(self, delay: float):
         self.delay = delay
+
+
+class Await(Command, Generic[R]):
+    """Await a value without blocking unrelated proxy work."""
+
+    blocking = True
+    awaitable: Awaitable[R]
+
+    def __init__(self, awaitable: Awaitable[R]):
+        self.awaitable = awaitable
+
+    def unwrap(self) -> Generator[Self, tuple[R, None] | tuple[None, Exception], R]:
+        match (yield self):
+            case result, None:
+                return result
+            case None, error:
+                raise error
 
 
 class ConnectionCommand(Command):
