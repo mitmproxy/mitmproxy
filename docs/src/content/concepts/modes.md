@@ -225,11 +225,14 @@ would establish a raw TCP proxy.
   the same data and you with debug information. Similarly, you could move your
   real server to a different IP/port and set up mitmproxy in the original
   place to debug and or redirect all sessions.
-- Say you're a web developer working on <http://example.com/> (with a
-  development version running on <http://localhost:8000/>). You can modify
-  your hosts file so that example.com points to 127.0.0.1 and then run
-  mitmproxy in reverse proxy mode on port 80. You can test your app on the
-  example.com domain and get all requests recorded in mitmproxy.
+- Say you're a web developer working on <http://example.com/> with a
+  development version running at <http://localhost:8000/>. Add a hosts-file
+  entry on the client that maps `example.com` to the proxy's IP address, then
+  start mitmproxy with
+  `mitmdump --mode reverse:http://localhost:8000@80 --set keep_host_header`.
+  The client can continue using the `http://example.com` URL, and mitmproxy
+  records the requests. This fixed-target reverse-proxy setup does not need the
+  `dns_spoofing.py` addon.
 - Say you have some toy project that should get TLS support. Simply set up
   mitmproxy as a reverse proxy on port 443 and you're done (`mitmdump -p 443
     --mode reverse:http://localhost:80/`). Mitmproxy auto-detects TLS traffic and intercepts
