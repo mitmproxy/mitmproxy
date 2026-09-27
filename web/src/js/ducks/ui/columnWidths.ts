@@ -49,7 +49,7 @@ export const commitColumnWidths =
         saveColumnWidths(getState().ui.columnWidths);
     };
 
-// The sized columns fill the table between them, and the actions column takes whatever they leave over.
+// The sized columns fill the table between them, and the filler column takes whatever they leave over.
 // Hiding one would widen that instead of the columns that stay, and showing one would push the table past its right edge.
 // A column therefore takes its width out of the columns it joins, or hands it back to them, each in proportion to its own width.
 export const shareColumnWidths =

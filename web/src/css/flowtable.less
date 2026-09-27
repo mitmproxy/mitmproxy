@@ -72,7 +72,7 @@ body.resizing-columns {
             display: block;
             min-height: 23px;
             padding: 0 @cell-padding;
-            // A label wider than its column, such as the one on the collapsed actions column, would otherwise spill past the table and scroll it sideways.
+            // A label wider than its column would otherwise spill past the table and scroll it sideways.
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
@@ -235,7 +235,7 @@ body.resizing-columns {
         width: 150px;
     }
 
-    // Collapsed until it is the column taking the slack.
+    // Collapsed for good: its buttons overflow into the row on hover.
     // As with the filler, the width may only sit on the col.
     col.col-quickactions {
         width: 0;
@@ -277,7 +277,7 @@ body.resizing-columns {
         }
     }
 
-    // A gutter that keeps the last resize handle clear of the scrollbar for as long as the actions column is collapsed.
+    // A gutter that keeps the last resize handle clear of the scrollbar, until it becomes the column taking the slack.
     col.col-filler {
         width: 12px;
     }

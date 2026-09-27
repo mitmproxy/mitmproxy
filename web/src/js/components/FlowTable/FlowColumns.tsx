@@ -206,7 +206,7 @@ export const quickactions: FlowColumn = ({ flow }) => {
         </td>
     );
 };
-quickactions.headerName = "Actions";
+quickactions.headerName = "";
 
 export const comment: FlowColumn = ({ flow }) => {
     const text = flow.comment;
