@@ -18,6 +18,9 @@ body.resizing-columns {
 }
 
 .flow-table {
+    // Keeps neighbouring columns apart, and the labels in line with the values beneath them.
+    @cell-padding: 4px;
+
     width: 100%;
     overflow-y: scroll;
     overflow-x: auto;
@@ -41,7 +44,6 @@ body.resizing-columns {
         vertical-align: bottom;
         position: relative !important;
         padding: 0;
-        padding-left: 1px;
         .user-select(none);
 
         &.sort-asc,
@@ -69,6 +71,7 @@ body.resizing-columns {
         .th-content {
             display: block;
             min-height: 23px;
+            padding: 0 @cell-padding;
             // A label wider than its column, such as the one on the collapsed actions column, would otherwise spill past the table and scroll it sideways.
             overflow: hidden;
             white-space: nowrap;
@@ -124,10 +127,18 @@ body.resizing-columns {
     }
 
     td {
-        padding: 0;
+        padding: 0 @cell-padding;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
+    }
+
+    // These hold a colour or an icon rather than text, and are sized to fit it exactly.
+    td.col-tls,
+    td.col-icon,
+    td.col-quickactions,
+    td.col-filler {
+        padding: 0;
     }
 
     @interceptorange: hsl(30, 100%, 50%);
@@ -160,8 +171,7 @@ body.resizing-columns {
     }
 
     .col-index {
-        text-align: right;
-        width: 4ch;
+        width: calc(4ch + 2 * @cell-padding);
     }
 
     .col-icon {
@@ -223,14 +233,6 @@ body.resizing-columns {
 
     .col-comment {
         width: 150px;
-        padding-left: 5px;
-    }
-
-    td.col-time,
-    td.col-size,
-    td.col-timestamp,
-    td.col-comment {
-        text-align: right;
     }
 
     // Collapsed until it is the column taking the slack.
