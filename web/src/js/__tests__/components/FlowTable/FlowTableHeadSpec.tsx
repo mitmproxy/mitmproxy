@@ -80,7 +80,7 @@ test("FlowTableHead resize handle reports a new width and does not sort", async 
 
     firePointer(handle, "pointerdown", 100);
 
-    // Every column is pinned before the drag starts, bar the quickactions column that takes the slack.
+    // Every column is pinned before the drag starts, bar the collapsed quickactions column.
     expect(onResize).toHaveBeenCalledTimes(1);
     expect(Object.keys(onResize.mock.calls[0][0])).toEqual(
         store.getState().options.web_columns,
@@ -122,11 +122,12 @@ test("FlowTableHead leaves the actions column to the browser", () => {
         </Provider>,
     );
 
-    // It takes the width the other columns leave over, so it has neither a width to drag nor an order to sort by.
+    // It stays collapsed with its buttons showing on hover, so it has no label, no width to drag and no order to sort by.
     const actions = container.querySelector(".col-quickactions") as HTMLElement;
+    expect(actions.textContent).toBe("");
     expect(actions.querySelector(".col-resize-handle")).toBeNull();
 
-    fireEvent.click(screen.getByText("Actions"));
+    fireEvent.click(actions);
     expect(store.getState().flows.sort.column).toBe("path");
 });
 test("FlowTableHead does not sort on a click that lands on a resize handle", () => {

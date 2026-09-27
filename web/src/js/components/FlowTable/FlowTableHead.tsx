@@ -55,7 +55,7 @@ export default React.memo(function FlowTableHead({
         const handle = e.currentTarget as HTMLElement;
 
         // Fixed table layout hands the space the sized columns leave over to every column without a width of its own, so setting one width on its own shifts the rest too.
-        // Pinning them all keeps the handle under the cursor; `quickactions` is left out and takes the slack instead.
+        // Pinning them all keeps the handle under the cursor; `quickactions` stays collapsed and is left out.
         const cells = handle.closest("tr")!.children;
         const widths = Object.fromEntries(
             displayColumns

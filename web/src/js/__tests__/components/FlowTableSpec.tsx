@@ -159,8 +159,9 @@ describe("FlowTable Component", () => {
             size: 150,
             time: 70,
         });
-        // With every other column pinned, the actions column is the one left to take the slack.
-        expect(colWidth(container, "quickactions")).toBe("auto");
+        // With every column pinned, the filler is the one left to take the slack, and the actions column stays collapsed.
+        expect(colWidth(container, "filler")).toBe("auto");
+        expect(colWidth(container, "quickactions")).toBe("");
         offsetWidth.mockRestore();
     });
 
