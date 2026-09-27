@@ -104,6 +104,8 @@ The go to your AVD, open up Magisk, click on `Modules` and install your module (
 
 Reboot your AVD.
 
+The commands below use `c8450d0d.0` as an example filename. Replace it with the name generated in [step 2]({{< ref "#2-rename-certificate" >}}).
+
 ### Instructions for API LEVEL > 28 using `-writable-system`
 By default, the `/system` partition is mounted as read-only. The following steps describe how to gain write permissions on the `/system` partition and how to copy the certificate created in chapter 2.
 
@@ -121,8 +123,8 @@ Tested on emulators running API LEVEL 29 and 30
    - reboot device: `adb reboot`
    - restart adb as root: `adb root`
    - perform remount of partitions as read-write: `adb remount`. (If adb tells you that you need to reboot, reboot again `adb reboot` and run `adb remount` again.)
-   - push your renamed certificate from [step 2]({{< ref "#2-rename-certificate" >}}): `adb push <path_to_certificate> /system/etc/security/cacerts`
-   - set certificate permissions: `adb shell chmod 644 /system/etc/security/cacerts/<name_of_pushed_certificate>`
+   - push your renamed certificate from [step 2]({{< ref "#2-rename-certificate" >}}): `adb push ~/.mitmproxy/c8450d0d.0 /system/etc/security/cacerts`
+   - set certificate permissions: `adb shell chmod 644 /system/etc/security/cacerts/c8450d0d.0`
    - reboot device: `adb reboot`
 
 ### Instructions for API LEVEL <= 28 using `-writable-system`
@@ -135,8 +137,8 @@ Tested on emulators running API LEVEL 26, 27 and 28
    - Start the desired AVD: `emulator -avd <avd_name_here> -writable-system` (add `-show-kernel` flag for kernel logs)
    - restart adb as root: `adb root`
    - perform remount of partitions as read-write: `adb remount`. (If adb tells you that you need to reboot, reboot again `adb reboot` and run `adb remount` again.)
-   - push your renamed certificate from [step 2]({{< ref "#2-rename-certificate" >}}): `adb push <path_to_certificate> /system/etc/security/cacerts`
-   - set certificate permissions: `adb shell chmod 644 /system/etc/security/cacerts/<name_of_pushed_certificate>`
+   - push your renamed certificate from [step 2]({{< ref "#2-rename-certificate" >}}): `adb push ~/.mitmproxy/c8450d0d.0 /system/etc/security/cacerts`
+   - set certificate permissions: `adb shell chmod 644 /system/etc/security/cacerts/c8450d0d.0`
    - reboot device: `adb reboot`
 
 ### Testing that your certificate is loaded from the system certificate store
