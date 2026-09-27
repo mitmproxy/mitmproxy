@@ -7,6 +7,12 @@
 
 ## Unreleased: mitmproxy next
 
+- mitmproxy: Fix search (`/`, `n`, `N`) in the flow view. The message body was rendered
+  as a single widget, so a match greyed out the entire body, discarded its syntax
+  highlighting, and `n`/`N` had nothing to jump to. Bodies are rendered line by line
+  again, only the match itself is emphasized, and the search term now survives view
+  rebuilds.
+  ([#8355](https://github.com/mitmproxy/mitmproxy/pull/8355), @malkafen)
 - Add `launch_edge()` to the Browser addon, so `browser.start edge` can
   launch an isolated, proxy-configured instance of Microsoft Edge, matching
   the existing Chrome and Firefox support.

@@ -21,6 +21,27 @@ from mitmproxy.tools.console import tabs
 from mitmproxy.utils import strutils
 
 
+def chunks_to_lines(chunks: list[tuple[str, str]]) -> list[list[tuple[str, str]]]:
+    """
+    Split syntax highlighting chunks (which may span multiple lines) into one
+    urwid markup list per line.
+
+    Rendering each line as its own widget is what makes search (`/`, `n`, `N`)
+    able to move between individual matches instead of treating the whole body
+    as one giant line.
+    """
+    lines: list[list[tuple[str, str]]] = [[]]
+    for style, text in chunks:
+        head, *rest = text.split("\n")
+        if head:
+            lines[-1].append((style, head))
+        for part in rest:
+            lines.append([(style, part)] if part else [])
+    if len(lines) > 1 and not lines[-1]:
+        lines.pop()
+    return lines
+
+
 class FlowViewHeader(urwid.WidgetWrap):
     def __init__(
         self,
@@ -229,7 +250,8 @@ class FlowDetails(tabs.Tabs):
                 marker = self.FROM_CLIENT_MARKER
             else:
                 marker = self.TO_CLIENT_MARKER
-            widget_lines.append(urwid.Text([marker, *chunks]))
+            for line in chunks_to_lines(chunks):
+                widget_lines.append(urwid.Text([marker, *line]))
 
         if flow.websocket.closed_by_client is not None:
             widget_lines.append(
@@ -288,7 +310,8 @@ class FlowDetails(tabs.Tabs):
                 language=pretty.syntax_highlight,
             )
 
-            widget_lines.append(urwid.Text([marker, *chunks]))
+            for line in chunks_to_lines(chunks):
+                widget_lines.append(urwid.Text([marker, *line]))
 
         if flow.intercepted:
             markup = widget_lines[-1].get_text()[0]
@@ -354,7 +377,7 @@ class FlowDetails(tabs.Tabs):
             language=pretty.syntax_highlight,
         )
 
-        text_objects = [urwid.Text(chunks)]
+        text_objects = [urwid.Text(line) for line in chunks_to_lines(chunks)]
         if len(cut_off) < len(pretty.text):
             text_objects.append(
                 urwid.Text(
