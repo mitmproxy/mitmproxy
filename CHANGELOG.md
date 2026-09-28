@@ -9,6 +9,7 @@
 
 - Fix active connections being closed by the inactivity timeout while an addon
   hook is still running.
+  ([#8451](https://github.com/mitmproxy/mitmproxy/pull/8451), @anconina)
 - Add `launch_edge()` to the Browser addon, so `browser.start edge` can
   launch an isolated, proxy-configured instance of Microsoft Edge, matching
   the existing Chrome and Firefox support.
