@@ -17,6 +17,7 @@ import errno
 import json
 import logging
 import os
+import re
 import socket
 import sys
 import textwrap
@@ -333,6 +334,11 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
         )
 
 
+# "Address already in use"-equivalent OS error codes, per platform:
+# Linux (EADDRINUSE), macOS/BSD (EADDRINUSE), Windows (WSAEADDRINUSE).
+_ADDR_IN_USE_OS_ERRORS = {98, 48, 10048}
+
+
 class WireGuardServerInstance(AsyncioServerInstance[mode_specs.WireGuardMode]):
     server_key: str
     client_key: str
@@ -381,14 +387,33 @@ class WireGuardServerInstance(AsyncioServerInstance[mode_specs.WireGuardMode]):
     async def start_udp_based_server(
         self, host, port
     ) -> mitmproxy_rs.wireguard.WireGuardServer:
-        return await mitmproxy_rs.wireguard.start_wireguard_server(
-            host,
-            port,
-            self.server_key,
-            [self.pubkey],
-            self.handle_stream,
-            self.handle_stream,
-        )
+        try:
+            return await mitmproxy_rs.wireguard.start_wireguard_server(
+                host,
+                port,
+                self.server_key,
+                [self.pubkey],
+                self.handle_stream,
+                self.handle_stream,
+            )
+        except RuntimeError as e:
+            # The Rust WireGuard binding raises a plain RuntimeError, not an
+            # OSError, so it wouldn't otherwise be caught by _start()'s
+            # `except OSError` handling below (which is what builds the
+            # "Try specifying a different port" message). Translate it to a
+            # proper OSError with the right errno here, at the source, so
+            # the existing shared logic in _start() just picks it up.
+            #
+            # We can't match on the English message text ("Address already
+            # in use" on macOS/Linux vs. "Only one usage of each socket
+            # address..." on Windows) since it differs per platform (and per
+            # OS locale). The numeric OS error code embedded in the message
+            # (e.g. "(os error 48)") is stable per platform, so match on
+            # that instead.
+            match = re.search(r"\(os error (\d+)\)", str(e))
+            if match and int(match.group(1)) in _ADDR_IN_USE_OS_ERRORS:
+                raise OSError(errno.EADDRINUSE, str(e)) from e
+            raise
 
     def client_conf(self) -> str | None:
         if not self._servers:

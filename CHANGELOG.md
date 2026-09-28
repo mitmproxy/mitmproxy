@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+- WireGuard mode now shows a clear, actionable error message when its port
+  is already in use (matching other modes), instead of a raw, unformatted
+  Rust error.
+  ([#7650](https://github.com/mitmproxy/mitmproxy/issues/7650), @eliahu-frusin)
 - Add `launch_edge()` to the Browser addon, so `browser.start edge` can
   launch an isolated, proxy-configured instance of Microsoft Edge, matching
   the existing Chrome and Firefox support.
