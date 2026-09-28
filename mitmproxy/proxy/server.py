@@ -69,7 +69,10 @@ class TimeoutWatchdog:
             while True:
                 await self.can_timeout.wait()
                 await asyncio.sleep(self.timeout - (time.time() - self.last_activity))
-                if self.last_activity + self.timeout < time.time():
+                if (
+                    self.can_timeout.is_set()
+                    and self.last_activity + self.timeout < time.time()
+                ):
                     await self.callback()
                     return
         except asyncio.CancelledError:

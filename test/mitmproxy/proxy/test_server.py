@@ -32,6 +32,69 @@ class MockConnectionHandler(server.SimpleConnectionHandler):
         )
 
 
+@pytest.mark.parametrize("depth", [1, 2])
+async def test_timeout_watchdog_disarmed_during_sleep(monkeypatch, depth):
+    now = 0.0
+    sleeps = []
+    fired = []
+    monkeypatch.setattr(server.time, "time", lambda: now)
+
+    async def callback():
+        fired.append((watchdog.blocker, now))
+
+    watchdog = server.TimeoutWatchdog(10, callback)
+
+    async def sleep(delay):
+        nonlocal now
+        sleeps.append(delay)
+        assert delay == 10
+        now += 11
+        if len(sleeps) == 1:
+            guards = [watchdog.disarm() for _ in range(depth)]
+            for guard in guards:
+                guard.__enter__()
+
+            def rearm():
+                for guard in reversed(guards):
+                    guard.__exit__(None, None, None)
+
+            asyncio.get_running_loop().call_soon(rearm)
+
+    monkeypatch.setattr(asyncio, "sleep", sleep)
+    await watchdog.watch()
+
+    assert sleeps == [10, 10]
+    assert fired == [(0, 22)]
+
+
+async def test_timeout_watchdog_activity_moves_deadline(monkeypatch):
+    now = 0.0
+    sleeps = []
+    fired = []
+    monkeypatch.setattr(server.time, "time", lambda: now)
+
+    async def callback():
+        fired.append(now)
+
+    watchdog = server.TimeoutWatchdog(10, callback)
+
+    async def sleep(delay):
+        nonlocal now
+        sleeps.append(delay)
+        if len(sleeps) == 1:
+            now = 5
+            watchdog.register_activity()
+            now = 11
+        else:
+            now = 16
+
+    monkeypatch.setattr(asyncio, "sleep", sleep)
+    await watchdog.watch()
+
+    assert sleeps == [10, 4]
+    assert fired == [16]
+
+
 @pytest.mark.parametrize("result", ("success", "killed", "failed"))
 async def test_open_connection(result, monkeypatch):
     handler = MockConnectionHandler()
