@@ -2,9 +2,23 @@ import asyncio
 import logging
 import sys
 
+from mitmproxy import ctx
 from mitmproxy import log
 from mitmproxy.contrib import click as miniclick
 from mitmproxy.utils import vt_codes
+
+
+def _resolve_color_override(raw: object) -> vt_codes.ColorOverride:
+    """Coerce the raw ``termlog_colors`` option value into a known literal.
+
+    Defaults to ``"auto"`` for any unexpected value so the type narrows to
+    ``vt_codes.ColorOverride`` without requiring callers to validate.
+    """
+    if raw == "always":
+        return "always"
+    if raw == "never":
+        return "never"
+    return "auto"
 
 
 class ErrorCheck:
@@ -32,7 +46,15 @@ class ErrorCheck:
             plural = "s" if len(self.logger.has_errored) > 1 else ""
             if self.repeat_errors_on_stderr:
                 message = f"Error{plural} logged during startup:"
-                if vt_codes.ensure_supported(sys.stderr):  # pragma: no cover
+                # `ctx.options` may not be loaded yet if errorcheck fires
+                # before option registration; default to "auto" in that case.
+                opts = getattr(ctx, "options", None)
+                color_override = _resolve_color_override(
+                    getattr(opts, "termlog_colors", "auto") if opts else "auto"
+                )
+                if vt_codes.ensure_supported(
+                    sys.stderr, override=color_override
+                ):  # pragma: no cover
                     message = miniclick.style(message, fg="red")
                 details = "\n".join(
                     self.logger.format(r) for r in self.logger.has_errored
