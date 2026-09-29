@@ -452,8 +452,12 @@ class TLSLayer(tunnel.TunnelLayer):
     def send_data(self, data: bytes) -> layer.CommandGenerator[None]:
         try:
             self.tls.sendall(data)
-        except (SSL.ZeroReturnError, SSL.SysCallError):
+        except (SSL.ZeroReturnError, SSL.SysCallError, SSL.WantReadError):
             # The other peer may still be trying to send data over, which we discard here.
+            # WantReadError happens when the connection is already failing/closing (e.g. right
+            # after a failed handshake) and OpenSSL needs a read before it can write -- there's
+            # nothing productive we can do with that here, so we drop the data the same way we
+            # already do for ZeroReturnError/SysCallError. See #6081.
             pass
         yield from self.tls_interact()
 
