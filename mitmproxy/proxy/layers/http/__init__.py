@@ -733,6 +733,18 @@ class HttpStream(layer.Layer):
             or self.server_state in (self.state_done, self.state_errored)
         )
 
+        # Save any buffered request/response body data before we lose it,
+        # so users can see what was received before the connection broke.
+        partial_body_saved = False
+        if self.request_body_buf and self.flow and self.flow.request:
+            if self.flow.request.raw_content is None:
+                self.flow.request.data.content = bytes(self.request_body_buf)
+                partial_body_saved = True
+        if self.response_body_buf and self.flow and self.flow.response:
+            if self.flow.response.raw_content is None:
+                self.flow.response.data.content = bytes(self.response_body_buf)
+                partial_body_saved = True
+
         if is_client_error_but_we_already_talk_upstream:
             yield SendHttp(event, self.context.server)
             self.client_state = self.state_errored
@@ -740,7 +752,10 @@ class HttpStream(layer.Layer):
         if need_error_hook:
             # We don't want to trigger both a response hook and an error hook,
             # so we need to check if the response is done yet or not.
-            self.flow.error = flow.Error(event.message)
+            error_msg = event.message
+            if partial_body_saved:
+                error_msg = f"{error_msg} (partial body saved)"
+            self.flow.error = flow.Error(error_msg)
             yield HttpErrorHook(self.flow)
 
         if (yield from self.check_killed(False)):
