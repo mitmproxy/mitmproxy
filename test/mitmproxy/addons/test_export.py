@@ -124,7 +124,13 @@ class TestExportCurlCommand:
 
     def test_expand_escaped(self, export_curl, post_request):
         post_request.request.content = b"foo\nbar"
-        result = "curl -X POST http://address:22/path -d \"$(printf 'foo\\x0abar')\""
+        result = "curl -X POST http://address:22/path -d \"$(printf -- 'foo\\x0abar')\""
+        assert export_curl(post_request) == result
+
+    def test_expand_escaped_dash_prefix(self, export_curl, post_request):
+        """Regression test for #8050: printf with data starting with dashes."""
+        post_request.request.content = b"---boundary\x0d\x0adata"
+        result = "curl -X POST http://address:22/path -d \"$(printf -- '---boundary\\x0d\\x0adata')\""
         assert export_curl(post_request) == result
 
     def test_no_expand_when_no_escaped(self, export_curl, post_request):
