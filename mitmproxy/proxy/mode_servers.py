@@ -121,6 +121,13 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
 
         return inst
 
+    def should_rebind(self) -> bool:
+        """
+        True if this instance is bound using the global listen_host/listen_port
+        options and those options no longer match the address we bound.
+        """
+        return False
+
     @property
     @abstractmethod
     def is_running(self) -> bool:
@@ -228,7 +235,15 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
 
     def __init__(self, *args, **kwargs) -> None:
         self._servers = []
+        self._requested_listen: tuple[str, int | None] | None = None
         super().__init__(*args, **kwargs)
+
+    def should_rebind(self) -> bool:
+        if self._requested_listen is None:
+            return False
+        host = self.mode.listen_host(ctx.options.listen_host)
+        port = self.mode.listen_port(ctx.options.listen_port)
+        return self._requested_listen != (host, port)
 
     @property
     def is_running(self) -> bool:
@@ -256,6 +271,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
         assert port is not None
         try:
             self._servers = await self.listen(host, port)
+            self._requested_listen = (host, port)
         except OSError as e:
             message = f"{self.mode.description} failed to listen on {host or '*'}:{port} with {e}"
             if e.errno == errno.EADDRINUSE and self.mode.custom_listen_port is None:
@@ -275,6 +291,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
         finally:
             # we always reset _server and ignore failures
             self._servers = []
+            self._requested_listen = None
 
     async def listen(
         self, host: str, port: int

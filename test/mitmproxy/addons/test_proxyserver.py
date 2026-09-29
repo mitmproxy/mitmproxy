@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import socket
 import ssl
 from collections.abc import AsyncGenerator
 from collections.abc import Callable
@@ -34,6 +35,9 @@ from mitmproxy.addons.tlsconfig import TlsConfig
 from mitmproxy.connection import Address
 from mitmproxy.proxy import layers
 from mitmproxy.proxy import server_hooks
+from mitmproxy.proxy.mode_servers import LocalRedirectorInstance
+from mitmproxy.proxy.mode_servers import ServerInstance
+from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test.tflow import tclient_conn
@@ -105,6 +109,55 @@ async def test_start_stop(caplog_async):
             writer.close()
             await writer.wait_closed()
             await _wait_for_connection_closes(ps)
+
+
+async def _wait_for_server_update(ps: Proxyserver) -> None:
+    for _ in range(50):
+        await asyncio.sleep(0)
+        if ps.servers.is_updating:
+            async with ps.servers._lock:
+                pass
+            return
+
+
+async def test_listen_port_option_rebinds():
+    """Modes without @port inherit options.listen_port; changing it must rebind (#4269)."""
+    ps = Proxyserver()
+    nl = NextLayer()
+    with taddons.context(ps, nl) as tctx:
+        tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
+        assert await ps.setup_servers()
+        ps.running()
+        old_port = ps.listen_addrs()[0][1]
+
+        assert ServerInstance.make("regular", ps).should_rebind() is False
+        assert (
+            LocalRedirectorInstance(ProxyMode.parse("local"), ps).should_rebind()
+            is False
+        )
+
+        with socket.create_server(("127.0.0.1", 0)) as sock:
+            new_port = sock.getsockname()[1]
+        assert new_port != old_port
+
+        tctx.configure(ps, listen_port=new_port)
+        await _wait_for_server_update(ps)
+        assert ps.listen_addrs()[0][1] == new_port
+
+        reader, writer = await asyncio.open_connection("127.0.0.1", new_port)
+        writer.close()
+        await writer.wait_closed()
+        with pytest.raises((ConnectionRefusedError, OSError)):
+            await asyncio.open_connection("127.0.0.1", old_port)
+
+        # A no-op update of the same listen options must keep the existing instance.
+        tctx.configure(ps, listen_host="127.0.0.1", listen_port=new_port)
+        await _wait_for_server_update(ps)
+        assert ps.listen_addrs()[0][1] == new_port
+
+        tctx.configure(ps, server=False)
+        await _wait_for_server_update(ps)
+        await _wait_for_connection_closes(ps)
 
 
 async def _wait_for_connection_closes(ps: Proxyserver):

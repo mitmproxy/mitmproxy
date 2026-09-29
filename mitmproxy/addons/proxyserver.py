@@ -59,22 +59,27 @@ class Servers:
             new_instances: dict[mode_specs.ProxyMode, ServerInstance] = {}
 
             start_tasks = []
+            stop_tasks = []
             if ctx.options.server:
-                # Create missing modes and keep existing ones.
+                # Create missing modes, keep existing ones, and rebind when the
+                # inherited listen_host/listen_port options no longer match.
                 for spec in modes:
-                    if spec in self._instances:
-                        instance = self._instances[spec]
+                    existing = self._instances.get(spec)
+                    if existing is not None and not existing.should_rebind():
+                        instance = existing
                     else:
+                        if existing is not None:
+                            stop_tasks.append(existing.stop())
                         instance = ServerInstance.make(spec, self._manager)
                         start_tasks.append(instance.start())
                     new_instances[spec] = instance
 
             # Shutdown modes that have been removed from the list.
-            stop_tasks = [
+            stop_tasks.extend(
                 s.stop()
                 for spec, s in self._instances.items()
                 if spec not in new_instances
-            ]
+            )
 
             if not start_tasks and not stop_tasks:
                 return (
@@ -255,7 +260,12 @@ class Proxyserver(ServerManager):
                 raise exceptions.OptionsError(
                     f"Invalid value for connect_addr: {ctx.options.connect_addr!r}. Specify a valid IP address."
                 )
-        if "mode" in updated or "server" in updated:
+        if (
+            "mode" in updated
+            or "server" in updated
+            or "listen_port" in updated
+            or "listen_host" in updated
+        ):
             # Make sure that all modes are syntactically valid...
             modes: list[mode_specs.ProxyMode] = []
             for mode in ctx.options.mode:

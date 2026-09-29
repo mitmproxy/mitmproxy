@@ -7,6 +7,11 @@
 
 ## Unreleased: mitmproxy next
 
+- Rebind proxy servers when the global `listen_port` or `listen_host` options
+  change. Modes without an explicit `@host:port` previously kept their original
+  socket, so addon `load()` (and the options UI) could show a new port while
+  traffic still arrived on the old one.
+  ([#4269](https://github.com/mitmproxy/mitmproxy/issues/4269))
 - Add `launch_edge()` to the Browser addon, so `browser.start edge` can
   launch an isolated, proxy-configured instance of Microsoft Edge, matching
   the existing Chrome and Firefox support.
