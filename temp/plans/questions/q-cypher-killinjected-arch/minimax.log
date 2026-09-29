@@ -1,0 +1,107 @@
+[0m
+> build · MiniMax-M2.7
+[0m
+Let me read the relevant files to ground my analysis in actual code.
+[0m→ [0mRead mitmproxy/proxy/events.py
+[0m→ [0mRead mitmproxy/flow.py
+[0m✗ [0mread failed
+[91m[1mError: [0mFile not found: /tmp/cypher-wt-1777492662/minimax/mitmproxy/proxy/core.py
+[0m→ [0mRead mitmproxy/addons/proxyserver.py
+[0m✱ [0mGrep "flow\.kill|kill.*command|command.*kill"[90m 14 matches[0m
+[0m→ [0mRead mitmproxy/addons/core.py
+[0m→ [0mRead mitmproxy/addons/view.py[90m [offset=420, limit=200][0m
+[0m✱ [0mGrep "@expect.*MessageInjected|MessageInjected"[90m 40 matches[0m
+[0m✱ [0mGrep "5484"[90m 0 matches[0m
+[0m✱ [0mGrep "def expect"[90m 2 matches[0m
+[0m→ [0mRead mitmproxy/proxy/layers/tcp.py[90m [limit=160][0m
+[0m→ [0mRead mitmproxy/proxy/utils.py
+[0m→ [0mRead mitmproxy/proxy/layer.py[90m [limit=100][0m
+Now I have enough context. Let me formulate my analysis.
+
+---
+
+**Q1 (per-protocol vs generic): B** — kill has no payload; per-protocol subclasses would be dishonest boilerplate that misleads future readers about why variants exist
+
+**Q2 (emission point): B** — `core.py:flow.kill` command is the addon-facing API; it calls `f.kill()` (pure state) then injects `KillInjected` into the proxyserver, mirroring exactly how `inject.tcp`/`inject.udp` work
+
+**Q3 (mid-upgrade ownership):** `KillInjected` propagates down the layer stack like `DataReceived` does — each layer's `_handle_event` receives it, ignores it if the flow isn't its responsibility, passes it down otherwise. The topmost active layer that placed the `resume_event` handles it and closes the connection. This is already how the layer architecture handles cross-protocol handoff.
+
+**Q4 (scope vs #5484): Conditional** — #5484 is about kill failing to unblock a flow mid-protocol-upgrade (kill fires but the `wait_for_resume` loop never exits). PR1 fixed `wait_for_resume` waking on intercept. `KillInjected` replaces the local-state `kill()` with an event that the running layer processes directly, so it closes #4711 transit kills AND the #5484 "kill unblocks the waiting layer" case — assuming `KillInjected` is what the `wait_for_resume` path awaits on.
+
+**OVERALL VERDICT:** Single `KillInjected(flow: flow.Flow)` event class in `events.py`, emitted from `core.py:flow.kill` via a new `proxyserver.inject_event()` overload, routed by existing `inject_event` lookup to the connection handler. Layers receive it via `@expect(events.KillInjected)` and act on it by closing the client/server connections and clearing the `resume_event`. This mirrors `MessageInjected` at the event-injection layer while keeping `Flow.kill()` as pure state mutation.
+
+<!-- cypher-report-begin -->
+## Cypher Verdict: KillInjected Implementation
+
+**Q1 (per-protocol vs generic):** B (generic) — `MessageInjected[T]` subclasses exist because each protocol bundles a typed payload (`TCPMessage`, `UDPMessage`, `WebSocketMessage`). `KillInjected` has no payload — it's a lifecycle signal. Per-protocol subclasses would be documentation Lies that imply payload differentiation where none exists. A single `KillInjected(Event)` is honest and requires zero new typing infrastructure.
+
+**Q2 (emission point):** B (from `core.py:flow.kill` command) — The addon command is the proper emission point. `Flow.kill()` stays a pure state mutation (sets `error`, `live = False`, clears `intercepted`, fires `_resume_event`). The addon command then calls `proxyserver.inject_event(KillInjected(flow))`, which routes to the live connection's layer stack. This is the exact mirror of how `inject.tcp`/`inject.udp`/`inject.websocket` work — addon validates, creates event, injects. Changing `Flow.kill()` itself to emit events would make the data layer know about the proxy server, which is a layering violation.
+
+**Q3 (mid-upgrade ownership):** `KillInjected` propagates down the layer stack the same way `DataReceived` does. Each layer's `_handle_event` receives it; layers that don't own the flow's current protocol state ignore it. The topmost layer actively managing the flow (e.g., the HTTP layer if WebSocket upgrade is in progress) handles it by issuing `CloseConnection` commands on both client and server, then signals the `resume_event` if set. The `_handle_event` chain ensures exactly one layer acts on it.
+
+**Q4 (scope vs #5484):** Conditional — If #5484 is the "kill doesn't wake `wait_for_resume`" variant (kill fires locally but the blocked coroutine never unblocks), `KillInjected` closes it because the event is delivered to the *running layer's* event handler, which clears the `_resume_event`. If #5484 is about a different race (e.g., kill on a CONNECT-pending-HTTP/2 flow that hasn't entered the HTTP/2 layer yet), it depends on whether the TCP layer handles the event for un-upgraded flows. The safe scope claim is #4711 only, with #5484 as "likely closed pending confirmation of the #5484 root cause."
+
+**Implementation shape:**
+```python
+# events.py
+@dataclass
+class KillInjected(Event):
+    flow: flow.Flow
+
+# proxyserver.py
+def inject_event(self, event: events.MessageInjected | events.KillInjected):
+    ...
+
+@command.command("inject.kill")  # mirrors inject.tcp
+def inject_kill(self, flow: Flow):
+    if not flow.killable:
+        return
+    flow.kill()  # pure state
+    try:
+        self.inject_event(events.KillInjected(flow))
+    except ValueError:
+        pass
+
+# core.py flow.kill command updated to call inject_kill OR proxyserver.inject_kill directly
+```
+
+The single-class design (B) means all layers use `@expect(events.KillInjected)` — not a problem since every active layer should handle kill uniformly.
+<!-- cypher-report-end -->
+
+---
+
+Now saving to file:
+[0m
+[0m$ [0mmkdir -p /tmp/cypher-wt-1777492662/minimax/temp/plans/questions/q-cypher-killinjected-arch
+[0m
+[0m← [0mWrite temp/plans/questions/q-cypher-killinjected-arch/minimax.md
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/tmp/cypher-wt-1777492662/minimax/mitmproxy/proxy/events.py">
+ERROR [108:5] "command" overrides symbol of same name in class "CommandCompleted"
+  Variable is mutable so its type is invariant
+    Override type "OpenConnection" is not the same as base type "Command"
+ERROR [115:5] "command" overrides symbol of same name in class "CommandCompleted"
+  Variable is mutable so its type is invariant
+    Override type "StartHook" is not the same as base type "Command"
+ERROR [138:5] "command" overrides symbol of same name in class "CommandCompleted"
+  Variable is mutable so its type is invariant
+    Override type "RequestWakeup" is not the same as base type "Command"
+</diagnostics>
+
+LSP errors detected in other files:
+<diagnostics file="/tmp/cypher-wt-1777492662/minimax/mitmproxy/addons/proxyserver.py">
+ERROR [16:6] Import "wsproto.frame_protocol" could not be resolved
+ERROR [110:16] Argument of type "str | ProxyMode" cannot be assigned to parameter "key" of type "ProxyMode" in function "__getitem__"
+  Type "str | ProxyMode" is not assignable to type "ProxyMode"
+    "str" is not assignable to "ProxyMode"
+</diagnostics>
+[0m
+Done. The verdict is saved to `temp/plans/questions/q-cypher-killinjected-arch/minimax.md` and the sentinel-fenced reply is above.
+
+**Summary of my position:**
+- **Q1:** B — single generic `KillInjected`, no per-protocol reason for variants
+- **Q2:** B — emit from `core.py:flow.kill` command, not from `Flow.kill()` itself; mirrors inject.* pattern
+- **Q3:** Stack propagation, each layer ignores if not its flow, topmost managing layer acts
+- **Q4:** Conditional — scope to #4711 only unless #5484 root cause is confirmed as the `wait_for_resume` unwakeable variant

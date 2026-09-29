@@ -130,6 +130,17 @@ class MessageInjected(Event, Generic[T]):
 
 
 @dataclass
+class KillInjected(Event):
+    """
+    The user has killed a flow. Layers receiving this event should close the
+    associated client and (if open) server connections so that in-transit
+    requests do not silently hang.
+    """
+
+    flow: flow.Flow
+
+
+@dataclass
 class Wakeup(CommandCompleted):
     """
     Event sent to layers that requested a wakeup using RequestWakeup.
