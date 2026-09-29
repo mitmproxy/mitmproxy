@@ -200,6 +200,23 @@ def test_strseq():
         assert b.is_valid(tctx.master.commands, Sequence[str], "foo") is False
 
 
+def test_intseq():
+    with taddons.context() as tctx:
+        b = mitmproxy.types._IntSeqType()
+        assert b.completion(tctx.master.commands, Sequence[int], "") == []
+        assert b.parse(tctx.master.commands, Sequence[int], "42") == [42]
+        assert b.parse(tctx.master.commands, Sequence[int], "42, 100, -5") == [
+            42,
+            100,
+            -5,
+        ]
+        assert b.is_valid(tctx.master.commands, Sequence[int], [42]) is True
+        assert b.is_valid(tctx.master.commands, Sequence[int], [1, 2, "3"]) is False
+        assert b.is_valid(tctx.master.commands, Sequence[int], 1) is False
+        assert b.is_valid(tctx.master.commands, Sequence[int], "foo") is False
+        assert b.is_valid(tctx.master.commands, Sequence[int], b"33") is False
+
+
 class DummyConsole:
     @command.command("view.flows.resolve")
     def resolve(self, spec: str) -> Sequence[flow.Flow]:
