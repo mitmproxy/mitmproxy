@@ -785,6 +785,23 @@ class TestHTTPFlow:
         f2.resume()
         assert f.intercepted is f2.intercepted is False
 
+    async def test_kill_unblocks_wait_for_resume(self):
+        # Regression test for https://github.com/mitmproxy/mitmproxy/issues/8045:
+        # Killing an intercepted flow that is currently being awaited via
+        # wait_for_resume() must wake the awaiter so the proxy can run its
+        # post-hook teardown (which closes the client connection).
+        f = tflow()
+        f.intercept()
+        resume_task = asyncio.ensure_future(f.wait_for_resume())
+        # Yield once so the task reaches the internal `await self._resume_event.wait()`.
+        await asyncio.sleep(0)
+        assert not resume_task.done()
+        f.kill()
+        await asyncio.wait_for(resume_task, 0.2)
+        assert f.error.msg == flow.Error.KILLED_MESSAGE
+        assert not f.intercepted
+        assert not f.live
+
     def test_timestamp_start(self):
         f = tflow()
         assert f.timestamp_start == f.request.timestamp_start
