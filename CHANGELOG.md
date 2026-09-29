@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix options-editor help showing the wrong key bindings and closing the editor.
+  ([#8428](https://github.com/mitmproxy/mitmproxy/pull/8428), @twelfthlabor)
 - Add `launch_edge()` to the Browser addon, so `browser.start edge` can
   launch an isolated, proxy-configured instance of Microsoft Edge, matching
   the existing Chrome and Firefox support.
