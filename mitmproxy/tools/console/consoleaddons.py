@@ -343,6 +343,11 @@ class ConsoleAddon:
         """View help."""
         self.master.switch_view("help")
 
+    @command.command("console.view.versioninfo")
+    def view_versioninfo(self) -> None:
+        """View version information."""
+        self.master.switch_view("versioninfo")
+
     @command.command("console.view.flow")
     def view_flow(self, flow: flow.Flow) -> None:
         """View a flow."""
