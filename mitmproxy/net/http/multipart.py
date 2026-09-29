@@ -55,23 +55,84 @@ def decode_multipart(
         ct = headers.parse_content_type(content_type)
         if not ct:
             return []
+
         try:
             boundary = ct[2]["boundary"].encode("ascii")
         except (KeyError, UnicodeError):
             return []
 
+        delimiter = b"--" + boundary
+
+        # A boundary delimiter must begin at the start of the body or
+        # immediately after a CRLF/LF. It must then be followed by either:
+        #   - CRLF
+        #   - LF
+        #   - "--" (closing boundary)
+        #   - end of input
+        boundary_rx = re.compile(
+            rb"(?:^|(?<=\r\n)|(?<=\n))" + re.escape(delimiter) + rb"(?=--|\r\n|\n|$)"
+        )
+
+        matches = list(boundary_rx.finditer(content))
+        if not matches:
+            return []
+
         rx = re.compile(rb'\bname="([^"]+)"')
         r = []
-        if content is not None:
-            for i in content.split(b"--" + boundary):
-                parts = i.splitlines()
-                if len(parts) > 1 and parts[0][0:2] != b"--":
-                    match = rx.search(parts[1])
-                    if match:
-                        key = match.group(1)
-                        value = b"".join(parts[3 + parts[2:].index(b"") :])
-                        r.append((key, value))
+
+        for index, match in enumerate(matches):
+            delimiter_end = match.end()
+
+            # This is the closing boundary: --boundary--
+            if content[delimiter_end : delimiter_end + 2] == b"--":
+                break
+
+            # The next boundary marks the end of this part.
+            if index + 1 < len(matches):
+                next_boundary_start = matches[index + 1].start()
+                chunk = content[delimiter_end:next_boundary_start]
+            else:
+                chunk = content[delimiter_end:]
+
+            # Remove the newline immediately following the boundary.
+            if chunk.startswith(b"\r\n"):
+                chunk = chunk[2:]
+            elif chunk.startswith(b"\n"):
+                chunk = chunk[1:]
+
+            # Separate headers from value.
+            header_end = chunk.find(b"\r\n\r\n")
+            delimiter_len = 4
+
+            if header_end == -1:
+                header_end = chunk.find(b"\n\n")
+                delimiter_len = 2
+
+            if header_end == -1:
+                continue
+
+            headers_part = chunk[:header_end]
+            value = chunk[header_end + delimiter_len :]
+
+            name_match = rx.search(headers_part)
+            if not name_match:
+                continue
+
+            key = name_match.group(1)
+
+            # Remove the structural newline immediately before the next
+            # boundary. Preserve the existing encode_multipart() behavior.
+            if value.endswith(b"\r\n\r\n"):
+                value = value[:-4]
+            elif value.endswith(b"\r\n"):
+                value = value[:-2]
+            elif value.endswith(b"\n"):
+                value = value[:-1]
+
+            r.append((key, value))
+
         return r
+
     return []
 
 

@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+- `decode_multipart()` no longer strips newline characters that are part of
+  a multipart field's value, and no longer raises an uncaught exception when
+  a part is missing its header/body separator.
+  ([#4466](https://github.com/mitmproxy/mitmproxy/issues/4466), @eliahu-frusin)
 - Add `launch_edge()` to the Browser addon, so `browser.start edge` can
   launch an isolated, proxy-configured instance of Microsoft Edge, matching
   the existing Chrome and Firefox support.
