@@ -119,10 +119,10 @@ async def _wait_for_connection_closes(ps: Proxyserver):
             await asyncio.wait_for(client_handler, 5)
         except asyncio.CancelledError:
             pass
-    for _ in range(5):
-        # Get all other scheduled coroutines to run.
-        await asyncio.sleep(0)
-    assert not ps.connections
+    # Closing mitmproxy_rs streams completes on another thread, so poll instead of yielding a fixed number of times.
+    async with asyncio.timeout(5):
+        while ps.connections:
+            await asyncio.sleep(0.001)
 
 
 async def test_inject() -> None:
