@@ -108,7 +108,8 @@ async def test_no_reentrancy(capsys):
     )
 
 
-async def test_handle_connection_waits_for_rust_stream_close(monkeypatch):
+@pytest.mark.parametrize("cancel", [False, True])
+async def test_handle_connection_waits_for_rust_stream_close(monkeypatch, cancel):
     class Stream:
         def __init__(self):
             self.closed = asyncio.Event()
@@ -136,6 +137,14 @@ async def test_handle_connection_waits_for_rust_stream_close(monkeypatch):
     task = asyncio.create_task(handler.handle_connection(client))
     await asyncio.sleep(0.01)
     assert not task.done()
+    if cancel:
+        task.cancel()
+        await asyncio.sleep(0.01)
+        assert not task.done()
     writer.closed.set()
-    await asyncio.wait_for(task, 1)
+    if cancel:
+        with pytest.raises(asyncio.CancelledError):
+            await asyncio.wait_for(task, 1)
+    else:
+        await asyncio.wait_for(task, 1)
     assert client not in handler.transports
