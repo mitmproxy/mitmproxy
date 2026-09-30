@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- Wait for mitmproxy_rs streams to finish closing when a connection is closed.
 - Add `launch_edge()` to the Browser addon, so `browser.start edge` can
   launch an isolated, proxy-configured instance of Microsoft Edge, matching
   the existing Chrome and Firefox support.

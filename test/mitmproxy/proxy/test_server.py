@@ -8,6 +8,8 @@ from unittest import mock
 import pytest
 
 from mitmproxy import options
+from mitmproxy.connection import Client
+from mitmproxy.connection import ConnectionState
 from mitmproxy.connection import Server
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import layer
@@ -104,3 +106,36 @@ async def test_no_reentrancy(capsys):
         Hook completed (must not happen before start is completed).
         """
     )
+
+
+async def test_handle_connection_waits_for_rust_stream_close(monkeypatch):
+    class Stream:
+        def __init__(self):
+            self.closed = asyncio.Event()
+
+        def close(self):
+            pass
+
+        async def wait_closed(self):
+            await self.closed.wait()
+
+    monkeypatch.setattr(server.mitmproxy_rs, "Stream", Stream)
+    handler = MockConnectionHandler()
+    handler.server_event = mock.AsyncMock()
+    client = Client(
+        peername=("127.0.0.1", 1234),
+        sockname=("127.0.0.1", 4321),
+        transport_protocol="udp",
+        state=ConnectionState.OPEN,
+    )
+    writer = Stream()
+    handler.transports[client] = server.ConnectionIO(
+        reader=mock.AsyncMock(read=mock.AsyncMock(return_value=b"")), writer=writer
+    )
+
+    task = asyncio.create_task(handler.handle_connection(client))
+    await asyncio.sleep(0.01)
+    assert not task.done()
+    writer.closed.set()
+    await asyncio.wait_for(task, 1)
+    assert client not in handler.transports

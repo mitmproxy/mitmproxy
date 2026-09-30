@@ -322,6 +322,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             writer.close()
         except OSError:
             pass
+        if isinstance(writer, mitmproxy_rs.Stream):
+            await writer.wait_closed()
         self.transports.pop(connection)
 
         if cancelled:
