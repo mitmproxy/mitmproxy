@@ -417,7 +417,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                         writer = self.transports[command.connection].writer
                         assert writer
                         if not writer.is_closing():
-                            writer.write(command.data)
+                            try:
+                                writer.write(command.data)
+                            except OSError as e:
+                                # mitmproxy_rs streams raise if the underlying server has been shut down.
+                                self.log(f"Error sending data: {e}", logging.DEBUG)
+                                self.close_connection(command.connection)
                     elif isinstance(command, commands.CloseTcpConnection):
                         self.close_connection(command.connection, command.half_close)
                     elif isinstance(command, commands.CloseConnection):

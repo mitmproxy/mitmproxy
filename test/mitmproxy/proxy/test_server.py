@@ -8,6 +8,7 @@ from unittest import mock
 import pytest
 
 from mitmproxy import options
+from mitmproxy.connection import ConnectionState
 from mitmproxy.connection import Server
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import layer
@@ -104,3 +105,32 @@ async def test_no_reentrancy(capsys):
         Hook completed (must not happen before start is completed).
         """
     )
+
+
+async def test_send_data_error_closes_connection():
+    handler = MockConnectionHandler()
+    client = handler.client
+    upstream = Server(address=("server", 1234))
+
+    failing_writer = mock.Mock()
+    failing_writer.is_closing.return_value = False
+    failing_writer.write.side_effect = OSError("Server has been shut down.")
+    failing_handler = mock.Mock()
+    handler.transports[client] = server.ConnectionIO(
+        handler=failing_handler, writer=failing_writer
+    )
+    upstream_writer = mock.Mock()
+    upstream_writer.is_closing.return_value = False
+    handler.transports[upstream] = server.ConnectionIO(
+        handler=mock.Mock(), writer=upstream_writer
+    )
+
+    handler.layer = mock.Mock()
+    handler.layer.handle_event.return_value = iter(
+        [commands.SendData(client, b"a"), commands.SendData(upstream, b"b")]
+    )
+    await handler.server_event(Start())
+
+    assert client.state is ConnectionState.CLOSED
+    failing_handler.cancel.assert_called_once()
+    upstream_writer.write.assert_called_once_with(b"b")

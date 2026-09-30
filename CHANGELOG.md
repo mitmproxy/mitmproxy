@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix a crash when sending data on a connection whose mitmproxy_rs server has already been shut down.
 - Add `launch_edge()` to the Browser addon, so `browser.start edge` can
   launch an isolated, proxy-configured instance of Microsoft Edge, matching
   the existing Chrome and Firefox support.
