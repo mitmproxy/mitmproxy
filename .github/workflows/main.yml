@@ -86,7 +86,10 @@ jobs:
     steps:
       - if: matrix.container
         run: |
-          apt-get update
+          # Debian 11 is EOL and its security updates are gone from deb.debian.org.
+          # Use the snapshot.debian.org sources that the image was built from instead.
+          sed -i -e '/^deb /d' -e 's/^# deb /deb /' /etc/apt/sources.list
+          apt-get -o Acquire::Check-Valid-Until=false update
           apt-get install --no-install-recommends -y git ca-certificates binutils build-essential
       - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
       - uses: mhils/workflows/setup-uv@acc73c7af100db9fb3f1ad3c0178d382048e943f
