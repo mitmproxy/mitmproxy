@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix active connections being closed by the inactivity timeout while an addon
+  hook is still running.
+  ([#8451](https://github.com/mitmproxy/mitmproxy/pull/8451), @anconina)
 - mitmweb: Support `float` addon options in the Options editor.
   ([#3144](https://github.com/mitmproxy/mitmproxy/issues/3144))
 - Add `launch_edge()` to the Browser addon, so `browser.start edge` can
