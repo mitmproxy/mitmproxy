@@ -59,7 +59,7 @@ class Servers:
         async with self._lock:
             new_instances: dict[mode_specs.ProxyMode, ServerInstance] = {}
 
-            start_tasks = []
+            start_instances = []
             if ctx.options.server:
                 # Create missing modes and keep existing ones.
                 for spec in modes:
@@ -67,34 +67,49 @@ class Servers:
                         instance = self._instances[spec]
                     else:
                         instance = ServerInstance.make(spec, self._manager)
-                        start_tasks.append(instance.start())
+                        start_instances.append(instance)
                     new_instances[spec] = instance
 
             # Shutdown modes that have been removed from the list.
-            stop_tasks = [
-                s.stop()
+            stop_instances = [
+                s
                 for spec, s in self._instances.items()
-                if spec not in new_instances
+                if spec not in new_instances and s.is_running
             ]
 
-            if not start_tasks and not stop_tasks:
+            if (
+                not start_instances
+                and not stop_instances
+                and new_instances == self._instances
+            ):
                 return (
                     True  # nothing to do, so we don't need to trigger `self.changed`.
                 )
 
             self._instances = new_instances
-            # Notify listeners about the new not-yet-started servers.
-            await self.changed.send()
+            try:
+                # Notify listeners about the new not-yet-started servers.
+                await self.changed.send()
 
-            # We first need to free ports before starting new servers.
-            for ret in await asyncio.gather(*stop_tasks, return_exceptions=True):
-                if ret:
-                    all_ok = False
-                    logger.error(str(ret))
-            for ret in await asyncio.gather(*start_tasks, return_exceptions=True):
-                if ret:
-                    all_ok = False
-                    logger.error(str(ret))
+                # We first need to free ports before starting new servers.
+                for ret in await asyncio.gather(
+                    *(s.stop() for s in stop_instances), return_exceptions=True
+                ):
+                    if ret:
+                        all_ok = False
+                        logger.error(str(ret))
+                for ret in await asyncio.gather(
+                    *(s.start() for s in start_instances), return_exceptions=True
+                ):
+                    if ret:
+                        all_ok = False
+                        logger.error(str(ret))
+            except BaseException:
+                # Keep unfinished removals reachable for final shutdown.
+                for s in stop_instances:
+                    if s.is_running:
+                        self._instances[s.mode] = s
+                raise
 
         await self.changed.send()
         return all_ok
@@ -126,6 +141,7 @@ class Proxyserver(ServerManager):
         self.connections = {}
         self.servers = Servers(self)
         self.is_running = False
+        self._update_tasks: set[asyncio.Task[bool]] = set()
 
     def __repr__(self):
         return f"Proxyserver({len(self.connections)} active conns)"
@@ -226,9 +242,28 @@ class Proxyserver(ServerManager):
     def running(self):
         self.is_running = True
 
-    async def done(self):
+    async def shutdown(self) -> None:
+        """Stop mode updates and listeners, then close the cached native redirector."""
         self.is_running = False
-        await LocalRedirectorInstance.shutdown()
+        updates = tuple(self._update_tasks)
+        for task in updates:
+            task.cancel()
+        try:
+            results = await asyncio.gather(*updates, return_exceptions=True)
+            errors = [
+                result
+                for result in results
+                if isinstance(result, BaseException)
+                and not isinstance(result, asyncio.CancelledError)
+            ]
+            if errors:
+                raise BaseExceptionGroup("Proxy server updates failed", errors)
+        finally:
+            try:
+                if not await self.servers.update([]):
+                    raise RuntimeError("Failed to stop proxy servers.")
+            finally:
+                await LocalRedirectorInstance.shutdown()
 
     def configure(self, updated) -> None:
         if "stream_large_bodies" in updated:
@@ -302,11 +337,13 @@ class Proxyserver(ServerManager):
                     )
 
             if self.is_running:
-                asyncio_utils.create_task(
+                task = asyncio_utils.create_task(
                     self.servers.update(modes),
                     name="update servers",
-                    keep_ref=True,
+                    keep_ref=False,
                 )
+                self._update_tasks.add(task)
+                task.add_done_callback(self._update_tasks.discard)
 
     async def setup_servers(self) -> bool:
         """Setup proxy servers. This may take an indefinite amount of time to complete (e.g. on permission prompts)."""

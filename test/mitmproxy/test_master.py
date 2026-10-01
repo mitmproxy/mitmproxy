@@ -5,6 +5,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from mitmproxy import exceptions
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.master import Master
 from mitmproxy.proxy.mode_servers import LocalRedirectorInstance
@@ -41,7 +42,10 @@ async def test_exception_handler(caplog_async):
 
 @pytest.mark.parametrize("during_startup", [False, True])
 @pytest.mark.parametrize("cancel", [False, True])
-async def test_local_redirector_shutdown(monkeypatch, during_startup, cancel):
+@pytest.mark.parametrize("cancel_again", [0, 1, 3])
+async def test_local_redirector_shutdown(
+    monkeypatch, during_startup, cancel, cancel_again
+):
     server = Mock()
     waiting = asyncio.Event()
     closed = asyncio.Event()
@@ -87,8 +91,12 @@ async def test_local_redirector_shutdown(monkeypatch, during_startup, cancel):
         assert setup_finished.is_set()
         server.close.assert_called_once()
         assert not task.done()
+        for _ in range(cancel_again):
+            task.cancel()
+            await asyncio.sleep(0)
+            assert not task.done()
         closed.set()
-        if cancel:
+        if cancel or cancel_again:
             with pytest.raises(asyncio.CancelledError):
                 await task
         else:
@@ -100,3 +108,52 @@ async def test_local_redirector_shutdown(monkeypatch, during_startup, cancel):
         closed.set()
         master.shutdown()
         await asyncio.gather(task, return_exceptions=True)
+
+
+@pytest.mark.parametrize("failure", ["frontend", "addon_halt", "native"])
+async def test_shutdown_does_not_depend_on_done_hooks(monkeypatch, failure):
+    server = Mock(wait_closed=AsyncMock())
+    if failure == "native":
+        server.wait_closed.side_effect = RuntimeError("native shutdown failed")
+    monkeypatch.setattr(LocalRedirectorInstance, "_server", server)
+    monkeypatch.setattr(LocalRedirectorInstance, "_instance", None)
+    master = Master(None)
+    ps = Proxyserver()
+    monkeypatch.setattr(ps, "setup_servers", AsyncMock(return_value=True))
+
+    class Halt:
+        def done(self):
+            raise exceptions.AddonHalt()
+
+    if failure == "addon_halt":
+        master.addons.add(Halt())
+    master.addons.add(ps)
+
+    async def running():
+        ps.running()
+        master.shutdown()
+
+    monkeypatch.setattr(master, "running", running)
+    if failure == "frontend":
+        monkeypatch.setattr(
+            master,
+            "done",
+            AsyncMock(side_effect=RuntimeError("frontend teardown failed")),
+        )
+    try:
+        if failure == "addon_halt":
+            await master.run()
+        else:
+            message = (
+                "frontend teardown failed"
+                if failure == "frontend"
+                else "native shutdown failed"
+            )
+            with pytest.raises(RuntimeError, match=message):
+                await master.run()
+        server.close.assert_called_once()
+        server.wait_closed.assert_awaited_once()
+        if failure != "native":
+            assert LocalRedirectorInstance._server is None
+    finally:
+        master._legacy_log_events.uninstall()

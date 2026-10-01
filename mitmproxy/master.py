@@ -58,12 +58,13 @@ class Master:
         ):
             self.should_exit.clear()
             running_called = False
+            ps = self.addons.get("proxyserver")
 
             try:
                 # Can we exit before even bringing up servers?
                 if ec := self.addons.get("errorcheck"):
                     await ec.shutdown_if_errored()
-                if ps := self.addons.get("proxyserver"):
+                if ps:
                     # This may block for some proxy modes, so we also monitor should_exit.
                     async with asyncio.TaskGroup() as tasks:
                         setup = tasks.create_task(
@@ -94,11 +95,24 @@ class Master:
 
                 await self.should_exit.wait()
             finally:
-                # UI teardown requires running(), but native cleanup cannot wait for it.
-                if running_called:
-                    await self.done()
-                elif ps := self.addons.get("proxyserver"):
-                    await ps.done()
+                cancelled = None
+                try:
+                    if ps:
+                        shutdown = asyncio_utils.create_task(
+                            ps.shutdown(), name="shutdown_servers", keep_ref=False
+                        )
+                        while not shutdown.done():
+                            try:
+                                await asyncio.shield(shutdown)
+                            except asyncio.CancelledError as e:
+                                cancelled = e
+                        shutdown.result()
+                finally:
+                    # UI teardown requires running(), but native cleanup cannot wait for it.
+                    if running_called:
+                        await self.done()
+                if cancelled:
+                    raise cancelled
 
     def shutdown(self):
         """

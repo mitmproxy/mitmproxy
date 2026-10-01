@@ -562,6 +562,32 @@ async def test_local_redirector_startup_err(patched_local_redirector):
         assert not inst.is_running
 
 
+async def test_local_redirector_cancelled_startup(patched_local_redirector):
+    entered = asyncio.Event()
+
+    async def start(*args):
+        entered.set()
+        await asyncio.Event().wait()
+
+    patched_local_redirector.side_effect = start
+    with taddons.context():
+        inst = ServerInstance.make("local", MagicMock())
+        task = asyncio.create_task(inst.start())
+        try:
+            await asyncio.wait_for(entered.wait(), 1)
+            task.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await task
+            assert not inst.is_running
+            assert LocalRedirectorInstance._instance is None
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+        patched_local_redirector.side_effect = None
+        await inst.start()
+        await inst.stop()
+
+
 async def test_multiple_local_redirectors(patched_local_redirector):
     manager = MagicMock()
 

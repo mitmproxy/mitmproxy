@@ -36,6 +36,7 @@ from mitmproxy.connection import Address
 from mitmproxy.proxy import layers
 from mitmproxy.proxy import server_hooks
 from mitmproxy.proxy.mode_servers import LocalRedirectorInstance
+from mitmproxy.proxy.mode_servers import ServerInstance
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test.tflow import tclient_conn
@@ -57,14 +58,221 @@ class HelperAddon:
         self.flows.append(f)
 
 
-async def test_done(monkeypatch):
+async def test_shutdown(monkeypatch):
     shutdown = AsyncMock()
     monkeypatch.setattr(LocalRedirectorInstance, "shutdown", shutdown)
     ps = Proxyserver()
-    ps.running()
-    await ps.done()
-    assert not ps.is_running
-    shutdown.assert_awaited_once()
+    with taddons.context(ps):
+        ps.running()
+        await ps.shutdown()
+        assert not ps.is_running
+        shutdown.assert_awaited_once()
+
+
+def test_remove_proxyserver():
+    ps = Proxyserver()
+    with taddons.context(ps) as tctx:
+        tctx.master.addons.remove(ps)
+        assert ps not in tctx.master.addons
+
+
+async def test_shutdown_waits_for_mode_update(monkeypatch):
+    ps = Proxyserver()
+    server = Mock(wait_closed=AsyncMock())
+    entered = asyncio.Event()
+    released = asyncio.Event()
+    monkeypatch.setattr(LocalRedirectorInstance, "_server", None)
+    monkeypatch.setattr(LocalRedirectorInstance, "_instance", None)
+
+    async def start_redirector(*args):
+        entered.set()
+        try:
+            await released.wait()
+        except asyncio.CancelledError:
+            await released.wait()
+        return server
+
+    monkeypatch.setattr(mitmproxy_rs.local, "start_local_redirector", start_redirector)
+    with taddons.context(ps, NextLayer()) as tctx:
+        ps.running()
+        before = asyncio.all_tasks()
+        tctx.configure(ps, mode=["local"])
+        updates = asyncio.all_tasks() - before
+        shutdown = None
+        try:
+            await asyncio.wait_for(entered.wait(), 1)
+            shutdown = asyncio.create_task(ps.shutdown())
+            await asyncio.sleep(0)
+            assert not shutdown.done()
+            released.set()
+            await shutdown
+            server.close.assert_called_once()
+            server.wait_closed.assert_awaited_once()
+            assert LocalRedirectorInstance._server is None
+            assert LocalRedirectorInstance._instance is None
+        finally:
+            released.set()
+            await asyncio.gather(
+                *updates, *([shutdown] if shutdown else []), return_exceptions=True
+            )
+
+
+async def test_shutdown_cancels_queued_mode_update(monkeypatch):
+    ps = Proxyserver()
+    server = Mock(wait_closed=AsyncMock())
+    start = AsyncMock(return_value=server)
+    monkeypatch.setattr(mitmproxy_rs.local, "start_local_redirector", start)
+    monkeypatch.setattr(LocalRedirectorInstance, "_server", None)
+    monkeypatch.setattr(LocalRedirectorInstance, "_instance", None)
+    loop = asyncio.get_running_loop()
+    factory = loop.get_task_factory()
+    loop.set_task_factory(None)
+    try:
+        with taddons.context(ps, NextLayer()) as tctx:
+            ps.running()
+            tctx.configure(ps, mode=["local"])
+            await ps.shutdown()
+            start.assert_not_called()
+            assert not ps._update_tasks
+            assert not ps.servers
+    finally:
+        loop.set_task_factory(factory)
+
+
+async def test_shutdown_during_mode_notification(monkeypatch):
+    ps = Proxyserver()
+    start = AsyncMock()
+    entered = asyncio.Event()
+    created = []
+    original_start = ServerInstance.start
+
+    def start_instance(instance):
+        coro = original_start(instance)
+        created.append(coro)
+        return coro
+
+    monkeypatch.setattr(ServerInstance, "start", start_instance)
+    monkeypatch.setattr(mitmproxy_rs.local, "start_local_redirector", start)
+    monkeypatch.setattr(LocalRedirectorInstance, "_server", None)
+    monkeypatch.setattr(LocalRedirectorInstance, "_instance", None)
+
+    async def changed():
+        if not entered.is_set():
+            entered.set()
+            await asyncio.Event().wait()
+
+    ps.servers.changed.connect(changed)
+    try:
+        with taddons.context(ps, NextLayer()) as tctx:
+            ps.running()
+            tctx.configure(ps, mode=["local"])
+            await asyncio.wait_for(entered.wait(), 1)
+            await ps.shutdown()
+            assert all(coro.cr_frame is None for coro in created)
+            start.assert_not_called()
+            assert not ps.servers
+    finally:
+        for coro in created:
+            coro.close()
+
+
+async def test_shutdown_keeps_removed_listener_owned():
+    ps = Proxyserver()
+    entered = asyncio.Event()
+
+    async def changed():
+        if not entered.is_set():
+            entered.set()
+            await asyncio.Event().wait()
+
+    with taddons.context(ps, NextLayer()) as tctx:
+        tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
+        assert await ps.setup_servers()
+        listener = ps.servers["regular"]
+        ps.servers.changed.connect(changed)
+        ps.running()
+        try:
+            tctx.configure(ps, server=False)
+            await asyncio.wait_for(entered.wait(), 1)
+            await ps.shutdown()
+            assert not listener.is_running
+        finally:
+            if listener.is_running:
+                await listener.stop()
+
+
+async def test_shutdown_after_cancelled_startup(monkeypatch):
+    entered = asyncio.Event()
+
+    async def start(*args):
+        entered.set()
+        await asyncio.Event().wait()
+
+    monkeypatch.setattr(mitmproxy_rs.local, "start_local_redirector", start)
+    monkeypatch.setattr(LocalRedirectorInstance, "_server", None)
+    monkeypatch.setattr(LocalRedirectorInstance, "_instance", None)
+    ps = Proxyserver()
+    with taddons.context(ps, NextLayer()) as tctx:
+        tctx.configure(ps, mode=["local"])
+        task = asyncio.create_task(tctx.master.run())
+        try:
+            await asyncio.wait_for(entered.wait(), 1)
+            tctx.master.shutdown()
+            await asyncio.wait_for(task, 1)
+            assert not ps.servers
+            assert LocalRedirectorInstance._server is None
+            assert LocalRedirectorInstance._instance is None
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+
+
+async def test_shutdown_update_error(monkeypatch):
+    server = Mock(wait_closed=AsyncMock())
+    monkeypatch.setattr(LocalRedirectorInstance, "_server", server)
+    monkeypatch.setattr(LocalRedirectorInstance, "_instance", None)
+    ps = Proxyserver()
+    entered = asyncio.Event()
+
+    async def update(modes):
+        if not modes:
+            return True
+        entered.set()
+        try:
+            await asyncio.Event().wait()
+        finally:
+            raise RuntimeError("update failed")
+
+    monkeypatch.setattr(ps.servers, "update", update)
+    with taddons.context(ps, NextLayer()) as tctx:
+        ps.running()
+        tctx.configure(ps, mode=["local"])
+        await asyncio.wait_for(entered.wait(), 1)
+        with pytest.raises(ExceptionGroup, match="Proxy server updates failed") as exc:
+            await ps.shutdown()
+        assert str(exc.value.exceptions[0]) == "update failed"
+        server.close.assert_called_once()
+        server.wait_closed.assert_awaited_once()
+        assert LocalRedirectorInstance._server is None
+
+
+async def test_shutdown_listener_error(monkeypatch, caplog):
+    server = Mock(wait_closed=AsyncMock())
+    monkeypatch.setattr(LocalRedirectorInstance, "_server", server)
+    monkeypatch.setattr(LocalRedirectorInstance, "_instance", None)
+    ps = Proxyserver()
+    with taddons.context(ps, NextLayer()) as tctx:
+        tctx.configure(ps, mode=["local"])
+        assert await ps.setup_servers()
+        monkeypatch.setattr(
+            ps.servers["local"], "stop", AsyncMock(side_effect=OSError("stop failed"))
+        )
+        with pytest.raises(RuntimeError, match="Failed to stop proxy servers"):
+            await ps.shutdown()
+        assert "stop failed" in caplog.text
+        server.close.assert_called_once()
+        server.wait_closed.assert_awaited_once()
+        assert LocalRedirectorInstance._server is None
 
 
 async def test_start_stop(caplog_async):

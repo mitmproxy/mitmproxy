@@ -7,7 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
-- Close and await the cached local redirector on shutdown, before Python exits.
+- Close proxy listeners and await the cached local redirector on shutdown, before Python exits.
   ([#8459](https://github.com/mitmproxy/mitmproxy/pull/8459), @natefinch)
 - mitmweb: Support `float` addon options in the Options editor.
   ([#3144](https://github.com/mitmproxy/mitmproxy/issues/3144))
