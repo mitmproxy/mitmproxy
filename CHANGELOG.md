@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Set the default text encoding to UTF-8 instead of (very) legacy Latin-1.
+  In consequence, saved HARs may be different than previously.
+  ([#8126](https://github.com/mitmproxy/mitmproxy/pull/8126), @emaheuxPEREN)
 - mitmweb: Support `float` addon options in the Options editor.
   ([#3144](https://github.com/mitmproxy/mitmproxy/issues/3144))
 - Add `launch_edge()` to the Browser addon, so `browser.start edge` can
