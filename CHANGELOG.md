@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- Close and await the cached local redirector on shutdown, before Python exits.
 - mitmweb: Support `float` addon options in the Options editor.
   ([#3144](https://github.com/mitmproxy/mitmproxy/issues/3144))
 - Add `launch_edge()` to the Browser addon, so `browser.start edge` can

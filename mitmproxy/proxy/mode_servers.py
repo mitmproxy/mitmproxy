@@ -469,6 +469,15 @@ class LocalRedirectorInstance(ServerInstance[mode_specs.LocalMode]):
         # We're not shutting down the server because we want to avoid additional UAC prompts.
         self._server.set_intercept("")
 
+    @classmethod
+    async def shutdown(cls) -> None:
+        """Close the cached redirector when mitmproxy exits, rather than when capture stops."""
+        if cls._server is not None:
+            cls._server.close()
+            await cls._server.wait_closed()
+            cls._server = None
+        cls._instance = None
+
 
 class RegularInstance(AsyncioServerInstance[mode_specs.RegularMode]):
     def make_top_layer(self, context: Context) -> Layer:

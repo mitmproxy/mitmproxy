@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from typing import Any
 from typing import ClassVar
 from typing import TypeVar
+from unittest.mock import AsyncMock
 from unittest.mock import Mock
 
 import pytest
@@ -34,6 +35,7 @@ from mitmproxy.addons.tlsconfig import TlsConfig
 from mitmproxy.connection import Address
 from mitmproxy.proxy import layers
 from mitmproxy.proxy import server_hooks
+from mitmproxy.proxy.mode_servers import LocalRedirectorInstance
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test.tflow import tclient_conn
@@ -53,6 +55,16 @@ class HelperAddon:
 
     def tcp_start(self, f):
         self.flows.append(f)
+
+
+async def test_done(monkeypatch):
+    shutdown = AsyncMock()
+    monkeypatch.setattr(LocalRedirectorInstance, "shutdown", shutdown)
+    ps = Proxyserver()
+    ps.running()
+    await ps.done()
+    assert not ps.is_running
+    shutdown.assert_awaited_once()
 
 
 async def test_start_stop(caplog_async):

@@ -31,6 +31,7 @@ from mitmproxy.proxy import server_hooks
 from mitmproxy.proxy.layers.tcp import TcpMessageInjected
 from mitmproxy.proxy.layers.udp import UdpMessageInjected
 from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
+from mitmproxy.proxy.mode_servers import LocalRedirectorInstance
 from mitmproxy.proxy.mode_servers import ProxyConnectionHandler
 from mitmproxy.proxy.mode_servers import ServerInstance
 from mitmproxy.proxy.mode_servers import ServerManager
@@ -224,6 +225,10 @@ class Proxyserver(ServerManager):
 
     def running(self):
         self.is_running = True
+
+    async def done(self):
+        self.is_running = False
+        await LocalRedirectorInstance.shutdown()
 
     def configure(self, updated) -> None:
         if "stream_large_bodies" in updated:

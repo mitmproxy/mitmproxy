@@ -507,6 +507,49 @@ async def test_local_redirector(patched_local_redirector, caplog_async):
         inst.make_top_layer(MagicMock())
 
 
+@pytest.mark.parametrize("stop_first", [False, True])
+async def test_local_redirector_shutdown(patched_local_redirector, stop_first):
+    server = patched_local_redirector.return_value
+    waiting = asyncio.Event()
+    closed = asyncio.Event()
+
+    async def wait_closed():
+        waiting.set()
+        await closed.wait()
+
+    server.wait_closed = AsyncMock(side_effect=wait_closed)
+
+    with taddons.context():
+        inst = ServerInstance.make("local", MagicMock())
+        await inst.start()
+        if stop_first:
+            await inst.stop()
+        server.close.assert_not_called()
+
+        shutdown = asyncio.create_task(LocalRedirectorInstance.shutdown())
+        try:
+            await asyncio.wait_for(waiting.wait(), 1)
+            server.close.assert_called_once()
+            server.wait_closed.assert_awaited_once()
+            assert not shutdown.done()
+            assert LocalRedirectorInstance._server is server
+            closed.set()
+            await shutdown
+        finally:
+            closed.set()
+            await shutdown
+
+        assert LocalRedirectorInstance._server is None
+        assert LocalRedirectorInstance._instance is None
+        await LocalRedirectorInstance.shutdown()
+        server.close.assert_called_once()
+
+        await inst.start()
+        assert patched_local_redirector.await_count == 2
+        await inst.stop()
+        await LocalRedirectorInstance.shutdown()
+
+
 async def test_local_redirector_startup_err(patched_local_redirector):
     patched_local_redirector.side_effect = RuntimeError(
         "Local redirector startup error"
@@ -545,6 +588,8 @@ async def test_always_uses_current_instance(patched_local_redirector, monkeypatc
 
         inst2 = LocalRedirectorInstance.make(f"local:wget", manager)
         await inst2.start()
+        assert patched_local_redirector.await_count == 1
+        patched_local_redirector.return_value.close.assert_not_called()
 
         monkeypatch.setattr(inst2, "handle_stream", handler := AsyncMock())
         await handle_stream(Mock())
