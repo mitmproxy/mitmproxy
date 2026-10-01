@@ -518,3 +518,14 @@ class TestCert:
         pem = Path(tdata.path(filename)).read_bytes()
         cert = certs.Cert.from_pem(pem)
         assert cert.crl_distribution_points == crls
+
+    def test_unencrypted_private_key_with_password_logs_warning(self, tdata, caplog):
+        raw = Path(tdata.path("mitmproxy/data/testkey.pem")).read_bytes()
+
+        key = certs.load_pem_private_key(raw, b"password")
+
+        assert isinstance(key, rsa.RSAPrivateKey)
+        assert caplog.messages == [
+            "A password was specified, but the provided private key did not require a "
+            "password."
+        ]
