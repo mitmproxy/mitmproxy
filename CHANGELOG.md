@@ -63,6 +63,8 @@
   ([#8333](https://github.com/mitmproxy/mitmproxy/pull/8333), @grusski)
 - Use stdlib (PEP-784) for Zstandard compression on Python 3.14+
   ([#8397](https://github.com/mitmproxy/mitmproxy/pull/8397), @Rogdham)
+- mitmweb: Validate flow filters on the backend and remove the duplicate frontend flow-filter parser.
+  ([#8331](https://github.com/mitmproxy/mitmproxy/pull/8331), @lups2000)
 
 ## 12 May 2026: mitmproxy 12.2.3
 
