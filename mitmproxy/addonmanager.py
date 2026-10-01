@@ -101,7 +101,7 @@ class Loader:
     def add_command(self, path: str, func: Callable) -> None:
         """Add a command to mitmproxy.
 
-        Unless you are generating commands programatically,
+        Unless you are generating commands programmatically,
         this API should be avoided. Decorate your function with `@mitmproxy.command.command` instead.
         """
         self.master.commands.add(path, func)
