@@ -92,7 +92,7 @@ class Flow(serializable.Serializable):
     """
     This attribute indicates if this flow has been replayed in either direction.
 
-     - a value of `request` indicates that the request has been artifically replayed by mitmproxy to the server.
+     - a value of `request` indicates that the request has been artificially replayed by mitmproxy to the server.
      - a value of `response` indicates that the response to the client's request has been set by server replay.
     """
 

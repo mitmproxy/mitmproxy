@@ -76,10 +76,10 @@ jobs:
             platform: windows
           - image: ubuntu-latest
             platform: linux-x86_64
-            container: debian@sha256:aeec37aebc55ca5cc6fcfb8d5f6ae2fd43d5017ad849e6e2fdb5325d61e144db  # Old Debian 11 so we get oldest glibc possible.
+            container: debian@sha256:f37a335e82bca302e955fa39f9dfe28f1be618f016f8a2b56318e5a5111afc26  # Old Debian 12 so we get oldest glibc possible.
           - image: ubuntu-24.04-arm
             platform: linux-arm64
-            container: debian@sha256:aeec37aebc55ca5cc6fcfb8d5f6ae2fd43d5017ad849e6e2fdb5325d61e144db  # Old Debian 11 so we get oldest glibc possible.
+            container: debian@sha256:f37a335e82bca302e955fa39f9dfe28f1be618f016f8a2b56318e5a5111afc26  # Old Debian 12 so we get oldest glibc possible.
     runs-on: ${{ matrix.image }}
     container:
       image: ${{ matrix.container }}
