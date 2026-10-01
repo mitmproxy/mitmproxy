@@ -54,6 +54,8 @@ async def test_local_redirector_shutdown(monkeypatch, during_startup, cancel):
     monkeypatch.setattr(LocalRedirectorInstance, "_server", server)
     monkeypatch.setattr(LocalRedirectorInstance, "_instance", None)
     master = Master(None)
+    done = AsyncMock(wraps=master.done)
+    monkeypatch.setattr(master, "done", done)
     proxyserver = Proxyserver()
     master.addons.add(proxyserver)
     entered = asyncio.Event()
@@ -93,6 +95,7 @@ async def test_local_redirector_shutdown(monkeypatch, during_startup, cancel):
             await task
         assert LocalRedirectorInstance._server is None
         assert not proxyserver.is_running
+        assert done.await_count == (0 if during_startup else 1)
     finally:
         closed.set()
         master.shutdown()

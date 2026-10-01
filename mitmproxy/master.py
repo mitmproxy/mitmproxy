@@ -57,6 +57,7 @@ class Master:
             asyncio_utils.set_eager_task_factory(),
         ):
             self.should_exit.clear()
+            running_called = False
 
             try:
                 # Can we exit before even bringing up servers?
@@ -84,6 +85,7 @@ class Master:
                     if ec := self.addons.get("errorcheck"):
                         await ec.shutdown_if_errored()
 
+                running_called = True
                 await self.running()
                 # Any errors in the final part of startup?
                 if ec := self.addons.get("errorcheck"):
@@ -92,8 +94,11 @@ class Master:
 
                 await self.should_exit.wait()
             finally:
-                # Also clean up if shutdown interrupts startup.
-                await self.done()
+                # UI teardown requires running(), but native cleanup cannot wait for it.
+                if running_called:
+                    await self.done()
+                elif ps := self.addons.get("proxyserver"):
+                    await ps.done()
 
     def shutdown(self):
         """
