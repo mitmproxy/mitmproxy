@@ -4,6 +4,7 @@
 ✨ Please add a bullet point describing your change.                                                             ✨
 ✨ You do not need to add a pull request reference or author information, this will be done automatically by CI. ✨
 -->
+- Bump tornado to >=5.6.9 and h2 to 4.4.1 to mitigate recent vulnerabilities
 
 ## Unreleased: mitmproxy next
 

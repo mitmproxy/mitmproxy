@@ -1,5 +1,6 @@
 import collections
 import logging
+from collections.abc import Buffer
 from typing import NamedTuple
 
 import h2.config
@@ -119,7 +120,7 @@ class BufferedH2Connection(h2.connection.H2Connection):
         self.stream_buffers.pop(stream_id, None)
         super().reset_stream(stream_id, error_code)
 
-    def receive_data(self, data: bytes):
+    def receive_data(self, data: Buffer):
         events = super().receive_data(data)
         ret = []
         for event in events:
