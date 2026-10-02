@@ -108,16 +108,20 @@ async def test_no_reentrancy(capsys):
     )
 
 
-@pytest.mark.parametrize("cancel", [False, True])
-async def test_handle_connection_waits_for_rust_stream_close(monkeypatch, cancel):
+@pytest.mark.parametrize("cancellations", [0, 1, 3])
+async def test_handle_connection_waits_for_rust_stream_close(
+    monkeypatch, cancellations
+):
     class Stream:
         def __init__(self):
             self.closed = asyncio.Event()
+            self.wait_started = asyncio.Event()
 
         def close(self):
             pass
 
         async def wait_closed(self):
+            self.wait_started.set()
             await self.closed.wait()
 
     monkeypatch.setattr(server.mitmproxy_rs, "Stream", Stream)
@@ -135,16 +139,54 @@ async def test_handle_connection_waits_for_rust_stream_close(monkeypatch, cancel
     )
 
     task = asyncio.create_task(handler.handle_connection(client))
-    await asyncio.sleep(0.01)
+    await asyncio.wait_for(writer.wait_started.wait(), 1)
     assert not task.done()
-    if cancel:
+    for _ in range(cancellations):
         task.cancel()
-        await asyncio.sleep(0.01)
+        await asyncio.sleep(0)
         assert not task.done()
     writer.closed.set()
-    if cancel:
+    if cancellations:
         with pytest.raises(asyncio.CancelledError):
             await asyncio.wait_for(task, 1)
     else:
+        await asyncio.wait_for(task, 1)
+    assert client not in handler.transports
+
+
+@pytest.mark.parametrize("already_done", [False, True])
+async def test_handle_connection_surfaces_rust_close_failure(monkeypatch, already_done):
+    class Stream:
+        def __init__(self):
+            self.closed = asyncio.get_running_loop().create_future()
+            self.wait_started = asyncio.Event()
+
+        def close(self):
+            pass
+
+        def wait_closed(self):
+            self.wait_started.set()
+            return self.closed
+
+    monkeypatch.setattr(server.mitmproxy_rs, "Stream", Stream)
+    handler = MockConnectionHandler()
+    handler.server_event = mock.AsyncMock()
+    client = Client(
+        peername=("127.0.0.1", 1234),
+        sockname=("127.0.0.1", 4321),
+        transport_protocol="udp",
+        state=ConnectionState.OPEN,
+    )
+    writer = Stream()
+    handler.transports[client] = server.ConnectionIO(
+        reader=mock.AsyncMock(read=mock.AsyncMock(return_value=b"")), writer=writer
+    )
+    if already_done:
+        writer.closed.set_exception(RuntimeError("native close failed"))
+    task = asyncio.create_task(handler.handle_connection(client))
+    if not already_done:
+        await asyncio.wait_for(writer.wait_started.wait(), 1)
+        writer.closed.set_exception(RuntimeError("native close failed"))
+    with pytest.raises(RuntimeError, match="native close failed"):
         await asyncio.wait_for(task, 1)
     assert client not in handler.transports

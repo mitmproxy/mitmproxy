@@ -331,6 +331,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                         await asyncio.shield(closed)
                     except asyncio.CancelledError as e:
                         cancelled = e
+                closed.result()
         finally:
             self.transports.pop(connection)
 
