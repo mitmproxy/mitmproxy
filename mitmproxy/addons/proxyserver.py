@@ -227,12 +227,11 @@ class Proxyserver(ServerManager):
             """Set the local IP address that mitmproxy should use when connecting to upstream servers.""",
         )
 
-    def running(self):
+    async def running(self):
         self.is_running = True
         # Scripts may change listen options in load() after initial server setup.
-        asyncio_utils.create_task(
-            self.setup_servers(), name="update servers", keep_ref=True
-        )
+        # Finish rebinding before subsequent running hooks use the listen addresses.
+        await self.setup_servers()
 
     def configure(self, updated) -> None:
         if "stream_large_bodies" in updated:
