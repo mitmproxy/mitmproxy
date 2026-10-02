@@ -169,7 +169,9 @@ def parse_http_basic_auth(s: str) -> tuple[str, str, str]:
         raise ValueError("Unknown scheme")
     try:
         user, password = (
-            binascii.a2b_base64(authinfo.encode()).decode("utf8", "replace").split(":")
+            binascii.a2b_base64(authinfo.encode())
+            .decode("utf8", "replace")
+            .split(":", 1)
         )
     except binascii.Error as e:
         raise ValueError(str(e))
