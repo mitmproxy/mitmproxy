@@ -132,7 +132,7 @@ class TestExportCurlCommand:
     ):
         # https://github.com/mitmproxy/mitmproxy/issues/8425
         post_request.request.content = b'{"a":1}\n'
-        result = 'curl -X POST http://address:22/path -d $\'{"a":1}\\x0a\''
+        result = "curl -X POST http://address:22/path -d $'{\"a\":1}\\x0a'"
         assert export_curl(post_request) == result
 
     def test_expand_escaped_percent_is_literal(self, export_curl, post_request):
