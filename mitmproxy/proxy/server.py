@@ -322,7 +322,18 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             writer.close()
         except OSError:
             pass
-        self.transports.pop(connection)
+        try:
+            if isinstance(writer, mitmproxy_rs.Stream):
+                # Keep waiting for the native task if we are cancelled (again) in the meantime.
+                closed = asyncio.ensure_future(writer.wait_closed())
+                while not closed.done():
+                    try:
+                        await asyncio.shield(closed)
+                    except asyncio.CancelledError as e:
+                        cancelled = e
+                closed.result()
+        finally:
+            self.transports.pop(connection)
 
         if cancelled:
             raise cancelled
