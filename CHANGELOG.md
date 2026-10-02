@@ -8,6 +8,7 @@
 ## Unreleased: mitmproxy next
 
 - Accept colons in Basic authentication passwords.
+  ([#8469](https://github.com/mitmproxy/mitmproxy/pull/8469), @gigioneggiando)
 - mitmweb: Support `float` addon options in the Options editor.
   ([#3144](https://github.com/mitmproxy/mitmproxy/issues/3144))
 - Add `launch_edge()` to the Browser addon, so `browser.start edge` can
