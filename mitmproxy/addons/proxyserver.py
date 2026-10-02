@@ -68,7 +68,7 @@ class Servers:
                     if existing is not None and not existing.should_rebind():
                         instance = existing
                     else:
-                        if existing is not None:
+                        if existing is not None and existing.is_running:
                             stop_tasks.append(existing.stop())
                         instance = ServerInstance.make(spec, self._manager)
                         start_tasks.append(instance.start())
@@ -229,6 +229,10 @@ class Proxyserver(ServerManager):
 
     def running(self):
         self.is_running = True
+        # Scripts may change listen options in load() after initial server setup.
+        asyncio_utils.create_task(
+            self.setup_servers(), name="update servers", keep_ref=True
+        )
 
     def configure(self, updated) -> None:
         if "stream_large_bodies" in updated:

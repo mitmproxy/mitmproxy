@@ -269,9 +269,9 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
         host = self.mode.listen_host(ctx.options.listen_host)
         port = self.mode.listen_port(ctx.options.listen_port)
         assert port is not None
+        self._requested_listen = (host, port)
         try:
             self._servers = await self.listen(host, port)
-            self._requested_listen = (host, port)
         except OSError as e:
             message = f"{self.mode.description} failed to listen on {host or '*'}:{port} with {e}"
             if e.errno == errno.EADDRINUSE and self.mode.custom_listen_port is None:
