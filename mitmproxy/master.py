@@ -57,30 +57,36 @@ class Master:
             asyncio_utils.set_eager_task_factory(),
         ):
             self.should_exit.clear()
-
-            # Can we exit before even bringing up servers?
-            if ec := self.addons.get("errorcheck"):
-                await ec.shutdown_if_errored()
-            if ps := self.addons.get("proxyserver"):
-                # This may block for some proxy modes, so we also monitor should_exit.
-                await asyncio.wait(
-                    [
-                        asyncio_utils.create_task(
-                            ps.setup_servers(), name="setup_servers", keep_ref=False
-                        ),
-                        asyncio_utils.create_task(
-                            self.should_exit.wait(), name="should_exit", keep_ref=False
-                        ),
-                    ],
-                    return_when=asyncio.FIRST_COMPLETED,
-                )
-                if self.should_exit.is_set():
-                    return
-                # Did bringing up servers fail?
-                if ec := self.addons.get("errorcheck"):
-                    await ec.shutdown_if_errored()
+            running_called = False
+            ps = self.addons.get("proxyserver")
 
             try:
+                # Can we exit before even bringing up servers?
+                if ec := self.addons.get("errorcheck"):
+                    await ec.shutdown_if_errored()
+                if ps:
+                    # This may block for some proxy modes, so we also monitor should_exit.
+                    async with asyncio.TaskGroup() as tasks:
+                        setup = tasks.create_task(
+                            ps.setup_servers(), name="setup_servers"
+                        )
+                        exiting = tasks.create_task(
+                            self.should_exit.wait(), name="should_exit"
+                        )
+                        try:
+                            await asyncio.wait(
+                                [setup, exiting], return_when=asyncio.FIRST_COMPLETED
+                            )
+                        finally:
+                            setup.cancel()
+                            exiting.cancel()
+                    if self.should_exit.is_set():
+                        return
+                    # Did bringing up servers fail?
+                    if ec := self.addons.get("errorcheck"):
+                        await ec.shutdown_if_errored()
+
+                running_called = True
                 await self.running()
                 # Any errors in the final part of startup?
                 if ec := self.addons.get("errorcheck"):
@@ -89,9 +95,24 @@ class Master:
 
                 await self.should_exit.wait()
             finally:
-                # if running() was called, we also always want to call done().
-                # .wait might be cancelled (e.g. by sys.exit), so  this needs to be in a finally block.
-                await self.done()
+                cancelled = None
+                try:
+                    if ps:
+                        shutdown = asyncio_utils.create_task(
+                            ps.shutdown(), name="shutdown_servers", keep_ref=False
+                        )
+                        while not shutdown.done():
+                            try:
+                                await asyncio.shield(shutdown)
+                            except asyncio.CancelledError as e:
+                                cancelled = e
+                        shutdown.result()
+                finally:
+                    # UI teardown requires running(), but native cleanup cannot wait for it.
+                    if running_called:
+                        await self.done()
+                if cancelled:
+                    raise cancelled
 
     def shutdown(self):
         """

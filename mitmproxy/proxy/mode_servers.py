@@ -456,7 +456,7 @@ class LocalRedirectorInstance(ServerInstance[mode_specs.LocalMode]):
                     cls.redirector_handle_stream,
                     cls.redirector_handle_stream,
                 )
-            except Exception:
+            except (Exception, asyncio.CancelledError):
                 cls._instance = None
                 raise
 
@@ -468,6 +468,15 @@ class LocalRedirectorInstance(ServerInstance[mode_specs.LocalMode]):
         self.__class__._instance = None
         # We're not shutting down the server because we want to avoid additional UAC prompts.
         self._server.set_intercept("")
+
+    @classmethod
+    async def shutdown(cls) -> None:
+        """Close the cached redirector when mitmproxy exits, rather than when capture stops."""
+        if cls._server is not None:
+            cls._server.close()
+            await cls._server.wait_closed()
+            cls._server = None
+        cls._instance = None
 
 
 class RegularInstance(AsyncioServerInstance[mode_specs.RegularMode]):
