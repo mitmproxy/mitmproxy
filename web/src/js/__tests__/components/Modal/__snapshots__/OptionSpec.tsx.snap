@@ -2,6 +2,16 @@
 
 exports[`ChoiceOption Component should render correctly 1`] = `<DocumentFragment />`;
 
+exports[`FloatOption Component should render correctly 1`] = `
+<DocumentFragment>
+  <input
+    step="any"
+    type="number"
+    value="0.42"
+  />
+</DocumentFragment>
+`;
+
 exports[`NumberOption Component should render correctly 1`] = `<DocumentFragment />`;
 
 exports[`StringOption Component should render correctly 1`] = `<DocumentFragment />`;

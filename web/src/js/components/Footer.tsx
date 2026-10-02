@@ -2,6 +2,20 @@ import * as React from "react";
 import { formatSize } from "../utils";
 import HideInStatic from "../components/common/HideInStatic";
 import { useAppSelector } from "../ducks";
+import Badge from "./common/Badge";
+
+type FooterBadgeProps = Omit<
+    React.ComponentProps<typeof Badge>,
+    "className"
+> & {
+    variant: "neutral" | "info" | "success" | "danger";
+};
+
+function FooterBadge({ variant, ...props }: FooterBadgeProps) {
+    return (
+        <Badge {...props} className={`footer-badge footer-badge-${variant}`} />
+    );
+}
 
 export default function Footer() {
     const version = useAppSelector((state) => state.backendState.version);
@@ -32,63 +46,63 @@ export default function Footer() {
     return (
         <footer>
             {mode && (mode.length !== 1 || mode[0] !== "regular") && (
-                <span className="label label-success">{mode.join(",")}</span>
+                <FooterBadge variant="success">{mode.join(",")}</FooterBadge>
             )}
             {intercept && (
-                <span className="label label-success">
+                <FooterBadge variant="success">
                     Intercept: {intercept}
-                </span>
+                </FooterBadge>
             )}
             {ssl_insecure && (
-                <span className="label label-danger">ssl_insecure</span>
+                <FooterBadge variant="danger">ssl_insecure</FooterBadge>
             )}
-            {showhost && <span className="label label-success">showhost</span>}
+            {showhost && <FooterBadge variant="success">showhost</FooterBadge>}
             {!upstream_cert && (
-                <span className="label label-success">no-upstream-cert</span>
+                <FooterBadge variant="success">no-upstream-cert</FooterBadge>
             )}
-            {!rawtcp && <span className="label label-success">no-raw-tcp</span>}
-            {!http2 && <span className="label label-success">no-http2</span>}
+            {!rawtcp && <FooterBadge variant="success">no-raw-tcp</FooterBadge>}
+            {!http2 && <FooterBadge variant="success">no-http2</FooterBadge>}
             {!websocket && (
-                <span className="label label-success">no-websocket</span>
+                <FooterBadge variant="success">no-websocket</FooterBadge>
             )}
             {anticache && (
-                <span className="label label-success">anticache</span>
+                <FooterBadge variant="success">anticache</FooterBadge>
             )}
-            {anticomp && <span className="label label-success">anticomp</span>}
+            {anticomp && <FooterBadge variant="success">anticomp</FooterBadge>}
             {stickyauth && (
-                <span className="label label-success">
+                <FooterBadge variant="success">
                     stickyauth: {stickyauth}
-                </span>
+                </FooterBadge>
             )}
             {stickycookie && (
-                <span className="label label-success">
+                <FooterBadge variant="success">
                     stickycookie: {stickycookie}
-                </span>
+                </FooterBadge>
             )}
             {stream_large_bodies && (
-                <span className="label label-success">
+                <FooterBadge variant="success">
                     stream: {formatSize(stream_large_bodies)}
-                </span>
+                </FooterBadge>
             )}
             {totalFlowsLength > 0 && (
-                <span className="label label-default">
+                <FooterBadge variant="neutral">
                     {selectedFlowsLength} of {totalFlowsLength} flows selected
-                </span>
+                </FooterBadge>
             )}
-            <div className="float-right">
+            <div className="footer-meta">
                 <HideInStatic>
                     {server && (
-                        <span
-                            className="label label-primary"
+                        <FooterBadge
+                            variant="info"
                             title="HTTP Proxy Server Address"
                         >
                             {listen_host || "*"}:{listen_port || 8080}
-                        </span>
+                        </FooterBadge>
                     )}
                 </HideInStatic>
-                <span className="label label-default" title="Mitmproxy Version">
+                <FooterBadge variant="neutral" title="Mitmproxy Version">
                     mitmproxy {version}
-                </span>
+                </FooterBadge>
             </div>
         </footer>
     );
