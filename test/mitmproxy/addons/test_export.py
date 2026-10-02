@@ -124,7 +124,30 @@ class TestExportCurlCommand:
 
     def test_expand_escaped(self, export_curl, post_request):
         post_request.request.content = b"foo\nbar"
-        result = "curl -X POST http://address:22/path -d \"$(printf 'foo\\x0abar')\""
+        result = "curl -X POST http://address:22/path -d $'foo\\x0abar'"
+        assert export_curl(post_request) == result
+
+    def test_expand_escaped_trailing_newline_is_preserved(
+        self, export_curl, post_request
+    ):
+        # https://github.com/mitmproxy/mitmproxy/issues/8425
+        post_request.request.content = b'{"a":1}\n'
+        result = 'curl -X POST http://address:22/path -d $\'{"a":1}\\x0a\''
+        assert export_curl(post_request) == result
+
+    def test_expand_escaped_percent_is_literal(self, export_curl, post_request):
+        post_request.request.content = b"a=100%\nb=2"
+        result = "curl -X POST http://address:22/path -d $'a=100%\\x0ab=2'"
+        assert export_curl(post_request) == result
+
+    def test_expand_escaped_backslash_is_literal(self, export_curl, post_request):
+        post_request.request.content = b"C:\\new\\temp\nx"
+        result = "curl -X POST http://address:22/path -d $'C:\\\\new\\\\temp\\x0ax'"
+        assert export_curl(post_request) == result
+
+    def test_expand_escaped_single_quote(self, export_curl, post_request):
+        post_request.request.content = b"'#\n"
+        result = "curl -X POST http://address:22/path -d $'\\'#\\x0a'"
         assert export_curl(post_request) == result
 
     def test_no_expand_when_no_escaped(self, export_curl, post_request):
