@@ -51,13 +51,17 @@ def request_content_for_console(request: http.Request) -> str:
         # shlex.quote doesn't support a bytes object
         # see https://github.com/python/cpython/pull/10871
         raise exceptions.CommandError("Request content must be valid unicode")
-    escape_control_chars = {chr(i): f"\\x{i:02x}" for i in range(32)}
-    escaped_text = "".join(escape_control_chars.get(x, x) for x in text)
-    if any(char in escape_control_chars for char in text):
-        # Escaped chars need to be unescaped by the shell to be properly inperpreted by curl and httpie
-        return f'"$(printf {shlex.quote(escaped_text)})"'
+    if any(ord(x) < 32 for x in text):
+        # Control characters are emitted as \xNN escapes, which ANSI-C quoting
+        # ($'...') expands byte for byte. Unlike the $(printf ...) approach
+        # used before, this leaves % and backslashes in the body untouched and
+        # survives command substitution stripping trailing newlines.
+        # See https://github.com/mitmproxy/mitmproxy/issues/8425
+        escaped = text.replace("\\", "\\\\").replace("'", "\\'")
+        escaped = "".join(f"\\x{ord(x):02x}" if ord(x) < 32 else x for x in escaped)
+        return f"$'{escaped}'"
 
-    return shlex.quote(escaped_text)
+    return shlex.quote(text)
 
 
 def curl_command(f: flow.Flow) -> str:
