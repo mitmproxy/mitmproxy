@@ -38,6 +38,10 @@
 - mitmweb: Add a dark theme, selectable via the new `web_theme` option (`system`, `dark`, or `light`).
   `system` follows the operating system's color-scheme preference.
   ([#8317](https://github.com/mitmproxy/mitmproxy/pull/8317), @sleeyax)
+- mitmweb: Make flow-table columns resizable by dragging their header edges, or fit a column to its contents by double-clicking one.
+  Widths persist across reloads.
+  The Appearance section of the Options menu picks which columns the flow table shows and restores their default widths.
+  ([#8358](https://github.com/mitmproxy/mitmproxy/pull/8358), @sleeyax)
 - mitmweb: Show colored status-code badges and method badges in the flow table, and add hover
   tooltips to the TLS, replay, intercept, and error indicators.
   ([#8335](https://github.com/mitmproxy/mitmproxy/pull/8335), @sleeyax)
