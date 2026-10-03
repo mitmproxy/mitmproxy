@@ -12,6 +12,10 @@
   socket, so addon `load()` (and the options UI) could show a new port while
   traffic still arrived on the old one.
   ([#4269](https://github.com/mitmproxy/mitmproxy/issues/4269))
+- Accept colons in Basic authentication passwords.
+  ([#8469](https://github.com/mitmproxy/mitmproxy/pull/8469), @gigioneggiando)
+- Clarify that inbound header validation covers requests and responses.
+  ([#8470](https://github.com/mitmproxy/mitmproxy/pull/8470), @gigioneggiando)
 - mitmweb: Support `float` addon options in the Options editor.
   ([#3144](https://github.com/mitmproxy/mitmproxy/issues/3144))
 - Add `launch_edge()` to the Browser addon, so `browser.start edge` can
