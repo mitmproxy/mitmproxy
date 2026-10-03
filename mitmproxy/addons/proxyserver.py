@@ -211,7 +211,7 @@ class Proxyserver(ServerManager):
             bool,
             True,
             """
-            Make sure that incoming HTTP requests are not malformed.
+            Make sure that incoming HTTP requests and responses are not malformed.
             Disabling this option makes mitmproxy vulnerable to HTTP smuggling attacks.
             """,
         )
