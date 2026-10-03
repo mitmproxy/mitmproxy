@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- Clarify that inbound header validation covers requests and responses.
 - mitmweb: Support `float` addon options in the Options editor.
   ([#3144](https://github.com/mitmproxy/mitmproxy/issues/3144))
 - Add `launch_edge()` to the Browser addon, so `browser.start edge` can
