@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Accept colons in Basic authentication passwords.
+  ([#8469](https://github.com/mitmproxy/mitmproxy/pull/8469), @gigioneggiando)
 - Clarify that inbound header validation covers requests and responses.
   ([#8470](https://github.com/mitmproxy/mitmproxy/pull/8470), @gigioneggiando)
 - mitmweb: Support `float` addon options in the Options editor.
