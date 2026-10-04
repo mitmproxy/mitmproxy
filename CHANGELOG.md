@@ -10,6 +10,7 @@
 - Fix the global `listen_port` option being applied to proxy modes that don't
   bind a port (e.g. `local`), which caused a "Cannot spawn multiple servers on
   the same address" error when enabling local capture.
+  ([#8471](https://github.com/mitmproxy/mitmproxy/pull/8471), @WarpFoxHub)
 - Accept colons in Basic authentication passwords.
   ([#8469](https://github.com/mitmproxy/mitmproxy/pull/8469), @gigioneggiando)
 - Clarify that inbound header validation covers requests and responses.
