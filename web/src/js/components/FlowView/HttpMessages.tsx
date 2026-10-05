@@ -14,6 +14,7 @@ import type { HTTPFlow, HTTPMessage, HTTPResponse } from "../../flow";
 import * as flowActions from "../../ducks/flows";
 import KeyValueListEditor from "../editors/KeyValueListEditor";
 import HttpMessage from "../contentviews/HttpMessage";
+import { statusCodeReasons } from "../../statusCodes";
 
 type RequestLineProps = {
     flow: HTTPFlow;
@@ -99,7 +100,17 @@ function ResponseLine({ flow }: ResponseLineProps) {
                 isValid={(code) => /^\d+$/.test(code)}
                 selectAllOnClick={true}
             />
-            {flow.response.http_version !== "HTTP/2.0" && (
+            {flow.response.http_version === "HTTP/2.0" || flow.response.http_version === "HTTP/3" ? (
+                <>
+                    &nbsp;
+                    <span
+                        className="response-reason"
+                        title="Reason phrase not transmitted for HTTP/2 and HTTP/3; looked up from status code"
+                    >
+                        {statusCodeReasons[flow.response.status_code] ?? flow.response.reason}
+                    </span>
+                </>
+            ) : (
                 <>
                     &nbsp;
                     <ValueEditor
