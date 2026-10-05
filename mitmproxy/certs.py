@@ -353,11 +353,13 @@ def dummy_cert(
     builder = builder.subject_name(x509.Name(subject))
     builder = builder.serial_number(x509.random_serial_number())
 
-    # RFC 5280 §4.2.1.6: subjectAltName is critical if subject is empty.
-    builder = builder.add_extension(
-        x509.SubjectAlternativeName(_fix_legacy_sans(sans)),
-        critical=not is_valid_commonname,
-    )
+    sans = _fix_legacy_sans(sans)
+    if sans:
+        # RFC 5280 §4.2.1.6: subjectAltName is critical if subject is empty.
+        builder = builder.add_extension(
+            x509.SubjectAlternativeName(sans),
+            critical=not is_valid_commonname,
+        )
 
     # https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.1
     # Per RFC 5280 §4.2.1.2, the AKI's keyIdentifier in a child certificate
