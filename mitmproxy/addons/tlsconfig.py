@@ -357,7 +357,7 @@ class TlsConfig:
             try:
                 ip: bytes = ipaddress.ip_address(server.sni).packed
             except ValueError:
-                host_name = server.sni.encode("idna")
+                host_name = _remove_trailing_dot(server.sni).encode("idna")
                 tls_start.ssl_conn.set_tlsext_host_name(host_name)
                 ok = SSL._lib.X509_VERIFY_PARAM_set1_host(  # type: ignore
                     param, host_name, len(host_name)
@@ -644,11 +644,22 @@ class TlsConfig:
             )
 
 
+def _remove_trailing_dot(host: str) -> str:
+    """Remove the root label from a fully-qualified domain name.
+
+    `example.com.` and `example.com` name the same host, but the trailing dot
+    must not be sent in an SNI HostName (RFC 6066, section 3) and would not
+    match a certificate issued for the dot-less form. Python's `idna` codec
+    keeps the dot, so it has to be taken off explicitly.
+    """
+    return host.removesuffix(".")
+
+
 def _ip_or_dns_name(val: str) -> x509.GeneralName:
     """Convert a string into either an x509.IPAddress or x509.DNSName object."""
     try:
         ip = ipaddress.ip_address(val)
     except ValueError:
-        return x509.DNSName(val.encode("idna").decode())
+        return x509.DNSName(_remove_trailing_dot(val).encode("idna").decode())
     else:
         return x509.IPAddress(ip)

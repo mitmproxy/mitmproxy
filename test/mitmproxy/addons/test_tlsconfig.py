@@ -208,6 +208,30 @@ class TestTlsConfig:
             with pytest.warns(UserWarning):
                 assert ta.get_cert(ctx)  # does not raise
 
+    def test_get_cert_trailing_dot(self):
+        """A fully-qualified name keeps its root label out of the certificate.
+
+        `example.com.` and `example.com` are the same host, so a certificate
+        issued for the trailing-dot form has to match a client asking for the
+        plain one.
+        """
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            ta.configure(["confdir"])
+
+            ctx = _ctx(tctx.options)
+            ctx.client.sni = "example.com."
+            ctx.server.address = ("server-address.example.", 443)
+
+            entry = ta.get_cert(ctx)
+            assert entry.cert.cn == "example.com"
+            assert entry.cert.altnames == x509.GeneralNames(
+                [
+                    x509.DNSName("example.com"),
+                    x509.DNSName("server-address.example"),
+                ]
+            )
+
     def test_tls_clienthello(self):
         # only really testing for coverage here, there's no point in mirroring the individual conditions
         ta = tlsconfig.TlsConfig()
@@ -564,6 +588,24 @@ class TestTlsConfig:
             f = tflow.tflow(req=tflow.treq(path=ta.crl_path()), live=False)
             ta.request(f)
             assert not f.response
+
+
+def test_remove_trailing_dot():
+    assert tlsconfig._remove_trailing_dot("example.com.") == "example.com"
+    assert tlsconfig._remove_trailing_dot("example.com") == "example.com"
+    assert tlsconfig._remove_trailing_dot(".") == ""
+    assert tlsconfig._remove_trailing_dot("") == ""
+
+
+def test_ip_or_dns_name_trailing_dot():
+    # The root label is dropped, and IDNA encoding still happens.
+    assert tlsconfig._ip_or_dns_name("example.com.") == x509.DNSName("example.com")
+    assert tlsconfig._ip_or_dns_name("🌈.example.") == x509.DNSName("xn--og8h.example")
+    # Names without a trailing dot and IP addresses are untouched.
+    assert tlsconfig._ip_or_dns_name("example.com") == x509.DNSName("example.com")
+    assert tlsconfig._ip_or_dns_name("10.0.0.1") == x509.IPAddress(
+        ipaddress.ip_address("10.0.0.1")
+    )
 
 
 def test_default_ciphers():
