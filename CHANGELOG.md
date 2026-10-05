@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Raise the upper bound of the `typing-extensions` dependency from 4.14 to 4.16.0 on Python 3.12, so that mitmproxy
+  can be installed next to packages that require a newer release (for example pydantic 2.12 and later).
+  ([#8472](https://github.com/mitmproxy/mitmproxy/pull/8472), @jpcaruana)
 - Accept colons in Basic authentication passwords.
   ([#8469](https://github.com/mitmproxy/mitmproxy/pull/8469), @gigioneggiando)
 - Clarify that inbound header validation covers requests and responses.
