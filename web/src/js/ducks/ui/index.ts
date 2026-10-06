@@ -4,6 +4,7 @@ import modal from "./modal";
 import optionsEditor from "./optionsEditor";
 import tabs from "./tabs";
 import filter from "./filter";
+import columnWidths from "./columnWidths";
 
 // TODO: Just move ducks/ui/* into ducks/?
 export default combineReducers({
@@ -12,4 +13,5 @@ export default combineReducers({
     optionsEditor,
     tabs,
     filter,
+    columnWidths,
 });
