@@ -20,6 +20,10 @@
   ([#8470](https://github.com/mitmproxy/mitmproxy/pull/8470), @gigioneggiando)
 - mitmweb: Support `float` addon options in the Options editor.
   ([#3144](https://github.com/mitmproxy/mitmproxy/issues/3144))
+- Fix secure web proxy negotiating `h2` ALPN with the client, which broke
+  HTTP/1.1 CONNECT for clients that offer `h2,http/1.1` on the outer TLS
+  (e.g. Node.js's default). This applies to `--mode regular` and `--mode upstream`.
+  ([#8435](https://github.com/mitmproxy/mitmproxy/pull/8435), @emanuele-em, @asaf-shitrit)
 - Add `launch_edge()` to the Browser addon, so `browser.start edge` can
   launch an isolated, proxy-configured instance of Microsoft Edge, matching
   the existing Chrome and Firefox support.
