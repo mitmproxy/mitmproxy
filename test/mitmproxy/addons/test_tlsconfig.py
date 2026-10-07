@@ -566,6 +566,18 @@ class TestTlsConfig:
             assert not f.response
 
 
+def test_ip_or_dns_name_idna_fallback():
+    # Valid IDNA punycodes
+    assert (
+        tlsconfig._ip_or_dns_name("\U0001f4a9.example.com").value
+        == "xn--ls8h.example.com"
+    )
+    # Lone surrogate cannot be punycoded - fallback to placeholder (cryptography validates A-label)
+    assert tlsconfig._ip_or_dns_name("test\udcff").value == "invalid.invalid"
+    # IP stays IP
+    assert str(tlsconfig._ip_or_dns_name("10.0.0.1").value) == "10.0.0.1"
+
+
 def test_default_ciphers():
     assert (
         tlsconfig._default_ciphers(net_tls.Version.TLS1_3) == tlsconfig._DEFAULT_CIPHERS
