@@ -86,7 +86,9 @@ jobs:
     steps:
       - if: matrix.container
         run: |
-          apt-get update
+          # The pinned Debian 11 image has an obsolete security repository.
+          sed -i 's@http://deb.debian.org/debian-security@http://snapshot.debian.org/archive/debian-security/20260901T000000Z@' /etc/apt/sources.list
+          apt-get -o Acquire::Check-Valid-Until=false update
           apt-get install --no-install-recommends -y git ca-certificates binutils build-essential
       - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
       - uses: mhils/workflows/setup-uv@acc73c7af100db9fb3f1ad3c0178d382048e943f
