@@ -106,7 +106,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     def __init__(self, context: Context) -> None:
         self.client = context.client
         self.transports = {}
-        self.max_conns = collections.defaultdict(lambda: asyncio.Semaphore(5))
+        self.max_conns = collections.defaultdict(
+            lambda: asyncio.Semaphore(context.options.connection_max_per_address)
+        )
         self.wakeup_timer = set()
 
         # Ask for the first layer right away.
