@@ -14,6 +14,7 @@ from mitmproxy.proxy.commands import OpenConnection
 from mitmproxy.proxy.commands import SendData
 from mitmproxy.proxy.events import ConnectionClosed
 from mitmproxy.proxy.events import DataReceived
+from mitmproxy.proxy.events import KillInjected
 from mitmproxy.proxy.layers import http
 from mitmproxy.proxy.layers import TCPLayer
 from mitmproxy.proxy.layers import tls
@@ -1374,6 +1375,48 @@ def test_kill_flow(tctx, when):
         return assert_kill(False)
     else:
         raise AssertionError
+
+
+def test_kill_injected_in_transit(tctx):
+    """
+    Regression test for https://github.com/mitmproxy/mitmproxy/issues/4711:
+    a flow killed while in transit (between hook checkpoints, e.g. waiting
+    on the server) must close the client connection instead of leaving the
+    client hung. With KillInjected, the kill is delivered as an event into
+    the live layer stack rather than only being detected at the next hook.
+    """
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+
+    # Drive a request all the way to the point where we are awaiting the
+    # server response — the kill MUST fire here, not at a hook checkpoint.
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n",
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
+    )
+
+    # Kill the flow and inject the corresponding event — this is what the
+    # `proxyserver.flow_killed` subscriber would do in production.
+    flow().kill()
+    assert (
+        playbook
+        >> KillInjected(flow())
+        << http.HttpErrorHook(flow)
+        >> reply()
+        << CloseConnection(tctx.client)
+    )
+    assert not flow().live
 
 
 def test_close_during_connect_hook(tctx):

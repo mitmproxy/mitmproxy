@@ -230,16 +230,30 @@ class Flow(serializable.Serializable):
     def kill(self):
         """
         Kill this flow. The current request/response will not be forwarded to its destination.
+
+        For in-transit flows, the proxyserver addon subscribes to `FlowKilledHook`
+        and injects a `KillInjected` event into the live connection's layer stack so
+        layers can close their connections (#4711).
         """
         if not self.killable:
             raise exceptions.ControlException("Flow is not killable.")
-        # TODO: The way we currently signal killing is not ideal. One major problem is that we cannot kill
-        #  flows in transit (https://github.com/mitmproxy/mitmproxy/issues/4711), even though they are advertised
-        #  as killable. An alternative approach would be to introduce a `KillInjected` event similar to
-        #  `MessageInjected`, which should fix this issue.
         self.error = Error(Error.KILLED_MESSAGE)
         self.intercepted = False
         self.live = False
+        if self._resume_event is not None:
+            self._resume_event.set()
+        # Fire FlowKilledHook so subscribers (proxyserver) can close live
+        # connections for flows that aren't currently at a hook checkpoint.
+        # Lazy imports avoid a circular dependency with `mitmproxy.proxy`.
+        try:
+            from mitmproxy import ctx
+            from mitmproxy.proxy import server_hooks
+        except ImportError:
+            return
+        master = getattr(ctx, "master", None)
+        if master is None:
+            return
+        master.addons.trigger(server_hooks.FlowKilledHook(self))
 
     def intercept(self):
         """

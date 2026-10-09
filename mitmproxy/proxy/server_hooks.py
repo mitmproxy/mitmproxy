@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from . import commands
 from mitmproxy import connection
+from mitmproxy import flow as mflow
 
 
 @dataclass
@@ -74,3 +75,16 @@ class ServerConnectErrorHook(commands.StartHook):
     """
 
     data: ServerConnectionHookData
+
+
+@dataclass
+class FlowKilledHook(commands.StartHook):
+    """
+    A flow has been killed via `Flow.kill()`. Fired after the flow's state
+    has been mutated (`error = KILLED_MESSAGE`, `intercepted = False`,
+    `live = False`) so subscribers can take protocol-level action — most
+    notably the proxyserver addon, which injects a `KillInjected` event
+    into the live connection's layer stack to close its connections.
+    """
+
+    flow: mflow.Flow
