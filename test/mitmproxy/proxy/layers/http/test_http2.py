@@ -13,6 +13,7 @@ from mitmproxy.flow import Error
 from mitmproxy.http import Headers
 from mitmproxy.http import HTTPFlow
 from mitmproxy.http import Request
+from mitmproxy.proxy.commands import Await
 from mitmproxy.proxy.commands import CloseConnection
 from mitmproxy.proxy.commands import Log
 from mitmproxy.proxy.commands import OpenConnection
@@ -906,6 +907,70 @@ def test_stream_concurrency(tctx):
     assert [type(x) for x in frames] == [
         hyperframe.frame.HeadersFrame,
     ]
+
+
+def test_awaiting_stream_does_not_block_sibling_stream(
+    tctx: Context, open_h2_server_conn: Server
+):
+    """An awaiting stream must not pause other streams on the same H2 connection."""
+    playbook, cff = start_h2_client(tctx)
+    tctx.server = open_h2_server_conn
+
+    flow1 = Placeholder(HTTPFlow)
+    flow2 = Placeholder(HTTPFlow)
+    pending_awaitable = Placeholder()
+    await_command = Await(pending_awaitable)
+    stream1_headers = Placeholder(bytes)
+    stream2_request = Placeholder(bytes)
+    stream1_data = Placeholder(bytes)
+
+    async def transform(chunk: bytes) -> bytes:
+        return b"transformed: " + chunk
+
+    def enable_streaming(flow: HTTPFlow) -> None:
+        flow.request.stream = transform
+
+    assert (
+        playbook
+        # Start streaming request body data on stream 1.
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(example_request_headers, stream_id=1).serialize(),
+        )
+        << http.HttpRequestHeadersHook(flow1)
+        >> reply(side_effect=enable_streaming)
+        << SendData(tctx.server, stream1_headers)
+        # The async transformer pauses only stream 1.
+        >> DataReceived(
+            tctx.client,
+            cff.build_data_frame(b"body", stream_id=1).serialize(),
+        )
+        << await_command
+        # Stream 3 shares both H2 connections and can still complete its request.
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"], stream_id=3
+            ).serialize(),
+        )
+        << http.HttpRequestHeadersHook(flow2)
+        >> reply()
+        << http.HttpRequestHook(flow2)
+        >> reply()
+        << SendData(tctx.server, stream2_request)
+        # Once stream 1 resumes, its transformed data is sent on the same connection.
+        >> reply((b"transformed: body", None), to=await_command)
+        << SendData(tctx.server, stream1_data)
+    )
+
+    assert decode_frames(stream1_headers())[-1].stream_id == 1
+    assert decode_frames(stream2_request())[-1].stream_id == 3
+    (data_frame,) = decode_frames(stream1_data())
+    assert isinstance(data_frame, hyperframe.frame.DataFrame)
+    assert data_frame.stream_id == 1
+    assert data_frame.data == b"transformed: body"
+
+    pending_awaitable().close()
 
 
 def test_max_concurrency(tctx):
