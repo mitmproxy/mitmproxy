@@ -10,6 +10,8 @@
 - Fix the global `listen_port` option being applied to proxy modes that don't
   bind a port (e.g. `local`), which caused a "Cannot spawn multiple servers on
   the same address" error when enabling local capture.
+- Fix multipart bodies being parsed as empty when the `Content-Type` boundary is
+  quoted, e.g. `boundary="abc"`.
   ([#8471](https://github.com/mitmproxy/mitmproxy/pull/8471), @WarpFoxHub)
 - Raise the upper bound of the `typing-extensions` dependency from 4.14 to 4.16.0 on Python 3.12, so that mitmproxy
   can be installed next to packages that require a newer release (for example pydantic 2.12 and later).
