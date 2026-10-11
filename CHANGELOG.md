@@ -10,6 +10,7 @@
 - Fix the global `listen_port` option being applied to proxy modes that don't
   bind a port (e.g. `local`), which caused a "Cannot spawn multiple servers on
   the same address" error when enabling local capture.
+  ([#8478](https://github.com/mitmproxy/mitmproxy/pull/8478), @Kesavamoorthig06)
 - Fix multipart bodies being parsed as empty when the `Content-Type` boundary is
   quoted, e.g. `boundary="abc"`.
   ([#8471](https://github.com/mitmproxy/mitmproxy/pull/8471), @WarpFoxHub)
