@@ -8,8 +8,23 @@ import { useAppDispatch, useAppSelector } from "../../ducks";
 import { isValidColumnName } from "../../flow/utils";
 
 const MIN_COLUMN_WIDTH = 20;
-// Cells are measured via scrollWidth, which hugs the content exactly; a small margin keeps it from looking clipped.
-const AUTO_FIT_PADDING = 8;
+
+// The width each element would take if nothing constrained it, padding included.
+// Their rendered widths can't tell this: a cell is never narrower than its column, so a column wider than its content would only ever fit to itself.
+// The styles are restored before the browser gets to paint, so the swap never shows.
+const naturalWidths = (elements: HTMLElement[]): number[] => {
+    const styles = elements.map((el) => el.style.cssText);
+    for (const el of elements) {
+        // A cell taken out of the table layout is sized by its content instead of by its column.
+        el.style.display = "block";
+        el.style.width = "max-content";
+    }
+    const widths = elements.map((el) =>
+        Math.ceil(el.getBoundingClientRect().width),
+    );
+    elements.forEach((el, i) => (el.style.cssText = styles[i]));
+    return widths;
+};
 
 type FlowTableHeadProps = {
     onResize: (widths: Record<string, number>) => void;
@@ -141,11 +156,18 @@ export default React.memo(function FlowTableHead({
 
         // The virtual scroller only mounts the rows currently in view, so the fit is over what's on screen, not the whole flow list.
         const table = handle.closest("table")!;
-        const cellWidths = Array.from(
-            table.querySelectorAll<HTMLElement>(`tbody td.col-${colName}`),
-        ).map((td) => td.scrollWidth);
-        const labelWidth = th.querySelector(".th-content")?.scrollWidth ?? 0;
+        const label = th.querySelector<HTMLElement>(".th-content")!;
+        const [labelWidth, ...cellWidths] = naturalWidths([
+            label,
+            ...table.querySelectorAll<HTMLElement>(`tbody td.col-${colName}`),
+        ]);
         if (cellWidths.length === 0 && labelWidth === 0) return;
+        // A sorted column pads its header for the sort indicator, which the label needs room for too.
+        const { paddingLeft, paddingRight } = getComputedStyle(th);
+        const headerWidth =
+            labelWidth +
+            (parseFloat(paddingLeft) || 0) +
+            (parseFloat(paddingRight) || 0);
 
         const minWidth = Math.min(MIN_COLUMN_WIDTH, widths[colName]);
         const viewport = handle.closest(".flow-table");
@@ -155,7 +177,7 @@ export default React.memo(function FlowTableHead({
         );
         const fitWidth = Math.min(
             maxWidth,
-            Math.max(minWidth, labelWidth, ...cellWidths) + AUTO_FIT_PADDING,
+            Math.max(minWidth, headerWidth, ...cellWidths),
         );
 
         onResizeEnd({ ...widths, [colName]: fitWidth });
