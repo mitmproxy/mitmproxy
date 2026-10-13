@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- mitmweb: Text and number fields in the Options editor now apply on blur or Enter instead of on every keystroke,
+  so `save_stream_file` no longer creates an empty file for every prefix of the typed path.
+  ([#7655](https://github.com/mitmproxy/mitmproxy/issues/7655), @Cassian433)
 - Fix the global `listen_port` option being applied to proxy modes that don't
   bind a port (e.g. `local`), which caused a "Cannot spawn multiple servers on
   the same address" error when enabling local capture.
