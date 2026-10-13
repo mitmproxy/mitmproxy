@@ -25,6 +25,30 @@ def test_view_json_nonascii():
     )
 
 
+def test_view_ndjson():
+    meta = Metadata()
+    ndjson = b'{"a": 1}\n{"b": [2, 3]}\n'
+    assert (
+        json_view.prettify(ndjson, meta)
+        == '{\n    "a": 1\n}\n{\n    "b": [\n        2,\n        3\n    ]\n}'
+    )
+
+    # Empty lines between records are ignored
+    ndjson_with_blanks = b'{"a": 1}\n\n  \n{"b": 2}\n'
+    assert (
+        json_view.prettify(ndjson_with_blanks, meta)
+        == '{\n    "a": 1\n}\n{\n    "b": 2\n}'
+    )
+
+    # Invalid NDJSON or empty input raises ValueError
+    with pytest.raises(ValueError):
+        json_view.prettify(b'{"a": 1}\n{invalid\n', meta)
+    with pytest.raises(ValueError):
+        json_view.prettify(b"", meta)
+    with pytest.raises(ValueError):
+        json_view.prettify(b"   \n  \n", meta)
+
+
 def test_render_priority():
     assert json_view.render_priority(b"data", Metadata(content_type="application/json"))
     assert json_view.render_priority(
@@ -36,5 +60,14 @@ def test_render_priority():
     assert json_view.render_priority(
         b"data", Metadata(content_type="application/acme+json")
     )
+    assert json_view.render_priority(
+        b"data", Metadata(content_type="application/x-ndjson")
+    )
+    assert json_view.render_priority(
+        b"data", Metadata(content_type="application/ndjson")
+    )
     assert not json_view.render_priority(b"data", Metadata(content_type="text/plain"))
     assert not json_view.render_priority(b"", Metadata(content_type="application/json"))
+    assert not json_view.render_priority(
+        b"", Metadata(content_type="application/x-ndjson")
+    )

@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Add support for displaying NDJSON (newline-delimited JSON) in the JSON content view.
+  ([#5608](https://github.com/mitmproxy/mitmproxy/issues/5608))
 - Fix the global `listen_port` option being applied to proxy modes that don't
   bind a port (e.g. `local`), which caused a "Cannot spawn multiple servers on
   the same address" error when enabling local capture.
