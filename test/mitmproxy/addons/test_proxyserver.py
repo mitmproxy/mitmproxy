@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+import socket
 import ssl
 from collections.abc import AsyncGenerator
 from collections.abc import Callable
 from contextlib import asynccontextmanager
+from contextlib import nullcontext
 from dataclasses import dataclass
 from typing import Any
 from typing import ClassVar
@@ -34,11 +36,15 @@ from mitmproxy.addons.tlsconfig import TlsConfig
 from mitmproxy.connection import Address
 from mitmproxy.proxy import layers
 from mitmproxy.proxy import server_hooks
+from mitmproxy.proxy.mode_servers import LocalRedirectorInstance
+from mitmproxy.proxy.mode_servers import ServerInstance
+from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test.tflow import tclient_conn
 from mitmproxy.test.tflow import tserver_conn
 from mitmproxy.test.tutils import tdnsreq
+from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils import data
 
 tlsdata = data.Data(__name__)
@@ -74,7 +80,7 @@ async def test_start_stop(caplog_async):
             tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
             assert not ps.servers
             assert await ps.setup_servers()
-            ps.running()
+            await ps.running()
             await caplog_async.await_log("HTTP(S) proxy listening at")
             assert ps.servers
 
@@ -104,6 +110,170 @@ async def test_start_stop(caplog_async):
 
             writer.close()
             await writer.wait_closed()
+            await _wait_for_connection_closes(ps)
+
+
+async def _wait_for_server_update(ps: Proxyserver) -> None:
+    for _ in range(50):
+        await asyncio.sleep(0)
+        if ps.servers.is_updating:
+            async with ps.servers._lock:
+                pass
+            return
+
+
+async def test_listen_port_option_rebinds():
+    """Modes without @port inherit options.listen_port; changing it must rebind (#4269)."""
+    ps = Proxyserver()
+    nl = NextLayer()
+    with taddons.context(ps, nl) as tctx:
+        tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
+        assert await ps.setup_servers()
+        await ps.running()
+        old_port = ps.listen_addrs()[0][1]
+
+        assert ServerInstance.make("regular", ps).should_rebind() is False
+        assert (
+            LocalRedirectorInstance(ProxyMode.parse("local"), ps).should_rebind()
+            is False
+        )
+
+        with socket.create_server(("127.0.0.1", 0)) as sock:
+            new_port = sock.getsockname()[1]
+        assert new_port != old_port
+
+        tctx.configure(ps, listen_port=new_port)
+        await _wait_for_server_update(ps)
+        assert ps.listen_addrs()[0][1] == new_port
+
+        reader, writer = await asyncio.open_connection("127.0.0.1", new_port)
+        writer.close()
+        await writer.wait_closed()
+        with pytest.raises((ConnectionRefusedError, OSError)):
+            await asyncio.open_connection("127.0.0.1", old_port)
+
+        # A no-op update of the same listen options must keep the existing instance.
+        tctx.configure(ps, listen_host="127.0.0.1", listen_port=new_port)
+        await _wait_for_server_update(ps)
+        assert ps.listen_addrs()[0][1] == new_port
+
+        tctx.configure(ps, server=False)
+        await _wait_for_server_update(ps)
+        await _wait_for_connection_closes(ps)
+
+
+@pytest.mark.parametrize("startup_failure", [False, True])
+async def test_listen_port_recovers_after_failed_bind(startup_failure, caplog_async):
+    caplog_async.set_level("INFO")
+    ps = Proxyserver()
+    with taddons.context(ps, NextLayer()) as tctx:
+        with socket.create_server(("127.0.0.1", 0)) as busy:
+            busy_port = busy.getsockname()[1]
+            tctx.configure(
+                ps,
+                listen_host="127.0.0.1",
+                listen_port=busy_port if startup_failure else 0,
+            )
+            assert await ps.setup_servers() is not startup_failure
+            await ps.running()
+            await _wait_for_server_update(ps)
+            if not startup_failure:
+                tctx.configure(ps, listen_port=busy_port)
+                await caplog_async.await_log("failed to listen on")
+                await _wait_for_server_update(ps)
+            failed = ps.servers["regular"]
+            assert not failed.is_running
+            assert not ps.listen_addrs()
+
+            try:
+                caplog_async.clear()
+                tctx.configure(ps, listen_port=0)
+                await caplog_async.await_log("HTTP(S) proxy listening at")
+                await _wait_for_server_update(ps)
+                recovered = ps.servers["regular"]
+                assert recovered is not failed
+                assert recovered.is_running
+                assert recovered.last_exception is None
+                assert ps.listen_addrs()[0][1] != busy_port
+                reader, writer = await asyncio.open_connection(*ps.listen_addrs()[0])
+                writer.close()
+                await writer.wait_closed()
+                assert not any(
+                    r.levelname == "ERROR" and not r.message
+                    for r in caplog_async.caplog.records
+                )
+            finally:
+                tctx.configure(ps, server=False)
+                await _wait_for_server_update(ps)
+                await _wait_for_connection_closes(ps)
+
+
+async def test_listen_port_set_in_addon_load(caplog_async):
+    caplog_async.set_level("INFO")
+    ps = Proxyserver()
+    with taddons.context(ps, NextLayer()) as tctx:
+        tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
+        assert await ps.setup_servers()
+        old_port = ps.listen_addrs()[0][1]
+        with socket.create_server(("127.0.0.1", 0)) as sock:
+            new_port = sock.getsockname()[1]
+
+        class SetListenPort:
+            def load(self, loader):
+                tctx.options.update(listen_port=new_port)
+
+        tctx.master.addons.add(SetListenPort())
+        assert ps.listen_addrs()[0][1] == old_port
+        try:
+            await tctx.master.running()
+            await caplog_async.await_log(
+                f"HTTP(S) proxy listening at 127.0.0.1:{new_port}."
+            )
+            await _wait_for_server_update(ps)
+            assert ps.listen_addrs()[0][1] == new_port
+            reader, writer = await asyncio.open_connection("127.0.0.1", new_port)
+            writer.close()
+            await writer.wait_closed()
+            with pytest.raises(OSError):
+                await asyncio.open_connection("127.0.0.1", old_port)
+        finally:
+            tctx.configure(ps, server=False)
+            await _wait_for_server_update(ps)
+            await _wait_for_connection_closes(ps)
+
+
+@pytest.mark.parametrize("eager", [False, True])
+async def test_running_waits_for_listen_port_rebind(eager):
+    ps = Proxyserver()
+    observed_addrs = []
+
+    class SelfTest:
+        def load(self, loader):
+            # Like release/selftest.py, switch from a fixed port to a random port.
+            tctx.options.update(listen_port=0)
+
+        def running(self):
+            observed_addrs.append(ps.listen_addrs()[0])
+
+    with taddons.context(ps, NextLayer()) as tctx:
+        with socket.create_server(("127.0.0.1", 0)) as sock:
+            old_port = sock.getsockname()[1]
+        tctx.configure(ps, listen_host="127.0.0.1", listen_port=old_port)
+        assert await ps.setup_servers()
+        tctx.master.addons.add(SelfTest())
+
+        try:
+            with asyncio_utils.set_eager_task_factory() if eager else nullcontext():
+                await tctx.master.running()
+                assert len(observed_addrs) == 1
+                assert observed_addrs == ps.listen_addrs()
+                assert not ps.servers.is_updating
+                reader, writer = await asyncio.open_connection(*observed_addrs[0])
+                writer.close()
+                await writer.wait_closed()
+        finally:
+            tctx.configure(ps, server=False)
+            await _wait_for_server_update(ps)
             await _wait_for_connection_closes(ps)
 
 
@@ -140,7 +310,7 @@ async def test_inject() -> None:
         async with tcp_server(server_handler) as addr:
             tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
             assert await ps.setup_servers()
-            ps.running()
+            await ps.running()
             proxy_addr = ps.servers["regular"].listen_addrs[0]
             reader, writer = await asyncio.open_connection(*proxy_addr)
 
@@ -195,7 +365,7 @@ async def test_warn_no_nextlayer(caplog):
     with taddons.context(ps) as tctx:
         tctx.configure(ps, listen_host="127.0.0.1", listen_port=0, server=False)
         assert await ps.setup_servers()
-        ps.running()
+        await ps.running()
         assert "Warning: Running proxyserver without nextlayer addon!" in caplog.text
 
 
@@ -207,7 +377,7 @@ async def test_self_connect():
     with taddons.context(ps) as tctx:
         tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
         assert await ps.setup_servers()
-        ps.running()
+        await ps.running()
         assert ps.servers
         server.address = ("localhost", ps.servers["regular"].listen_addrs[0][1])
         ps.server_connect(server_hooks.ServerConnectionHookData(server, client))
@@ -262,7 +432,7 @@ async def test_shutdown_err(caplog_async) -> None:
     with taddons.context(ps) as tctx:
         tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
         assert await ps.setup_servers()
-        ps.running()
+        await ps.running()
         assert ps.servers
         for server in ps.servers:
             setattr(server, "stop", _raise)
@@ -288,7 +458,7 @@ async def test_dns(caplog_async, monkeypatch) -> None:
             mode=["dns@127.0.0.1:0"],
         )
         assert await ps.setup_servers()
-        ps.running()
+        await ps.running()
         await caplog_async.await_log("DNS server listening at")
         assert ps.servers
         dns_addr = ps.servers["dns@127.0.0.1:0"].listen_addrs[0]
@@ -384,7 +554,7 @@ async def test_udp(caplog_async) -> None:
             mode = f"reverse:udp://{server_addr[0]}:{server_addr[1]}@127.0.0.1:0"
             tctx.configure(ps, mode=[mode])
             assert await ps.setup_servers()
-            ps.running()
+            await ps.running()
             await caplog_async.await_log(
                 f"reverse proxy to udp://{server_addr[0]}:{server_addr[1]} listening"
             )
@@ -794,7 +964,7 @@ async def test_reverse_http3_and_quic_stream(caplog_async, scheme: str) -> None:
             )
             tctx.configure(ps, mode=[mode])
             assert await ps.setup_servers()
-            ps.running()
+            await ps.running()
             await caplog_async.await_log(
                 f"reverse proxy to {scheme}://{server_addr[0]}:{server_addr[1]} listening"
             )
@@ -827,7 +997,7 @@ async def test_reverse_quic_datagram(caplog_async) -> None:
             )
             tctx.configure(ps, mode=[mode])
             assert await ps.setup_servers()
-            ps.running()
+            await ps.running()
             await caplog_async.await_log(
                 f"reverse proxy to quic://{server_addr[0]}:{server_addr[1]} listening"
             )
@@ -875,7 +1045,7 @@ async def test_regular_http3(caplog_async, monkeypatch) -> None:
             )
             tctx.configure(ps, mode=[mode])
             assert await ps.setup_servers()
-            ps.running()
+            await ps.running()
             await caplog_async.await_log(f"HTTP3 proxy listening")
             assert ps.servers
             addr = ps.servers[mode].listen_addrs[0]
