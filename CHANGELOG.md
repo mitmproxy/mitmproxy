@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Automatically discover and load addons installed via the mitmproxy.addons entry point group.
+  ([#7755](https://github.com/mitmproxy/mitmproxy/issues/7755))
+
 - Update `certifi` dependency to remove eMudhra CAs from precompiled binaries.
   ([#8499](https://github.com/mitmproxy/mitmproxy/pull/8499), @mhils) 
 - Fix the WBXML contentview raising a `KeyError` on tags that are missing from the code page,

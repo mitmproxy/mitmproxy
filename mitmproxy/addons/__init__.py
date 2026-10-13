@@ -1,3 +1,10 @@
+import contextlib
+import importlib.metadata
+import inspect
+import logging
+import types
+from typing import Any
+
 from mitmproxy.addons import anticache
 from mitmproxy.addons import anticomp
 from mitmproxy.addons import block
@@ -29,6 +36,48 @@ from mitmproxy.addons import strip_dns_https_records
 from mitmproxy.addons import tlsconfig
 from mitmproxy.addons import update_alt_svc
 from mitmproxy.addons import upstream_auth
+
+logger = logging.getLogger(__name__)
+
+
+def entrypoint_addons() -> list[Any]:
+    """
+    Discover and load addons registered via Python entry points in group 'mitmproxy.addons'.
+    """
+    addons: list[Any] = []
+    for ep in importlib.metadata.entry_points(group="mitmproxy.addons"):
+        try:
+            addon = ep.load()
+            if isinstance(addon, type):
+                addon = addon()
+            elif callable(addon) and not isinstance(addon, types.ModuleType):
+                try:
+                    sig = inspect.signature(addon)
+                    if not any(
+                        p.default == inspect.Parameter.empty
+                        and p.kind
+                        in (
+                            inspect.Parameter.POSITIONAL_ONLY,
+                            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                        )
+                        for p in sig.parameters.values()
+                    ):
+                        addon = addon()
+                except (ValueError, TypeError):
+                    pass
+            if isinstance(addon, (list, tuple)):
+                addons.extend(addon)
+            else:
+                if not getattr(addon, "name", None):
+                    with contextlib.suppress(AttributeError):
+                        addon.name = ep.name
+                addons.append(addon)
+        except Exception:
+            logger.error(
+                f"Failed to load addon from entry point '{ep.name}': {ep.value}",
+                exc_info=True,
+            )
+    return addons
 
 
 def default_addons():
@@ -64,4 +113,5 @@ def default_addons():
         tlsconfig.TlsConfig(),
         upstream_auth.UpstreamAuth(),
         update_alt_svc.UpdateAltSvc(),
+        *entrypoint_addons(),
     ]
