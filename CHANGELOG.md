@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Automatically discover and load addons installed via the `mitmproxy.addons` entry point group.
+  ([#7755](https://github.com/mitmproxy/mitmproxy/issues/7755))
+
 - Fix the global `listen_port` option being applied to proxy modes that don't
   bind a port (e.g. `local`), which caused a "Cannot spawn multiple servers on
   the same address" error when enabling local capture.
