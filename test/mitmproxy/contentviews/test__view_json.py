@@ -35,7 +35,10 @@ def test_view_ndjson():
 
     # Empty lines between records are ignored
     ndjson_with_blanks = b'{"a": 1}\n\n  \n{"b": 2}\n'
-    assert json_view.prettify(ndjson_with_blanks, meta) == '{\n    "a": 1\n}\n{\n    "b": 2\n}'
+    assert (
+        json_view.prettify(ndjson_with_blanks, meta)
+        == '{\n    "a": 1\n}\n{\n    "b": 2\n}'
+    )
 
     # Invalid NDJSON or empty input raises ValueError
     with pytest.raises(ValueError):
@@ -65,4 +68,6 @@ def test_render_priority():
     )
     assert not json_view.render_priority(b"data", Metadata(content_type="text/plain"))
     assert not json_view.render_priority(b"", Metadata(content_type="application/json"))
-    assert not json_view.render_priority(b"", Metadata(content_type="application/x-ndjson"))
+    assert not json_view.render_priority(
+        b"", Metadata(content_type="application/x-ndjson")
+    )
