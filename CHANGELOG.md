@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Update Certificate Authority documentation for Firefox to Firefox ESR 153.x
+  ([#8475](https://github.com/mitmproxy/mitmproxy/pull/8475), @iamleot)
 - Fix the global `listen_port` option being applied to proxy modes that don't
   bind a port (e.g. `local`), which caused a "Cannot spawn multiple servers on
   the same address" error when enabling local capture.

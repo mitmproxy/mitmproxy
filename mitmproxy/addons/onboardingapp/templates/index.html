@@ -110,9 +110,14 @@
     {% call entry('Firefox <small>(does not use the OS root certificates)</small>', 'firefox-browser') %}
     <h5>Firefox</h5>
     <ol>
-        <li>Open <samp>Options -> Privacy &amp; Security</samp> and click <samp>View Certificates...</samp>
-            at the bottom of the page.</li>
-        <li>Click <samp>Import...</samp> and select the downloaded certificate.</li>
+	<li>Open <samp>Options -> Privacy &amp; Security</samp> go to
+	    <samp>Connection and software security</samp> at the bottom
+	    of the page and click to <samp>Advanced settings</samp> under <samp>
+	    at the bottom of the page.</li>
+	<li>Go to <samp>Certificates</samp> at the bottom of the page and click
+	    <samp>Manage certificates</samp>.</li>
+	<li>Select <samp>Authorities</samp> tab on the right and click
+	    <samp>Import...</samp> and select the downloaded certificate.</li>
         <li>Enable <samp>Trust this CA to identify websites</samp> and click <samp>OK</samp>.</li>
     </ol>
     {% endcall %}
