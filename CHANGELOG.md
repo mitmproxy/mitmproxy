@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix requests hanging when an HTTP/1 server sends an informational response
+  such as `103 Early Hints` before the final response.
 - Fix the global `listen_port` option being applied to proxy modes that don't
   bind a port (e.g. `local`), which caused a "Cannot spawn multiple servers on
   the same address" error when enabling local capture.
