@@ -166,6 +166,22 @@ def test_hostport():
     assert url.hostport(b"https", b"foo.com", 8080) == b"foo.com:8080"
 
 
+def test_hostport_ipv6():
+    assert url.hostport("http", "::1", 8080) == "[::1]:8080"
+    assert url.hostport("http", "::1", 80) == "[::1]"
+    assert url.hostport(b"https", b"2001:db8::1", 8443) == b"[2001:db8::1]:8443"
+    assert url.hostport(b"https", b"2001:db8::1", 443) == b"[2001:db8::1]"
+    assert url.hostport("http", "[::1]", 8080) == "[::1]:8080"
+
+
+def test_unparse_ipv6():
+    assert url.unparse("http", "::1", 8080, "/a") == "http://[::1]:8080/a"
+    assert (
+        url.unparse(b"https", b"2001:db8::1", 443, b"/a") == b"https://[2001:db8::1]/a"
+    )
+    assert url.unparse(*url.parse("http://[::1]:8080/a")) == b"http://[::1]:8080/a"
+
+
 def test_default_port():
     assert url.default_port("http") == 80
     assert url.default_port(b"https") == 443
