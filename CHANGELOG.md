@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Wrap IPv6 hosts in square brackets when building `Host` headers and URLs. This fixes the
+  `Host` header that reverse proxy mode sent to IPv6 backends, and `request.url` for IPv6 targets.
+  ([#8484](https://github.com/mitmproxy/mitmproxy/pull/8484), @RitiGrover)
 - Fix the global `listen_port` option being applied to proxy modes that don't
   bind a port (e.g. `local`), which caused a "Cannot spawn multiple servers on
   the same address" error when enabling local capture.

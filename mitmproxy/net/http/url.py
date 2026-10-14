@@ -144,6 +144,12 @@ def hostport(scheme: AnyStr, host: AnyStr, port: int) -> AnyStr:
     """
     Returns the host component, with a port specification if needed.
     """
+    # IPv6 literals need brackets to tell their colons apart from the port.
+    if isinstance(host, bytes) and b":" in host and not host.startswith(b"["):
+        host = b"[%s]" % host
+    elif isinstance(host, str) and ":" in host and not host.startswith("["):
+        host = f"[{host}]"
+
     if default_port(scheme) == port:
         return host
     else:
