@@ -9,9 +9,11 @@
 
 - Fix key presses in the console's commands view failing with urwid 4.0, and stop using
   `Pile.widget_list` and `ListBox.get_focus()`, which urwid 5.0 removes.
+  ([#8481](https://github.com/mitmproxy/mitmproxy/pull/8481), @penguinolog)
 - Replace the deprecated urwid `Pile.get_item_size()` with `Pile.get_rows_sizes()` in the
   console's key bindings, options and commands views, and the deprecated `urwid.raw_display`
   module path with `urwid.display.raw`.
+  ([#8481](https://github.com/mitmproxy/mitmproxy/pull/8481), @penguinolog)
 - Fix the global `listen_port` option being applied to proxy modes that don't
   bind a port (e.g. `local`), which caused a "Cannot spawn multiple servers on
   the same address" error when enabling local capture.
