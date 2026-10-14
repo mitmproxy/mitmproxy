@@ -90,7 +90,7 @@ class CommandsList(urwid.ListBox):
 
     def keypress(self, size: int, key: str):
         if key == "m_select":
-            foc, idx = self.get_focus()
+            foc = self.focus
             signals.status_prompt_command.send(partial=foc.cmd.name + " ")
         elif key == "m_start":
             self.set_focus(0)
@@ -138,19 +138,15 @@ class Commands(urwid.Pile, layoutwidget.LayoutWidget):
         self.master = master
 
     def layout_pushed(self, prev):
-        self.widget_list[0].walker.refresh()
+        self.contents[0][0].walker.refresh()
 
     def keypress(self, size, key):
         if key == "m_next":
-            self.focus_position = (self.focus_position + 1) % len(self.widget_list)
-            self.widget_list[1].set_active(self.focus_position == 1)
+            self.focus_position = (self.focus_position + 1) % len(self.contents)
+            self.contents[1][0].set_active(self.focus_position == 1)
             key = None
 
         # This is essentially a copypasta from urwid.Pile's keypress handler.
         # So much for "closed for modification, but open for extension".
-        item_rows = None
-        if len(size) == 2:
-            item_rows = self.get_item_rows(size, focus=True)
-        i = self.widget_list.index(self.focus_item)
-        tsize = self.get_item_size(size, i, True, item_rows)
-        return self.focus_item.keypress(tsize, key)
+        tsize = self.get_rows_sizes(size, focus=True)[2][self.focus_position]
+        return self.focus.keypress(tsize, key)

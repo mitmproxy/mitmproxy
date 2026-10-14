@@ -305,7 +305,7 @@ class Window(urwid.Frame):
             return self.master.keymap.handle(self.focus_stack().top_widget().keyctx, k)
 
 
-class Screen(urwid.raw_display.Screen):
+class Screen(urwid.display.raw.Screen):
     def __init__(self) -> None:
         super().__init__()
         self.logger = logging.getLogger("urwid")

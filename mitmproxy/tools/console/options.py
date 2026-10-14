@@ -165,7 +165,7 @@ class OptionsList(urwid.ListBox):
     def keypress(self, size, key):
         if self.walker.editing:
             if key == "enter":
-                foc, idx = self.get_focus()
+                foc = self.focus
                 v = self.walker.get_edit_text()
                 try:
                     self.master.options.set(f"{foc.opt.name}={v}")
@@ -184,7 +184,7 @@ class OptionsList(urwid.ListBox):
                 self.set_focus(len(self.walker.opts) - 1)
                 self.walker._modified()
             elif key == "m_select":
-                foc, idx = self.get_focus()
+                foc = self.focus
                 if foc.opt.typespec is bool:
                     self.master.options.toggler(foc.opt.name)()
                     # Bust the focus widget cache
@@ -254,19 +254,16 @@ class Options(urwid.Pile, layoutwidget.LayoutWidget):
         self.master = master
 
     def current_name(self):
-        foc, idx = self.optionslist.get_focus()
+        foc = self.optionslist.focus
         return foc.opt.name
 
     def keypress(self, size, key):
         if key == "m_next":
-            self.focus_position = (self.focus_position + 1) % len(self.widget_list)
-            self.widget_list[1].set_active(self.focus_position == 1)
+            self.focus_position = (self.focus_position + 1) % len(self.contents)
+            self.contents[1][0].set_active(self.focus_position == 1)
             key = None
 
         # This is essentially a copypasta from urwid.Pile's keypress handler.
         # So much for "closed for modification, but open for extension".
-        item_rows = None
-        if len(size) == 2:
-            item_rows = self.get_item_rows(size, focus=True)
-        tsize = self.get_item_size(size, self.focus_position, True, item_rows)
+        tsize = self.get_rows_sizes(size, focus=True)[2][self.focus_position]
         return self.focus.keypress(tsize, key)
