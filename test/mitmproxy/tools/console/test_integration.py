@@ -17,6 +17,12 @@ def test_keybindings_home_end(console):
     assert "Key Binding" in console.screen_contents()
 
 
+def test_commands_select(console):
+    cmds = sorted(console.commands.commands.values(), key=lambda c: c.signature_help())
+    console.type("C<tab><tab><down><enter>")
+    assert f": {cmds[1].name} " in console.screen_contents()
+
+
 def test_replay_count(console):
     console.type(":replay.server.count<enter>")
     assert "Data viewer" in console.screen_contents()
