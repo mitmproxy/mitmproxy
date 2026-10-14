@@ -1,2 +1,3 @@
 graft mitmproxy
 recursive-exclude * *.pyc *.pyo *.swo *.swp *.map
+include release/linux/org.mitmproxy.mitmproxy.metainfo.xml
