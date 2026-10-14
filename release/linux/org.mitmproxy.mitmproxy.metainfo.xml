@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<component type="console-application">
+  <id>org.mitmproxy.mitmproxy</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+
+  <name>mitmproxy</name>
+  <summary>Interactive, SSL/TLS-capable intercepting proxy</summary>
+  <developer id="org.mitmproxy">
+    <name>mitmproxy.org</name>
+  </developer>
+
+  <description>
+    <p>
+      mitmproxy is an interactive, SSL/TLS-capable intercepting proxy for HTTP/1, HTTP/2, and WebSockets.
+    </p>
+    <ul>
+      <li>mitmproxy: an interactive proxy with a console interface</li>
+      <li>mitmdump: the command-line version of mitmproxy, like tcpdump for HTTP</li>
+      <li>mitmweb: a web-based interface for mitmproxy</li>
+    </ul>
+  </description>
+
+  <icon type="remote" width="150" height="150">https://raw.githubusercontent.com/mitmproxy/mitmproxy/main/release/windows-installer/Assets/logo.150x150.png</icon>
+
+  <categories>
+    <category>Development</category>
+    <category>Network</category>
+  </categories>
+  <keywords>
+    <keyword>proxy</keyword>
+    <keyword>HTTP</keyword>
+    <keyword>HTTPS</keyword>
+    <keyword>TLS</keyword>
+    <keyword>WebSocket</keyword>
+    <keyword>debugging</keyword>
+  </keywords>
+
+  <provides>
+    <binary>mitmproxy</binary>
+    <binary>mitmdump</binary>
+    <binary>mitmweb</binary>
+  </provides>
+
+  <url type="homepage">https://mitmproxy.org/</url>
+  <url type="bugtracker">https://github.com/mitmproxy/mitmproxy/issues</url>
+  <url type="vcs-browser">https://github.com/mitmproxy/mitmproxy</url>
+  <url type="help">https://docs.mitmproxy.org/stable/</url>
+  <url type="contribute">https://github.com/mitmproxy/mitmproxy/blob/main/CONTRIBUTING.md</url>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Console interface of mitmproxy</caption>
+      <image>https://raw.githubusercontent.com/mitmproxy/mitmproxy/main/docs/src/static/screenshots/mitmproxy.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Web interface of mitmweb</caption>
+      <image>https://raw.githubusercontent.com/mitmproxy/mitmproxy/main/docs/src/static/screenshots/mitmweb.png</image>
+    </screenshot>
+  </screenshots>
+
+  <content_rating type="oars-1.1"/>
+</component>
