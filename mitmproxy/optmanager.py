@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import copy
+import logging
 import pprint
 import textwrap
 import weakref
@@ -23,6 +24,8 @@ from mitmproxy.utils import typecheck
 """
     The base implementation for Options.
 """
+
+logger = logging.getLogger(__name__)
 
 unset = object()
 
@@ -137,6 +140,7 @@ class OptManager:
             yield
         except exceptions.OptionsError as e:
             # Notify error handlers
+            logger.error(f"Failed to update options: {e}")
             self.errored.send(exc=e)
             # Rollback
             self.__dict__["_options"] = old
@@ -352,11 +356,23 @@ class OptManager:
         have since been added.
         """
         update: dict[str, Any] = {}
+        failed: list[str] = []
         for optname, value in self.deferred.items():
             if optname in self._options:
-                if isinstance(value, _UnconvertedStrings):
-                    value = self._parse_setval(self._options[optname], value.val)
-                update[optname] = value
+                try:
+                    if isinstance(value, _UnconvertedStrings):
+                        value = self._parse_setval(self._options[optname], value.val)
+                    update[optname] = value
+                except exceptions.OptionsError as e:
+                    # A deferred value that cannot be parsed (for example an
+                    # addon option set before the addon registered it) must
+                    # not be silently dropped: log it so callers can diagnose
+                    # the failure, and remove it from the deferred map so it
+                    # is not retried forever.
+                    logger.error(f"Failed to apply deferred option {optname}: {e}")
+                    failed.append(optname)
+        for optname in failed:
+            self.deferred.pop(optname, None)
         self.update(**update)
         for k in update.keys():
             del self.deferred[k]
