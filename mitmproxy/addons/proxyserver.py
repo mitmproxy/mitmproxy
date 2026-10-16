@@ -141,7 +141,12 @@ class Proxyserver(ServerManager):
         try:
             yield
         finally:
-            del self.connections[connection_id]
+            # Only remove our own entry: connection_id can be reused (e.g. a client
+            # address/port pair reconnecting quickly) before this handler's cleanup
+            # runs, in which case a newer registration has already overwritten ours
+            # here and a plain `del` would raise KeyError (#6405).
+            if self.connections.get(connection_id) is handler:
+                del self.connections[connection_id]
 
     def load(self, loader):
         loader.add_option(
