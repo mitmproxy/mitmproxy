@@ -85,6 +85,13 @@ class Dumper:
                     raise exceptions.OptionsError(str(e)) from e
             else:
                 self.filter = None
+        if "termlog_colors" in updated:
+            # Re-detect VT-code support honoring the user's color override
+            # (auto/always/never). Keeps `mitmdump | less -R` colorized.
+            self.out_has_vt_codes = vt_codes.ensure_supported(
+                self.outfp,
+                override=ctx.options.termlog_colors,  # type: ignore[arg-type]
+            )
 
     def style(self, text: str, **style) -> str:
         if style and self.out_has_vt_codes:
