@@ -14,6 +14,7 @@ from mitmproxy.proxy import commands
 from mitmproxy.proxy import context
 from mitmproxy.proxy import events
 from mitmproxy.proxy import layer
+from mitmproxy.proxy.layers import tcp
 from mitmproxy.proxy.layers import tls
 from mitmproxy.tls import ClientHelloData
 from mitmproxy.tls import TlsData
@@ -670,6 +671,42 @@ class TestClientTLS:
             )  # and the same for the serverhello.
             << commands.SendData(tctx.client, b"ServerHello")
         )
+
+    @pytest.mark.parametrize("show_ignored_hosts", [False, True])
+    def test_passthrough_from_clienthello_show_ignored_hosts(
+        self, tctx, show_ignored_hosts
+    ):
+        """
+        A connection passed through via the tls_clienthello hook's ignore_connection flag
+        should honor show_ignored_hosts just like the --ignore/--allow path in next_layer.py
+        does, instead of always suppressing the flow.
+        """
+        tctx.options.show_ignored_hosts = show_ignored_hosts
+        playbook, client_layer, tssl_client = make_client_tls_layer(tctx, alpn=["quux"])
+
+        def make_passthrough(client_hello: ClientHelloData) -> None:
+            client_hello.ignore_connection = True
+
+        client_hello = tssl_client.bio_read()
+        (
+            playbook
+            >> events.DataReceived(tctx.client, client_hello)
+            << tls.TlsClienthelloHook(tutils.Placeholder())
+            >> tutils.reply(side_effect=make_passthrough)
+        )
+        if show_ignored_hosts:
+            # only a non-ignored (i.e. shown) TCPLayer has a flow, and thus fires these hooks.
+            playbook << tcp.TcpStartHook(tutils.Placeholder())
+            playbook >> tutils.reply()
+        playbook << commands.OpenConnection(tctx.server)
+        playbook >> tutils.reply(None)
+        if show_ignored_hosts:
+            playbook << tcp.TcpMessageHook(tutils.Placeholder())
+            playbook >> tutils.reply()
+        assert playbook << commands.SendData(tctx.server, client_hello)
+
+        # TCPLayer only creates (and hooks/shows) a flow when it isn't told to fully ignore.
+        assert (client_layer.child_layer.flow is not None) == show_ignored_hosts
 
     def test_cannot_parse_clienthello(self, tctx: context.Context):
         """Test the scenario where we cannot parse the ClientHello"""
