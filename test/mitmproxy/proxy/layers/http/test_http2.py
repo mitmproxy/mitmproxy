@@ -21,6 +21,7 @@ from mitmproxy.proxy.commands import SendData
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.events import ConnectionClosed
 from mitmproxy.proxy.events import DataReceived
+from mitmproxy.proxy.events import KillInjected
 from mitmproxy.proxy.layers import http
 from mitmproxy.proxy.layers.http import ErrorCode
 from mitmproxy.proxy.layers.http import HTTPMode
@@ -1056,6 +1057,53 @@ def test_kill_stream(tctx):
         hyperframe.frame.WindowUpdateFrame,
         hyperframe.frame.HeadersFrame,
     ]
+
+
+def test_kill_injected_h2(tctx):
+    """KillInjected on an HTTP/2 stream issues RST_STREAM for that stream
+    via the existing ResponseProtocolError(KILL) codec path — not a
+    CloseConnection on the underlying TCP connection. Pre-PR8200 dispatch
+    asserted `isinstance(conn, Http1Connection)`, which crashed for HTTP/2.
+
+    Also covers the idempotency case: if Flow.kill() lands at a hook
+    checkpoint, the hook-reply path runs check_killed first; the subsequent
+    injected KillInjected event must not fire HttpErrorHook a second time.
+    """
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+
+    def mark_killed(f: HTTPFlow):
+        f.error = Error(Error.KILLED_MESSAGE)
+        f.live = False
+
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"], stream_id=1
+            ).serialize(),
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        # Production: Flow.kill() sets error + fires FlowKilledHook;
+        # proxyserver.flow_killed injects KillInjected. Reply with the kill
+        # side effect, then inject the event — exact production ordering.
+        >> reply(side_effect=mark_killed)
+        # The hook-reply path detects flow.error and runs check_killed first.
+        << http.HttpErrorHook(flow)
+        >> reply()
+        << SendData(
+            tctx.client,
+            cff.build_rst_stream_frame(
+                1, error_code=ErrorCodes.INTERNAL_ERROR
+            ).serialize(),
+        )
+        # KillInjected lands on an already-torn-down stream — idempotent no-op.
+        >> KillInjected(flow)
+    )
+    assert not flow().live
 
 
 class TestClient:

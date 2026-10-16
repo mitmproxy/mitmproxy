@@ -1,0 +1,6 @@
+Q1 (per-protocol vs generic): B — Single event avoids upgrade-routing ambiguity and matches HttpLayer's existing base-class MessageInjected handling.
+Q2 (emission point): B — Flow.kill() stays a pure state mutation; addon commands emit via inject_event, mirroring inject.tcp.
+Q3 (mid-upgrade ownership): The event propagates down the layer stack; HttpLayer routes it to the owning HttpStream using the same stream-lookup logic as MessageInjected. HttpStream handles it in its current state—if in passthrough it forwards to child_layer, otherwise it runs check_killed logic—so there is no mid-upgrade ownership ambiguity.
+Q4 (scope vs #5484): No — PR1 already fixed the intercepted-flow kill path (#8045/#5484); KillInjected targets the distinct in-transit case (#4711).
+
+OVERALL VERDICT: Implement a single `KillInjected(flow)` event class in `mitmproxy/proxy/events.py`. Keep `Flow.kill()` as a pure state mutation; modify `core.py:flow.kill` and `view.py:remove` to call `inject_event(KillInjected(f))` after `f.kill()`. In `HttpLayer`, add `KillInjected` routing alongside `MessageInjected` to dispatch to the correct `HttpStream`; in `TcpLayer`, `UdpLayer`, and `WebSocketLayer`, add `KillInjected` to `@expect` and handle it by yielding `CloseConnection` and setting `flow.live = False`. Scope PR2 to #4711 only; PR1 already closes #5484.

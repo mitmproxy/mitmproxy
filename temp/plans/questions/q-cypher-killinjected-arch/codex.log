@@ -1,0 +1,264 @@
+OpenAI Codex v0.125.0 (research preview)
+--------
+workdir: /tmp/cypher-wt-1777492662/codex
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR, /home/gerg/.codex/memories]
+reasoning effort: none
+reasoning summaries: none
+session id: 019ddad1-a1be-7000-a5be-a0ff250327db
+--------
+user
+**Read this first.** You are running headless; chat is a no-reply address. Deliver your verdict in BOTH of the following ways; the orchestrator picks the cleanest path.
+
+**Primary — sentinel-fenced reply.** End your response with your verdict wrapped between two HTML-comment marker lines, each on its own line, verbatim:
+
+    <!-- cypher-report-begin -->
+
+    [your full markdown verdict here]
+
+    <!-- cypher-report-end -->
+
+The markers are valid markdown (HTML comments render to nothing). Always include both.
+
+**Secondary — file write.** If your CLI has a file-write tool, also save the same content to `temp/plans/questions/q-cypher-killinjected-arch/codex.md`. Path is relative to the repository root.
+
+---
+
+---
+date: 2026-04-29
+tags: [cypher, mitmproxy, oss-contribution, architecture]
+source: PR2 design for mitmproxy#4711 (flow kill flows-in-transit)
+mode: narrow fix-shape mini-panel
+---
+
+# Cypher question: KillInjected event architecture for mitmproxy
+
+## Context
+
+You are deliberating the implementation of a `KillInjected` event for mitmproxy/mitmproxy. The maintainer (Maximilian Hils) has staked the high-level architecture in a TODO comment inside `Flow.kill()` (`mitmproxy/flow.py`):
+
+> *"The way we currently signal killing is not ideal. One major problem is that we cannot kill flows in transit (https://github.com/mitmproxy/mitmproxy/issues/4711), even though they are advertised as killable. An alternative approach would be to introduce a `KillInjected` event similar to `MessageInjected`, which should fix this issue."*
+
+PR1 (just merged-pending: https://github.com/mitmproxy/mitmproxy/pull/8199) fixed the simpler #8045 case (kill on intercepted flow not waking `wait_for_resume`). PR2 will close #4711 by implementing the `KillInjected` event.
+
+**The architecture is staked. Do NOT deliberate whether to do this.** Deliberate the implementation-detail decisions that the TODO doesn't fully resolve, where reading the existing `MessageInjected` pattern alone leaves real choices.
+
+**Reference: how `MessageInjected` is structured today.**
+
+- Base class in `mitmproxy/proxy/events.py:122-129`:
+  ```python
+  T = TypeVar("T")
+
+  @dataclass
+  class MessageInjected(Event, Generic[T]):
+      """The user has injected a custom WebSocket/TCP/... message."""
+      flow: flow.Flow
+      message: T
+  ```
+- Per-protocol subclasses (`TcpMessageInjected`, `UdpMessageInjected`, `WebSocketMessageInjected`) parameterize `T` with that protocol's message type.
+- Layer handlers use `@expect(events.DataReceived, events.ConnectionClosed, TcpMessageInjected)` to receive them; the layer code branches on `isinstance(event, TcpMessageInjected)` and acts.
+- Events enter the proxy event stream via `mitmproxy/addons/proxyserver.py:inject_event(event)`, which looks up the connection handler by `event.flow.client_conn.id` and calls `handler.server_event(event)`. Public commands (`@command.command("inject.tcp")` etc.) wrap that with the addon-facing API.
+- Three call sites for `flow.kill()` today: `core.py:92` (`flow.kill` command), `view.py:435`, `view.py:598`.
+
+## The four narrow questions
+
+### Q1 — Per-protocol vs single generic `KillInjected`?
+
+`MessageInjected[T]` is generic *because messages have different payload types*. `KillInjected` has no payload — it's a lifecycle event, not a data event. Two shapes:
+
+**Option A: per-protocol subclasses, mirror `MessageInjected` exactly.**
+```python
+class TcpKillInjected(KillInjected): ...
+class UdpKillInjected(KillInjected): ...
+class WebSocketKillInjected(KillInjected): ...
+class HttpKillInjected(KillInjected): ...
+```
+Pro: maximum pattern-match with existing code; layers can use familiar `@expect(..., XxxKillInjected)` decorators.
+Con: boilerplate with no payload-type reason; new contributor reading the code asks "why are these different?"
+
+**Option B: one generic `KillInjected` event handled by every layer.**
+```python
+@dataclass
+class KillInjected(Event):
+    flow: flow.Flow
+```
+Pro: cleaner; single event class for a single concept.
+Con: layers' `@expect` decorators all reference the same event class; less obviously parallel to `MessageInjected`.
+
+Which is more mergeable and why? Consider the maintainer's likely review reaction.
+
+### Q2 — Where is the event emitted?
+
+Three plausible emission points:
+
+**Option A: from `Flow.kill()` itself.** Couples `mitmproxy/flow.py` to proxy-event infrastructure that flow.py currently doesn't import. Could break the layering — `Flow` is a data class today; reaching into proxy events makes it know about the proxy server.
+
+**Option B: from `core.py:flow.kill` command (the addon path).** The addon calls `f.kill()` then asks proxyserver to inject a `KillInjected` event. Mirrors how `inject_message`/`inject.tcp`/etc. work — the addon emits the event, `flow.kill()` stays a pure state mutation.
+
+**Option C: new `inject.kill` proxyserver command.** Most exact mirror of `inject.tcp`/`inject.udp`/`inject.websocket`. The TUI's `flow.kill` command is changed to call `flow.kill()` AND `inject.kill`, OR `inject.kill` itself calls `flow.kill()` and emits the event.
+
+The "should `flow.kill()` keep being a pure state mutation OR become a proxy-event emitter" choice has real layering consequences. Which do you pick?
+
+### Q3 — Mid-protocol-upgrade flow ownership.
+
+A flow can be in CONNECT-pending-upgrade-to-HTTP/2 state, OR a WebSocket upgrade in progress, OR raw TCP that hasn't decided whether to upgrade. When a `KillInjected` event arrives:
+
+- Which layer "owns" the kill response if the flow is between protocols?
+- Should the event propagate down the layer stack until something handles it, or should `inject_event` route based on flow type?
+- What if multiple layers are active (e.g., TLS-over-TCP-over-CONNECT)?
+
+Concrete: if you pick per-protocol subclasses (Q1=A), how do you route `WebSocketKillInjected` to a flow that hasn't finished upgrading yet?
+
+### Q4 — Scope: does PR2 also close #5484?
+
+[#5484](https://github.com/mitmproxy/mitmproxy/issues/5484) is mentioned by Prinzhorn alongside #4711 as a "kind of works but not really" kill issue. If your design naturally closes #5484, the PR description should claim both. If it doesn't, scope it explicitly to #4711 only.
+
+Read #5484 and judge: does the `KillInjected` design as you'd build it close #5484? Yes/no/depends-on-which-Q1-option, with a one-line justification.
+
+## What we are NOT deliberating
+
+- Whether `KillInjected` is the right architecture overall. Maintainer's TODO settled this.
+- Whether to do PR2 at all. It's already committed in PR1's description ("should be following later").
+- Anything from the broader 10-voice cypher panel — this is a narrow, fix-shape-only mini-panel. ~3-5 voices, narrow output.
+
+## Deliverable shape per voice
+
+Each voice should produce a tight, opinionated reply with this structure:
+
+```
+Q1 (per-protocol vs generic): [A/B] — [<10 word justification]
+Q2 (emission point):          [A/B/C] — [<10 word justification]
+Q3 (mid-upgrade ownership):   [<2-sentence answer]
+Q4 (scope vs #5484):          [Yes/No/Conditional] — [1-line justification]
+
+OVERALL VERDICT: [the shape you'd implement, in 3-5 sentences]
+```
+
+Voices that want to argue Q1 is wrong-question or that some other axis matters more should say so explicitly — but lead with answers to these four questions in the prescribed format.
+
+## Convergence target
+
+Per [[projects/cypher#Convergence protocol]]:
+- Unanimous on Q1+Q2 → implement that shape directly.
+- Convergent diagnosis but divergent on one of Q1/Q2 → narrow follow-up panel on the disagreement axis.
+- Divergent across Q1/Q2 → re-frame; may indicate the architecture choice is genuinely contested and Q1=A or Q1=B materially differ in maintainer-empathy outcome.
+
+Q3 and Q4 are tie-breakers / scope-clarifiers; not blocking on convergence.
+
+warning: Codex's Linux sandbox uses bubblewrap and needs access to create user namespaces.
+codex
+I’ll inspect the local mitmproxy tree and the referenced issue context where available, then write the same verdict to the requested path and include it fenced in the final response.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+The shell sandbox is failing before commands run (`bwrap` cannot set loopback), so I can’t inspect files through the normal CLI. I’ll proceed from the code context in the prompt and use the file-write tool directly for the required report.
+web search: 
+web search: mitmproxy issue 5484 kill flow Prinzhorn
+web search: 
+web search: https://github.com/mitmproxy/mitmproxy/issues/5484
+codex
+I found the relevant GitHub issue text: #5484 is specifically “Pressing X doesn’t kill an intercepted request,” while #4711 is “kill requests while in transit without a response yet.” I’m treating #5484 as already addressed by the PR1 intercepted-flow wakeup path unless PR2 also changes the command path uniformly.
+hook: PreToolUse
+hook: PreToolUse Completed
+apply patch
+2026-04-29T19:58:20.125152Z ERROR codex_core::tools::router: error={"output":"Failed to write file /tmp/cypher-wt-1777492662/codex/temp/plans/questions/q-cypher-killinjected-arch/codex.md\n","metadata":{"exit_code":1,"duration_seconds":0.1}}
+patch: failed
+/tmp/cypher-wt-1777492662/codex/temp/plans/questions/q-cypher-killinjected-arch/codex.md
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PostToolUse
+hook: PostToolUse Completed
+codex
+Secondary file write was attempted, but the target directory does not exist and the shell sandbox failed before `mkdir` could run.
+
+<!-- cypher-report-begin -->
+
+### Voice 1
+
+Q1 (per-protocol vs generic): B — no payload, one lifecycle concept  
+Q2 (emission point):          C — command-shaped API, pure Flow model  
+Q3 (mid-upgrade ownership):   Route by connection handler, not flow type. Let the active layer stack consume/propagate the kill.  
+Q4 (scope vs #5484):          Conditional — PR1 likely covers intercepted wakeup; PR2 only if command path emits kill.
+
+OVERALL VERDICT: Implement one `KillInjected(flow)` event. Expose it through an `inject.kill` proxyserver API that preserves `Flow.kill()` as pure state mutation. This is the most reviewable shape because it follows the event architecture without inventing protocol subclasses that carry no protocol data.
+
+### Voice 2
+
+Q1 (per-protocol vs generic): B — fake subclasses invite reviewer pushback  
+Q2 (emission point):          C — mirrors injection without coupling data model  
+Q3 (mid-upgrade ownership):   The connection/layer stack owns kill semantics. `inject_event` should not guess from `HTTPFlow`/`TCPFlow`/WebSocket state.  
+Q4 (scope vs #5484):          Conditional — yes only if `x` on intercepted flows uses same injected path.
+
+OVERALL VERDICT: Keep the public kill command authoritative: mutate flow state, then inject a generic kill event into the live connection handler. Mid-upgrade cases are exactly why routing must be runtime-stack-based rather than per-protocol-class-based. Per-protocol kill events would make WebSocket upgrade edge cases awkward for no payload-type benefit.
+
+### Voice 3
+
+Q1 (per-protocol vs generic): B — lifecycle event, not typed message data  
+Q2 (emission point):          C — explicit proxy event boundary  
+Q3 (mid-upgrade ownership):   The current active layer owns the abort. If it cannot handle it, normal event propagation should continue downward.  
+Q4 (scope vs #5484):          No/Conditional — #5484 is intercepted-request behavior; claim only if tested.
+
+OVERALL VERDICT: Add `KillInjected` beside `MessageInjected`, but do not mirror the subclass matrix. The event should be injected by addon/proxyserver command plumbing, not by `Flow.kill()`. Tests should cover in-transit HTTP and at least one upgrade-ish path where flow type dispatch would be wrong.
+
+### Converged Verdict
+
+Implement **Q1=B** and **Q2=C**: a single `events.KillInjected(flow)` plus an `inject.kill` proxyserver command/API, with `Flow.kill()` remaining a pure state mutation. The user-facing `flow.kill` command should use that API so all UI/addon paths both mark the flow killed and notify the live proxy handler. For mid-upgrade ownership, inject by `flow.client_conn.id` into the existing connection handler and let the active layer stack handle or propagate the event; do not route based on nominal flow type. Scope the PR to #4711 unless tests prove the same command path also fixes #5484.
+
+Sources checked: [#4711](https://github.com/mitmproxy/mitmproxy/issues/4711), [#5484](https://github.com/mitmproxy/mitmproxy/issues/5484).
+
+<!-- cypher-report-end -->
+hook: Stop
+hook: Stop Completed
+2026-04-29T19:58:48.970129Z ERROR codex_core::session: failed to record rollout items: thread 019ddad1-a1be-7000-a5be-a0ff250327db not found
+tokens used
+62,237
+Secondary file write was attempted, but the target directory does not exist and the shell sandbox failed before `mkdir` could run.
+
+<!-- cypher-report-begin -->
+
+### Voice 1
+
+Q1 (per-protocol vs generic): B — no payload, one lifecycle concept  
+Q2 (emission point):          C — command-shaped API, pure Flow model  
+Q3 (mid-upgrade ownership):   Route by connection handler, not flow type. Let the active layer stack consume/propagate the kill.  
+Q4 (scope vs #5484):          Conditional — PR1 likely covers intercepted wakeup; PR2 only if command path emits kill.
+
+OVERALL VERDICT: Implement one `KillInjected(flow)` event. Expose it through an `inject.kill` proxyserver API that preserves `Flow.kill()` as pure state mutation. This is the most reviewable shape because it follows the event architecture without inventing protocol subclasses that carry no protocol data.
+
+### Voice 2
+
+Q1 (per-protocol vs generic): B — fake subclasses invite reviewer pushback  
+Q2 (emission point):          C — mirrors injection without coupling data model  
+Q3 (mid-upgrade ownership):   The connection/layer stack owns kill semantics. `inject_event` should not guess from `HTTPFlow`/`TCPFlow`/WebSocket state.  
+Q4 (scope vs #5484):          Conditional — yes only if `x` on intercepted flows uses same injected path.
+
+OVERALL VERDICT: Keep the public kill command authoritative: mutate flow state, then inject a generic kill event into the live connection handler. Mid-upgrade cases are exactly why routing must be runtime-stack-based rather than per-protocol-class-based. Per-protocol kill events would make WebSocket upgrade edge cases awkward for no payload-type benefit.
+
+### Voice 3
+
+Q1 (per-protocol vs generic): B — lifecycle event, not typed message data  
+Q2 (emission point):          C — explicit proxy event boundary  
+Q3 (mid-upgrade ownership):   The current active layer owns the abort. If it cannot handle it, normal event propagation should continue downward.  
+Q4 (scope vs #5484):          No/Conditional — #5484 is intercepted-request behavior; claim only if tested.
+
+OVERALL VERDICT: Add `KillInjected` beside `MessageInjected`, but do not mirror the subclass matrix. The event should be injected by addon/proxyserver command plumbing, not by `Flow.kill()`. Tests should cover in-transit HTTP and at least one upgrade-ish path where flow type dispatch would be wrong.
+
+### Converged Verdict
+
+Implement **Q1=B** and **Q2=C**: a single `events.KillInjected(flow)` plus an `inject.kill` proxyserver command/API, with `Flow.kill()` remaining a pure state mutation. The user-facing `flow.kill` command should use that API so all UI/addon paths both mark the flow killed and notify the live proxy handler. For mid-upgrade ownership, inject by `flow.client_conn.id` into the existing connection handler and let the active layer stack handle or propagate the event; do not route based on nominal flow type. Scope the PR to #4711 unless tests prove the same command path also fixes #5484.
+
+Sources checked: [#4711](https://github.com/mitmproxy/mitmproxy/issues/4711), [#5484](https://github.com/mitmproxy/mitmproxy/issues/5484).
+
+<!-- cypher-report-end -->
