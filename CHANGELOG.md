@@ -9,6 +9,7 @@
 
 - Fix gzip-encoded bodies that consist of several gzip members being truncated
   after the first member.
+  ([#8485](https://github.com/mitmproxy/mitmproxy/pull/8485), @APX403)
 - Fix the global `listen_port` option being applied to proxy modes that don't
   bind a port (e.g. `local`), which caused a "Cannot spawn multiple servers on
   the same address" error when enabling local capture.
