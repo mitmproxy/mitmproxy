@@ -328,19 +328,23 @@ def get_expiration_ts(cookie_attrs):
     Returns: timestamp of when the cookie will expire.
              None, if no expiration time is set.
     """
-    if "expires" in cookie_attrs:
-        e = email.utils.parsedate_tz(cookie_attrs["expires"])
-        if e:
-            return email.utils.mktime_tz(e)
-
-    elif "max-age" in cookie_attrs:
+    # RFC 6265 4.1.2.2: "If a cookie has both the Max-Age and the Expires
+    # attribute, the Max-Age attribute has precedence".
+    if "max-age" in cookie_attrs:
         try:
-            max_age = int(cookie_attrs["Max-Age"])
-        except ValueError:
+            # The attribute may have no value at all, in which case
+            # _read_set_cookie_pairs stores None.
+            max_age = int(cookie_attrs["max-age"])
+        except (ValueError, TypeError):
             pass
         else:
             now_ts = time.time()
             return now_ts + max_age
+
+    if "expires" in cookie_attrs:
+        e = email.utils.parsedate_tz(cookie_attrs["expires"])
+        if e:
+            return email.utils.mktime_tz(e)
 
     return None
 
