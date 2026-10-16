@@ -12,6 +12,7 @@ from mitmproxy.tools.console.keybindings import KeyBindings
 from mitmproxy.tools.console.keymap import Keymap
 from mitmproxy.tools.console.options import Options
 from mitmproxy.tools.console.overlay import SimpleOverlay
+from mitmproxy.tools.console.versioninfo import VersionInfo
 
 
 @pytest.fixture(scope="module")
@@ -37,6 +38,7 @@ tflow2.marked = "x"
         (Options, None, True),
         (HelpView, None, False),
         (EventLog, None, True),
+        (VersionInfo, None, True),
         (PathEditor, None, False),
         (SimpleOverlay, None, False),
     ],
