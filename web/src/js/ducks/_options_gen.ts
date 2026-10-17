@@ -209,7 +209,7 @@ export const defaultState: OptionsState = {
     web_open_browser: true,
     web_password: "",
     web_port: 8081,
-    web_split_flowview: true,
+    web_split_flowview: false,
     web_static_viewer: "",
     web_theme: "system",
     websocket: true,

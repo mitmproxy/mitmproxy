@@ -254,7 +254,6 @@ exports[`OptionMenu Component should render correctly 1`] = `
         >
           <label>
             <input
-              checked=""
               type="checkbox"
             />
             Split request/response view

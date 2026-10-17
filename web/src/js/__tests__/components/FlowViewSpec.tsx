@@ -10,7 +10,12 @@ enableFetchMocks();
 test("FlowView", async () => {
     fetchMock.mockReject(new Error("backend missing"));
 
-    const { asFragment, getByTestId, store } = render(<FlowView />);
+    const { asFragment, getByTestId, store } = render(<FlowView />, {
+        store: TStore({
+            ...testState,
+            options: { ...testState.options, web_split_flowview: true },
+        }),
+    });
     expect(asFragment()).toMatchSnapshot();
 
     fireEvent.click(screen.getByText("Response"));
@@ -68,13 +73,9 @@ test("FlowView", async () => {
     expect(store.getState().flows.selected).toEqual([]);
 });
 
-test("FlowView shows HTTP flows in a single column when the split view is off", async () => {
+test("FlowView shows HTTP flows in a single column by default", async () => {
     fetchMock.mockReject(new Error("backend missing"));
-    const store = TStore({
-        ...testState,
-        options: { ...testState.options, web_split_flowview: false },
-    });
-    const { container } = render(<FlowView />, { store });
+    const { container } = render(<FlowView />);
 
     expect(container.querySelector(".flow-detail-split")).toBeNull();
     expect(container.querySelectorAll("nav.nav-tabs")).toHaveLength(1);

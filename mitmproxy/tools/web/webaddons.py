@@ -107,7 +107,7 @@ class WebAddon:
         loader.add_option(
             "web_split_flowview",
             bool,
-            True,
+            False,
             "Show the request and response of HTTP flows side by side in the flow details.",
         )
 

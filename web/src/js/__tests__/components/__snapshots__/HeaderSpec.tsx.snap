@@ -676,7 +676,6 @@ exports[`Header 2`] = `
             >
               <label>
                 <input
-                  checked=""
                   type="checkbox"
                 />
                 Split request/response view
@@ -1216,7 +1215,6 @@ exports[`Header 3`] = `
             >
               <label>
                 <input
-                  checked=""
                   type="checkbox"
                 />
                 Split request/response view

@@ -48,7 +48,7 @@ describe("OptionMenu Component", () => {
                 "./options",
                 expect.objectContaining({
                     method: "PUT",
-                    body: JSON.stringify({ web_split_flowview: false }),
+                    body: JSON.stringify({ web_split_flowview: true }),
                 }),
             ),
         );

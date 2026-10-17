@@ -78,9 +78,9 @@
   ([#8333](https://github.com/mitmproxy/mitmproxy/pull/8333), @grusski)
 - Use stdlib (PEP-784) for Zstandard compression on Python 3.14+
   ([#8397](https://github.com/mitmproxy/mitmproxy/pull/8397), @Rogdham)
-- mitmweb: Show HTTP flows as side-by-side request and response panels with independent tabs
+- mitmweb: Optionally show HTTP flows as side-by-side request and response panels with independent tabs
   and a draggable divider. Non-HTTP flows keep the single-column view.
-  Toggle it with the new `web_split_flowview` option, also under Options → Appearance.
+  Opt in with the new `web_split_flowview` option, also under Options → Appearance.
 
 ## 12 May 2026: mitmproxy 12.2.3
 
