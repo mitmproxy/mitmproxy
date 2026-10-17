@@ -100,6 +100,7 @@ export interface OptionsState {
     web_open_browser: boolean;
     web_password: string;
     web_port: number;
+    web_split_flowview: boolean;
     web_static_viewer: string | undefined;
     web_theme: string;
     websocket: boolean;
@@ -208,6 +209,7 @@ export const defaultState: OptionsState = {
     web_open_browser: true,
     web_password: "",
     web_port: 8081,
+    web_split_flowview: false,
     web_static_viewer: "",
     web_theme: "system",
     websocket: true,

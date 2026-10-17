@@ -9,7 +9,11 @@ import Error from "./FlowView/Error";
 import Timing from "./FlowView/Timing";
 import WebSocket from "./FlowView/WebSocket";
 import Comment from "./FlowView/Comment";
-import { selectTab } from "../ducks/ui/flow";
+import {
+    selectTab,
+    selectRequestTab,
+    selectResponseTab,
+} from "../ducks/ui/flow";
 import { useAppDispatch, useAppSelector } from "../ducks";
 import type {
     Error as FlowError,
@@ -22,6 +26,7 @@ import TcpMessages from "./FlowView/TcpMessages";
 import UdpMessages from "./FlowView/UdpMessages";
 import * as flowsActions from "../ducks/flows";
 import Icon from "./common/Icon";
+import Splitter from "./common/Splitter";
 
 type TabId =
     | "request"
@@ -116,17 +121,123 @@ export function tabsForFlow(flow: Flow): TabId[] {
     return tabs;
 }
 
-export default function FlowView() {
+function CloseButton() {
     const dispatch = useAppDispatch();
-    const flow = useAppSelector((state) => state.flows.selected[0]);
+    return (
+        <button
+            data-testid="close-button-id"
+            className="close-button"
+            onClick={() => dispatch(flowsActions.select([]))}
+        >
+            <Icon name="closeCircle" />
+        </button>
+    );
+}
+
+function TabStrip({
+    tabs,
+    active,
+    onSelect,
+    children,
+}: {
+    tabs: TabId[];
+    active: TabId | undefined;
+    onSelect: (tab: TabId) => void;
+    children?: React.ReactNode;
+}) {
+    return (
+        <nav className="nav-tabs nav-tabs-sm">
+            {children}
+            {tabs.map((tabId) => (
+                <a
+                    key={tabId}
+                    href="#"
+                    className={classnames({ active: active === tabId })}
+                    onClick={(event) => {
+                        event.preventDefault();
+                        onSelect(tabId);
+                    }}
+                >
+                    {tabLabels[tabId]}
+                </a>
+            ))}
+        </nav>
+    );
+}
+
+/** Request-side tabs of the split HTTP view. */
+function requestTabsForFlow(flow: HTTPFlow): TabId[] {
+    const tabs: TabId[] = ["request"];
+    if (flow.error) tabs.push("error");
+    tabs.push("connection", "timing", "comment");
+    return tabs;
+}
+
+/** Response-side tabs of the split HTTP view. */
+function responseTabsForFlow(flow: HTTPFlow): TabId[] {
+    const tabs: TabId[] = [];
+    if (flow.response) tabs.push("response");
+    if (flow.websocket) tabs.push("websocket");
+    return tabs;
+}
+
+function SplitHttpView({ flow }: { flow: HTTPFlow }) {
+    const dispatch = useAppDispatch();
+    const tabRequest = useAppSelector(
+        (state) => state.ui.flow.tabRequest,
+    ) as TabId;
+    const tabResponse = useAppSelector(
+        (state) => state.ui.flow.tabResponse,
+    ) as TabId;
+
+    const requestTabs = requestTabsForFlow(flow);
+    const responseTabs = responseTabsForFlow(flow);
+
+    const activeRequest = requestTabs.includes(tabRequest)
+        ? tabRequest
+        : requestTabs[0];
+    const activeResponse = responseTabs.includes(tabResponse)
+        ? tabResponse
+        : responseTabs[0];
+
+    return (
+        <div className="flow-detail flow-detail-split">
+            <div className="flow-detail-panels">
+                <div className="flow-detail-panel">
+                    <TabStrip
+                        tabs={requestTabs}
+                        active={activeRequest}
+                        onSelect={(t) => dispatch(selectRequestTab(t))}
+                    >
+                        <CloseButton />
+                    </TabStrip>
+                    {renderTab(activeRequest, flow)}
+                </div>
+                <Splitter axis="x" />
+                <div className="flow-detail-panel">
+                    <TabStrip
+                        tabs={responseTabs}
+                        active={activeResponse}
+                        onSelect={(t) => dispatch(selectResponseTab(t))}
+                    />
+                    {activeResponse ? (
+                        renderTab(activeResponse, flow)
+                    ) : (
+                        <div className="flow-detail-empty text-muted">
+                            Waiting for response…
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function SingleColumnView({ flow }: { flow: Flow }) {
+    const dispatch = useAppDispatch();
     let active = useAppSelector((state) => state.ui.flow.tab) as TabId;
 
-    if (flow == undefined) {
-        return <></>;
-    }
-
     const tabs = tabsForFlow(flow);
-
     if (tabs.indexOf(active) < 0) {
         if (active === "response" && flow.error) {
             active = "error";
@@ -140,31 +251,30 @@ export default function FlowView() {
             active = tabs[0];
         }
     }
+
     return (
         <div className="flow-detail">
-            <nav className="nav-tabs nav-tabs-sm">
-                <button
-                    data-testid="close-button-id"
-                    className="close-button"
-                    onClick={() => dispatch(flowsActions.select([]))}
-                >
-                    <Icon name="closeCircle" />
-                </button>
-                {tabs.map((tabId) => (
-                    <a
-                        key={tabId}
-                        href="#"
-                        className={classnames({ active: active === tabId })}
-                        onClick={(event) => {
-                            event.preventDefault();
-                            dispatch(selectTab(tabId));
-                        }}
-                    >
-                        {tabLabels[tabId]}
-                    </a>
-                ))}
-            </nav>
+            <TabStrip
+                tabs={tabs}
+                active={active}
+                onSelect={(t) => dispatch(selectTab(t))}
+            >
+                <CloseButton />
+            </TabStrip>
             {renderTab(active, flow)}
         </div>
     );
+}
+
+export default function FlowView() {
+    const flow = useAppSelector((state) => state.flows.selected[0]);
+    const split = useAppSelector((state) => state.options.web_split_flowview);
+
+    if (flow == undefined) {
+        return <></>;
+    }
+    if (flow.type === "http" && split) {
+        return <SplitHttpView flow={flow} />;
+    }
+    return <SingleColumnView flow={flow} />;
 }
