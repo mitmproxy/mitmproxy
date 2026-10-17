@@ -102,6 +102,11 @@ export default function OptionMenu() {
                 <div className="menu-content">
                     <EventlogToggle />
                     <CommandBarToggle />
+                    <HideInStatic>
+                        <OptionsToggle name="web_split_flowview">
+                            Split request/response view
+                        </OptionsToggle>
+                    </HideInStatic>
                 </div>
                 <div className="menu-legend">View Options</div>
             </div>
@@ -110,9 +115,6 @@ export default function OptionMenu() {
                 <div className="menu-group">
                     <div className="menu-content">
                         <ThemeSelect />
-                        <OptionsToggle name="web_split_flowview">
-                            Split request/response view
-                        </OptionsToggle>
                         <ColumnVisibility />
                         <ResetColumnWidths />
                     </div>

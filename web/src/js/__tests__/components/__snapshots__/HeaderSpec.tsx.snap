@@ -632,6 +632,16 @@ exports[`Header 2`] = `
                 Display Command Bar
               </label>
             </div>
+            <div
+              class="menu-entry"
+            >
+              <label>
+                <input
+                  type="checkbox"
+                />
+                Split request/response view
+              </label>
+            </div>
           </div>
           <div
             class="menu-legend"
@@ -669,16 +679,6 @@ exports[`Header 2`] = `
                     light
                   </option>
                 </select>
-              </label>
-            </div>
-            <div
-              class="menu-entry"
-            >
-              <label>
-                <input
-                  type="checkbox"
-                />
-                Split request/response view
               </label>
             </div>
             <div
@@ -1171,6 +1171,16 @@ exports[`Header 3`] = `
                 Display Command Bar
               </label>
             </div>
+            <div
+              class="menu-entry"
+            >
+              <label>
+                <input
+                  type="checkbox"
+                />
+                Split request/response view
+              </label>
+            </div>
           </div>
           <div
             class="menu-legend"
@@ -1208,16 +1218,6 @@ exports[`Header 3`] = `
                     light
                   </option>
                 </select>
-              </label>
-            </div>
-            <div
-              class="menu-entry"
-            >
-              <label>
-                <input
-                  type="checkbox"
-                />
-                Split request/response view
               </label>
             </div>
             <div
