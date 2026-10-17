@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix `Set-Cookie` attribute parsing: prevent subsequent attributes (such as `Secure` or `HttpOnly`) from being swallowed into `Expires` when `Expires` contains non-date or short values (e.g. `Expires=0`), and correctly parse RFC 850 dates with full weekday names.
 - Fix the global `listen_port` option being applied to proxy modes that don't
   bind a port (e.g. `local`), which caused a "Cannot spawn multiple servers on
   the same address" error when enabling local capture.
