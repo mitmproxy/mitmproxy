@@ -250,6 +250,17 @@ exports[`OptionMenu Component should render correctly 1`] = `
           </label>
         </div>
         <div
+          class="menu-entry"
+        >
+          <label>
+            <input
+              checked=""
+              type="checkbox"
+            />
+            Split request/response view
+          </label>
+        </div>
+        <div
           class="menu-entry column-visibility"
         >
           <label>

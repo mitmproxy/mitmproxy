@@ -37,6 +37,23 @@ describe("OptionMenu Component", () => {
         );
     });
 
+    it("toggles the web_split_flowview option", async () => {
+        fetchMock.mockResponseOnce("");
+
+        render(<OptionMenu />);
+        fireEvent.click(screen.getByLabelText("Split request/response view"));
+
+        await waitFor(() =>
+            expect(fetchMock).toHaveBeenCalledWith(
+                "./options",
+                expect.objectContaining({
+                    method: "PUT",
+                    body: JSON.stringify({ web_split_flowview: false }),
+                }),
+            ),
+        );
+    });
+
     it("resets the flow table column widths", () => {
         const { store } = render(<OptionMenu />, { store: withColumnWidths() });
 

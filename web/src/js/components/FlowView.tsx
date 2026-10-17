@@ -268,11 +268,12 @@ function SingleColumnView({ flow }: { flow: Flow }) {
 
 export default function FlowView() {
     const flow = useAppSelector((state) => state.flows.selected[0]);
+    const split = useAppSelector((state) => state.options.web_split_flowview);
 
     if (flow == undefined) {
         return <></>;
     }
-    if (flow.type === "http") {
+    if (flow.type === "http" && split) {
         return <SplitHttpView flow={flow} />;
     }
     return <SingleColumnView flow={flow} />;

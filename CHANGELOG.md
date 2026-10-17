@@ -80,6 +80,7 @@
   ([#8397](https://github.com/mitmproxy/mitmproxy/pull/8397), @Rogdham)
 - mitmweb: Show HTTP flows as side-by-side request and response panels with independent tabs
   and a draggable divider. Non-HTTP flows keep the single-column view.
+  Toggle it with the new `web_split_flowview` option, also under Options → Appearance.
 
 ## 12 May 2026: mitmproxy 12.2.3
 

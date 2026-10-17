@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen } from "../test-utils";
 import FlowView from "../../components/FlowView";
 import * as flowActions from "../../ducks/flows";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
+import { TStore, testState } from "../ducks/tutils";
 
 enableFetchMocks();
 
@@ -65,4 +66,19 @@ test("FlowView", async () => {
 
     fireEvent.click(getByTestId("close-button-id"));
     expect(store.getState().flows.selected).toEqual([]);
+});
+
+test("FlowView shows HTTP flows in a single column when the split view is off", async () => {
+    fetchMock.mockReject(new Error("backend missing"));
+    const store = TStore({
+        ...testState,
+        options: { ...testState.options, web_split_flowview: false },
+    });
+    const { container } = render(<FlowView />, { store });
+
+    expect(container.querySelector(".flow-detail-split")).toBeNull();
+    expect(container.querySelectorAll("nav.nav-tabs")).toHaveLength(1);
+    expect(screen.getByText("Request")).toBeInTheDocument();
+    expect(screen.getByText("Response")).toBeInTheDocument();
+    await screen.findByText(/Error getting content/);
 });

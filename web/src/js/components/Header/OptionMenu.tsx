@@ -110,6 +110,9 @@ export default function OptionMenu() {
                 <div className="menu-group">
                     <div className="menu-content">
                         <ThemeSelect />
+                        <OptionsToggle name="web_split_flowview">
+                            Split request/response view
+                        </OptionsToggle>
                         <ColumnVisibility />
                         <ResetColumnWidths />
                     </div>
