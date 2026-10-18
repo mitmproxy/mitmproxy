@@ -11,6 +11,7 @@
   completed. A TLS 1.3 server that rejects the client certificate only after the
   handshake now yields a prompt `502 Bad Gateway` naming the error, instead of
   hanging until the client gives up.
+  ([#8490](https://github.com/mitmproxy/mitmproxy/pull/8490), @choksi2212)
 - Fix the global `listen_port` option being applied to proxy modes that don't
   bind a port (e.g. `local`), which caused a "Cannot spawn multiple servers on
   the same address" error when enabling local capture.
