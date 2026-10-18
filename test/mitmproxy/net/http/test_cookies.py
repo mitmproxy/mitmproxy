@@ -181,6 +181,36 @@ def test_parse_set_cookie_header():
                 ("doo", "dar", ()),
             ],
         ],
+        # a short expires value must not swallow what follows it
+        [
+            "foo=bar; Expires=0; Secure; HttpOnly",
+            [
+                (
+                    "foo",
+                    "bar",
+                    (("Expires", "0"), ("Secure", None), ("HttpOnly", None)),
+                ),
+            ],
+        ],
+        [
+            "foo=bar; expires=0, doo=dar",
+            [
+                ("foo", "bar", (("expires", "0"),)),
+                ("doo", "dar", ()),
+            ],
+        ],
+        # full weekday names, as in RFC 850 dates
+        [
+            "foo=bar; expires=Wednesday, 21-Oct-2026 07:28:00 GMT; path=/, doo=dar",
+            [
+                (
+                    "foo",
+                    "bar",
+                    (("expires", "Wednesday, 21-Oct-2026 07:28:00 GMT"), ("path", "/")),
+                ),
+                ("doo", "dar", ()),
+            ],
+        ],
     ]
     for s, expected in vals:
         ret = cookies.parse_set_cookie_header(s)

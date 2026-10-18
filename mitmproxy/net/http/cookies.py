@@ -162,9 +162,10 @@ def _read_set_cookie_pairs(s: str, off=0) -> tuple[list[TPairs], int]:
                 # We actually bank on the fact that the expires value WILL
                 # contain a comma. Things will fail, if they don't.
 
-                # '3' is just a heuristic we use to determine whether we've
-                # only read a part of the expires value and we should read more.
-                if len(rhs) <= 3:
+                # We have only read a part of the expires value if we stopped at a
+                # comma that follows the name of the weekday ("Wed" or "Wednesday").
+                # After a semicolon, or after anything else, the value is complete.
+                if off < len(s) and s[off] == "," and rhs.strip().isalpha():
                     trail, off = _read_value(s, off + 1, ";,")
                     rhs = rhs + "," + trail
 
