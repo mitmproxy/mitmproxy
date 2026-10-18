@@ -17,6 +17,12 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
 
     node = React.createRef<HTMLDivElement>();
 
+    // Captured at drag start so each move is computed from fixed values; using
+    // the live (already-resized) sizes would compound the delta and the panel
+    // would run away from the pointer.
+    private dragPrevStart = 0;
+    private dragTotal = 0;
+
     constructor(props: SplitterProps) {
         super(props);
         this.state = { applied: false, startPos: 0, dragPointer: 0.1 };
@@ -25,46 +31,79 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
         this.onPointerMove = this.onPointerMove.bind(this);
     }
 
+    private isX() {
+        return this.props.axis === "x";
+    }
+
+    private siblings() {
+        const node = this.node.current!;
+        return {
+            prev: node.previousElementSibling as HTMLElement | null,
+            next: node.nextElementSibling as HTMLElement | null,
+        };
+    }
+
+    private sizeOf(el: HTMLElement) {
+        return this.isX() ? el.offsetWidth : el.offsetHeight;
+    }
+
+    // Clamp keeps the panel within the shared space: it can collapse to 0 but
+    // not cross the far panel.
+    private applyDrag(pos: number) {
+        const { prev, next } = this.siblings();
+        if (!prev || !next) {
+            return;
+        }
+        const desired = this.dragPrevStart + (pos - this.state.startPos);
+        const newPrev = Math.max(0, Math.min(desired, this.dragTotal));
+
+        prev.style.flex = `0 0 ${newPrev}px`;
+        next.style.flex = "1 1 auto";
+    }
+
     onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
         if (this.state.dragPointer !== 0.1) {
             return;
         }
         (e.target as HTMLDivElement).setPointerCapture(e.pointerId);
+
+        const { prev, next } = this.siblings();
+        const prevSize = prev ? this.sizeOf(prev) : 0;
+        const nextSize = next ? this.sizeOf(next) : 0;
+        this.dragPrevStart = prevSize;
+        this.dragTotal = prevSize + nextSize;
+
+        document.body.classList.add("splitter-resizing");
+        if (!this.isX()) {
+            document.body.classList.add("splitter-resizing-y");
+        }
+
         this.setState({
-            startPos: this.props.axis === "x" ? e.pageX : e.pageY,
+            startPos: this.isX() ? e.pageX : e.pageY,
             dragPointer: e.pointerId,
         });
-    }
-
-    onLostPointerCapture(e: React.PointerEvent<HTMLDivElement>) {
-        if (this.state.dragPointer !== e.pointerId) {
-            return;
-        }
-        const node = this.node.current!;
-        const prev = node.previousElementSibling! as HTMLElement;
-        const next = node.nextElementSibling! as HTMLElement;
-
-        node.style.transform = "";
-        prev.style.flex = `0 0 ${Math.max(
-            0,
-            (this.props.axis === "x"
-                ? prev.offsetWidth + e.pageX
-                : prev.offsetHeight + e.pageY) - this.state.startPos,
-        )}px`;
-        next.style.flex = "1 1 auto";
-
-        this.setState({ applied: true, dragPointer: 0.1 });
-        this.onResize();
     }
 
     onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
         if (this.state.dragPointer !== e.pointerId) {
             return;
         }
-        this.node.current!.style.transform =
-            this.props.axis === "x"
-                ? `translateX(${e.pageX - this.state.startPos}px)`
-                : `translateY(${e.pageY - this.state.startPos}px)`;
+        this.applyDrag(this.isX() ? e.pageX : e.pageY);
+    }
+
+    onLostPointerCapture(e: React.PointerEvent<HTMLDivElement>) {
+        if (this.state.dragPointer !== e.pointerId) {
+            return;
+        }
+        this.applyDrag(this.isX() ? e.pageX : e.pageY);
+
+        document.body.classList.remove(
+            "splitter-resizing",
+            "splitter-resizing-y",
+        );
+
+        this.setState({ applied: true, dragPointer: 0.1 });
+        this.onResize();
     }
 
     onResize() {
@@ -95,6 +134,10 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
     }
 
     componentWillUnmount() {
+        document.body.classList.remove(
+            "splitter-resizing",
+            "splitter-resizing-y",
+        );
         this.reset(true);
     }
 
@@ -104,7 +147,8 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
                 ref={this.node}
                 className={classnames(
                     "splitter",
-                    this.props.axis === "x" ? "splitter-x" : "splitter-y",
+                    this.isX() ? "splitter-x" : "splitter-y",
+                    { "splitter-dragging": this.state.dragPointer !== 0.1 },
                 )}
             >
                 <div

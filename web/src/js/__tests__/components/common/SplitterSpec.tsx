@@ -2,10 +2,28 @@ import * as React from "react";
 import Splitter from "../../../components/common/Splitter";
 import { act, render } from "../../test-utils";
 
-describe.each([["x"], ["y"]])("Splitter Component", (axis) => {
-    it(`should render correctly (${axis} axis)`, () => {
+describe.each([["x"], ["y"]])("Splitter Component (%s axis)", (axis) => {
+    const isX = axis === "x";
+    // jsdom reports every element as 0x0, so fake a size for the two panels the
+    // splitter sits between. Both start at 200px, giving a 400px total.
+    let sizeSpy: jest.SpyInstance;
+    beforeEach(() => {
+        sizeSpy = jest
+            .spyOn(
+                HTMLElement.prototype,
+                isX ? "offsetWidth" : "offsetHeight",
+                "get",
+            )
+            .mockReturnValue(200);
+    });
+    afterEach(() => {
+        sizeSpy.mockRestore();
+        document.body.className = "";
+    });
+
+    it("should render correctly", () => {
         const ref = React.createRef<Splitter>();
-        const { asFragment, unmount } = render(
+        const { asFragment, container, unmount } = render(
             <>
                 <div></div>
                 <Splitter axis={axis} ref={ref} />
@@ -13,6 +31,7 @@ describe.each([["x"], ["y"]])("Splitter Component", (axis) => {
             </>,
         );
         const splitter = ref.current!;
+        const prev = container.firstChild as HTMLElement;
 
         expect(asFragment()).toMatchSnapshot();
 
@@ -22,29 +41,83 @@ describe.each([["x"], ["y"]])("Splitter Component", (axis) => {
                     setPointerCapture: () => 0,
                 } as unknown,
                 pageX: 100,
-                pageY: 200,
+                pageY: 100,
                 pointerId: 42,
             } as React.PointerEvent<HTMLDivElement>);
         });
-        expect(splitter.state.startPos).toBe(axis === "x" ? 100 : 200);
+        expect(splitter.state.startPos).toBe(100);
+        // The drag adds a body class so the resize cursor shows everywhere.
+        expect(document.body.classList.contains("splitter-resizing")).toBe(
+            true,
+        );
 
+        // The previous panel follows the pointer: starting at 200px, a +50
+        // move sizes it to 250px.
         act(() => {
             splitter.onPointerMove({
-                pageX: 300,
-                pageY: 300,
+                pageX: 150,
+                pageY: 150,
                 pointerId: 42,
             } as React.PointerEvent<HTMLDivElement>);
         });
-        expect(splitter.node.current!.style.transform).toBeTruthy();
+        expect(prev.style.flex).toBe("0 0 250px");
 
         act(() => {
             splitter.onLostPointerCapture({
-                pageX: 400,
-                pageY: 400,
+                pageX: 150,
+                pageY: 150,
                 pointerId: 42,
             } as React.PointerEvent<HTMLDivElement>);
         });
+        expect(splitter.state.dragPointer).toBe(0.1);
+        expect(document.body.classList.contains("splitter-resizing")).toBe(
+            false,
+        );
         expect(asFragment()).toMatchSnapshot();
+
+        unmount();
+    });
+
+    it("clamps the drag to the shared space", () => {
+        const ref = React.createRef<Splitter>();
+        const { container, unmount } = render(
+            <>
+                <div></div>
+                <Splitter axis={axis} ref={ref} />
+                <div></div>
+            </>,
+        );
+        const splitter = ref.current!;
+        const prev = container.firstChild as HTMLElement;
+
+        act(() => {
+            splitter.onPointerDown({
+                target: { setPointerCapture: () => 0 } as unknown,
+                pageX: 0,
+                pageY: 0,
+                pointerId: 7,
+            } as React.PointerEvent<HTMLDivElement>);
+        });
+
+        // Drag far past the next panel; prev is capped at the 400px total.
+        act(() => {
+            splitter.onPointerMove({
+                pageX: 10000,
+                pageY: 10000,
+                pointerId: 7,
+            } as React.PointerEvent<HTMLDivElement>);
+        });
+        expect(prev.style.flex).toBe("0 0 400px");
+
+        // Drag far the other way; prev collapses to 0.
+        act(() => {
+            splitter.onPointerMove({
+                pageX: -10000,
+                pageY: -10000,
+                pointerId: 7,
+            } as React.PointerEvent<HTMLDivElement>);
+        });
+        expect(prev.style.flex).toBe("0 0 0px");
 
         unmount();
     });

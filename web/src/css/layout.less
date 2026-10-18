@@ -45,26 +45,78 @@ body,
     flex: 0 0 1px;
     background-color: var(--mitmweb-border-strong);
     position: relative;
+    z-index: 1;
+    transition: background-color 0.15s ease;
 
+    // A transparent strip wider than the visible 1px line so the splitter is
+    // easy to hit with a pointer; the ::before is the visible grip pill. The
+    // strip is centered on the 1px divider, so when a panel is dragged to 0 its
+    // inner half stays on-screen and the splitter is still grabbable.
     > div {
         position: absolute;
+        touch-action: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         //debug: background-color: orange;
+
+        &::before {
+            content: "";
+            display: block;
+            border-radius: 6px;
+            background-color: var(--mitmweb-border-strong);
+            box-shadow: 0 0 0 1px var(--mitmweb-bg);
+            transition:
+                background-color 0.15s ease,
+                transform 0.15s ease;
+        }
+    }
+
+    &:hover,
+    &.splitter-dragging {
+        background-color: var(--mitmweb-fg-muted);
+
+        > div::before {
+            background-color: var(--mitmweb-fg-muted);
+            transform: scale(1.08);
+        }
     }
 
     &.splitter-x {
         cursor: col-resize;
         > div {
-            margin-left: -1px;
-            width: 4px;
+            margin-left: -6px;
+            width: 13px;
             height: 100%;
+
+            &::before {
+                width: 5px;
+                height: 20px;
+            }
         }
     }
     &.splitter-y {
         cursor: row-resize;
         > div {
-            margin-top: -1px;
-            height: 4px;
+            margin-top: -6px;
+            height: 13px;
             width: 100%;
+
+            &::before {
+                width: 20px;
+                height: 5px;
+            }
         }
+    }
+}
+
+// While dragging, keep the resize cursor everywhere and stop the panels from
+// selecting text or intercepting the pointer.
+body.splitter-resizing {
+    cursor: col-resize;
+    user-select: none;
+
+    &.splitter-resizing-y {
+        cursor: row-resize;
     }
 }
