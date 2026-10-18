@@ -4,6 +4,7 @@ from typing import cast
 
 import tornado.httpserver
 import tornado.ioloop
+import tornado.netutil
 
 from mitmproxy import addons
 from mitmproxy import flow
@@ -110,7 +111,9 @@ class WebMaster(master.Master):
             self.app, max_buffer_size=2**32
         )  # 4GB
         try:
-            http_server.listen(self.options.web_port, self.options.web_host)
+            sockets = tornado.netutil.bind_sockets(self.options.web_port, self.options.web_host)
+            http_server.add_sockets(sockets)
+            self.options.web_port = sockets[0].getsockname()[1]
         except OSError as e:
             message = f"Web server failed to listen on {self.options.web_host or '*'}:{self.options.web_port} with {e}"
             if e.errno == errno.EADDRINUSE:
