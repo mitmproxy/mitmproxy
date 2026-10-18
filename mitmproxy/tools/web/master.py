@@ -111,7 +111,9 @@ class WebMaster(master.Master):
             self.app, max_buffer_size=2**32
         )  # 4GB
         try:
-            sockets = tornado.netutil.bind_sockets(self.options.web_port, self.options.web_host)
+            sockets = tornado.netutil.bind_sockets(
+                self.options.web_port, self.options.web_host
+            )
             http_server.add_sockets(sockets)
             self.options.web_port = sockets[0].getsockname()[1]
         except OSError as e:

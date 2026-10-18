@@ -8,6 +8,7 @@
 ## Unreleased: mitmproxy next
 
 - mitmweb: Update web port to actual value if set to 0
+  ([#8491](https://github.com/mitmproxy/mitmproxy/pull/8491), @george-hopkins)
 - Fix the global `listen_port` option being applied to proxy modes that don't
   bind a port (e.g. `local`), which caused a "Cannot spawn multiple servers on
   the same address" error when enabling local capture.
