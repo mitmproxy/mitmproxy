@@ -94,8 +94,8 @@ class KeyList(urwid.ListBox):
 
     def keypress(self, size, key):
         if key == "m_select":
-            foc, idx = self.get_focus()
             # Act here
+            pass
         elif key == "m_start":
             self.set_focus(0)
             self.walker._modified()
@@ -150,14 +150,11 @@ class KeyBindings(urwid.Pile, layoutwidget.LayoutWidget):
 
     def keypress(self, size, key):
         if key == "m_next":
-            self.focus_position = (self.focus_position + 1) % len(self.widget_list)
+            self.focus_position = (self.focus_position + 1) % len(self.contents)
             self.contents[1][0].set_active(self.focus_position == 1)
             key = None
 
         # This is essentially a copypasta from urwid.Pile's keypress handler.
         # So much for "closed for modification, but open for extension".
-        item_rows = None
-        if len(size) == 2:
-            item_rows = self.get_item_rows(size, focus=True)
-        tsize = self.get_item_size(size, self.focus_position, True, item_rows)
+        tsize = self.get_rows_sizes(size, focus=True)[2][self.focus_position]
         return self.focus.keypress(tsize, key)
