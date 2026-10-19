@@ -93,7 +93,7 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
         if (this.state.dragPointer !== e.pointerId) {
             return;
         }
-        
+
         document.body.classList.remove(
             "splitter-resizing",
             "splitter-resizing-y",
