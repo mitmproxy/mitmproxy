@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Add AppStream metainfo in `release/linux`, which Linux distributions can
+  install to `share/metainfo`, so that software centers can show mitmproxy.
+  ([#8483](https://github.com/mitmproxy/mitmproxy/pull/8483), @KiaraGrouwstra)
 - Fix the global `listen_port` option being applied to proxy modes that don't
   bind a port (e.g. `local`), which caused a "Cannot spawn multiple servers on
   the same address" error when enabling local capture.
