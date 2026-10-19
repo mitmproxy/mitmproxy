@@ -3,7 +3,6 @@ import classnames from "classnames";
 
 type SplitterState = {
     applied: boolean;
-    startPos: number;
     // .dragPointer === 0.1 means not dragging
     dragPointer: number;
 };
@@ -20,12 +19,13 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
     // Captured at drag start so each move is computed from fixed values; using
     // the live (already-resized) sizes would compound the delta and the panel
     // would run away from the pointer.
+    private dragStartPos = 0;
     private dragPrevStart = 0;
     private dragTotal = 0;
 
     constructor(props: SplitterProps) {
         super(props);
-        this.state = { applied: false, startPos: 0, dragPointer: 0.1 };
+        this.state = { applied: false, dragPointer: 0.1 };
         this.onLostPointerCapture = this.onLostPointerCapture.bind(this);
         this.onPointerDown = this.onPointerDown.bind(this);
         this.onPointerMove = this.onPointerMove.bind(this);
@@ -54,7 +54,7 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
         if (!prev || !next) {
             return;
         }
-        const desired = this.dragPrevStart + (pos - this.state.startPos);
+        const desired = this.dragPrevStart + (pos - this.dragStartPos);
         const newPrev = Math.max(0, Math.min(desired, this.dragTotal));
 
         prev.style.flex = `0 0 ${newPrev}px`;
@@ -70,6 +70,7 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
         const { prev, next } = this.siblings();
         const prevSize = prev ? this.sizeOf(prev) : 0;
         const nextSize = next ? this.sizeOf(next) : 0;
+        this.dragStartPos = this.isX() ? e.pageX : e.pageY;
         this.dragPrevStart = prevSize;
         this.dragTotal = prevSize + nextSize;
 
@@ -78,10 +79,7 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
             document.body.classList.add("splitter-resizing-y");
         }
 
-        this.setState({
-            startPos: this.isX() ? e.pageX : e.pageY,
-            dragPointer: e.pointerId,
-        });
+        this.setState({ dragPointer: e.pointerId });
     }
 
     onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
@@ -95,8 +93,7 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
         if (this.state.dragPointer !== e.pointerId) {
             return;
         }
-        this.applyDrag(this.isX() ? e.pageX : e.pageY);
-
+        
         document.body.classList.remove(
             "splitter-resizing",
             "splitter-resizing-y",

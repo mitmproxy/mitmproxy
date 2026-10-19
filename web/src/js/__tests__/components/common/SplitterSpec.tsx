@@ -45,7 +45,7 @@ describe.each([["x"], ["y"]])("Splitter Component (%s axis)", (axis) => {
                 pointerId: 42,
             } as React.PointerEvent<HTMLDivElement>);
         });
-        expect(splitter.state.startPos).toBe(100);
+        expect(splitter.state.dragPointer).toBe(42);
         // The drag adds a body class so the resize cursor shows everywhere.
         expect(document.body.classList.contains("splitter-resizing")).toBe(
             true,
@@ -62,13 +62,17 @@ describe.each([["x"], ["y"]])("Splitter Component (%s axis)", (axis) => {
         });
         expect(prev.style.flex).toBe("0 0 250px");
 
+        // Capture can be lost at coordinates that aren't meaningful (e.g.
+        // pointercancel). The size must stay where the last move left it rather
+        // than jump to these coordinates.
         act(() => {
             splitter.onLostPointerCapture({
-                pageX: 150,
-                pageY: 150,
+                pageX: 999,
+                pageY: 999,
                 pointerId: 42,
             } as React.PointerEvent<HTMLDivElement>);
         });
+        expect(prev.style.flex).toBe("0 0 250px");
         expect(splitter.state.dragPointer).toBe(0.1);
         expect(document.body.classList.contains("splitter-resizing")).toBe(
             false,
