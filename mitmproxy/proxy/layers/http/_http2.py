@@ -164,7 +164,7 @@ class Http2Connection(HttpConnection):
                             case ErrorCode.CANCEL | ErrorCode.CLIENT_DISCONNECTED:
                                 error_code = h2.errors.ErrorCodes.CANCEL
                             case ErrorCode.KILL:
-                                # XXX: Debateable whether this is the best error code.
+                                # XXX: Debatable whether this is the best error code.
                                 error_code = h2.errors.ErrorCodes.INTERNAL_ERROR
                             case ErrorCode.HTTP_1_1_REQUIRED:
                                 error_code = h2.errors.ErrorCodes.HTTP_1_1_REQUIRED

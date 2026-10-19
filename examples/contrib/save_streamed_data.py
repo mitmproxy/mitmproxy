@@ -3,7 +3,7 @@ Save streamed requests and responses
 
 If the option 'save_streamed_data' is set to a format string then
 streamed requests and responses are written to individual files with a name
-derived from the string. Apart from python strftime() formating (using the
+derived from the string. Apart from python strftime() formatting (using the
 request start time) the following codes can also be used:
     - %+T: The time stamp of the request with microseconds
     - %+D: 'req' or 'rsp' indicating the direction of the data
@@ -95,7 +95,7 @@ def load(loader):
         Optional[str],
         None,
         "Format string for saving streamed data to files. If set each streamed request or response is written "
-        "to a file with a name derived from the string. In addition to formating supported by python "
+        "to a file with a name derived from the string. In addition to formatting supported by python "
         "strftime() (using the request start time) the code '%+T' is replaced with the time stamp of the request, "
         "'%+D' by 'req' or 'rsp' depending on the direction of the data, '%+C' by the client IP addresses and "
         "'%+I' by the client connection ID.",
