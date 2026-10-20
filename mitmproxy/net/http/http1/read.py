@@ -13,7 +13,7 @@ from mitmproxy.net.http import validate
 def get_header_tokens(headers, key):
     """
     Retrieve all tokens for a header key. A number of different headers
-    follow a pattern where each header line can containe comma-separated
+    follow a pattern where each header line can contain comma-separated
     tokens, and headers can be set multiple times.
     """
     if key not in headers:

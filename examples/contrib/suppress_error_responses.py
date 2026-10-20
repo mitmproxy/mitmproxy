@@ -1,5 +1,5 @@
 """
-This script suppresses the 502 Bad Gateway messages, mitmproxy sends if the server is not responsing correctly.
+This script suppresses the 502 Bad Gateway messages, mitmproxy sends if the server is not responding correctly.
 For example, this functionality can be helpful if mitmproxy is used in between a web scanner and a web application.
 Without this script, if the web application under test crashes, mitmproxy will send 502 Bad Gateway responses.
 These responses are irritating the web application scanner since they obfuscate the actual problem.
