@@ -9,6 +9,8 @@
 
 - Fix `Set-Cookie` attribute parsing: prevent subsequent attributes (such as `Secure` or `HttpOnly`) from being swallowed into `Expires` when `Expires` contains non-date or short values (e.g. `Expires=0`), and correctly parse RFC 850 dates with full weekday names.
   ([#8489](https://github.com/mitmproxy/mitmproxy/pull/8489), @7-Bala)
+- Fix typos in the `save_stream_file` option help, docstrings and examples.
+  ([#8494](https://github.com/mitmproxy/mitmproxy/pull/8494), @qodelicious)
 - Fix the global `listen_port` option being applied to proxy modes that don't
   bind a port (e.g. `local`), which caused a "Cannot spawn multiple servers on
   the same address" error when enabling local capture.
@@ -80,6 +82,8 @@
   ([#8333](https://github.com/mitmproxy/mitmproxy/pull/8333), @grusski)
 - Use stdlib (PEP-784) for Zstandard compression on Python 3.14+
   ([#8397](https://github.com/mitmproxy/mitmproxy/pull/8397), @Rogdham)
+- mitmweb: Fix the flow details splitter and make dragging resize the panels live.
+  ([#8492](https://github.com/mitmproxy/mitmproxy/pull/8492), @lups2000)
 
 ## 12 May 2026: mitmproxy 12.2.3
 
