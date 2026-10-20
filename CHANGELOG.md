@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix crashes when resetting retired QUIC streams.
 - Fix `Set-Cookie` attribute parsing: prevent subsequent attributes (such as `Secure` or `HttpOnly`) from being swallowed into `Expires` when `Expires` contains non-date or short values (e.g. `Expires=0`), and correctly parse RFC 850 dates with full weekday names.
   ([#8489](https://github.com/mitmproxy/mitmproxy/pull/8489), @7-Bala)
 - Fix typos in the `save_stream_file` option help, docstrings and examples.

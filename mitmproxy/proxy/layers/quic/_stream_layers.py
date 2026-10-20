@@ -108,6 +108,10 @@ class QuicLayer(tunnel.TunnelLayer):
                     command.stream_id, command.data, command.end_stream
                 )
             elif isinstance(command, ResetQuicStream):
+                # aioquic's send lookup can recreate retired local streams or
+                # raise for retired peer streams. Ignore late resets for both.
+                if command.stream_id in self.quic._streams_finished:
+                    return
                 stream = self.quic._get_or_create_stream_for_send(command.stream_id)
                 existing_reset_error_code = stream.sender._reset_error_code
                 if existing_reset_error_code is None:
