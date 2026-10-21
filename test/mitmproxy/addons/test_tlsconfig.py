@@ -308,6 +308,54 @@ class TestTlsConfig:
                 "example.mitmproxy.org"
             ]
 
+    def test_emudhra(self):
+        emsign_ecc_root_g3 = (
+            "-----BEGIN CERTIFICATE-----\n"
+            "MIICTjCCAdOgAwIBAgIKPPYHqWhwDtqLhDAKBggqhkjOPQQDAzBrMQswCQYDVQQG\n"
+            "EwJJTjETMBEGA1UECxMKZW1TaWduIFBLSTElMCMGA1UEChMcZU11ZGhyYSBUZWNo\n"
+            "bm9sb2dpZXMgTGltaXRlZDEgMB4GA1UEAxMXZW1TaWduIEVDQyBSb290IENBIC0g\n"
+            "RzMwHhcNMTgwMjE4MTgzMDAwWhcNNDMwMjE4MTgzMDAwWjBrMQswCQYDVQQGEwJJ\n"
+            "TjETMBEGA1UECxMKZW1TaWduIFBLSTElMCMGA1UEChMcZU11ZGhyYSBUZWNobm9s\n"
+            "b2dpZXMgTGltaXRlZDEgMB4GA1UEAxMXZW1TaWduIEVDQyBSb290IENBIC0gRzMw\n"
+            "djAQBgcqhkjOPQIBBgUrgQQAIgNiAAQjpQy4LRL1KPOxst3iAhKAnjlfSU2fySU0\n"
+            "WXTsuwYc58Byr+iuL+FBVIcUqEqy6HyC5ltqtdyzdc6LBtCGI79G1Y4PPwT01xyS\n"
+            "fvalY8L1X44uT6EYGQIrMgqCZH0Wk9GjQjBAMB0GA1UdDgQWBBR8XQKEE9TMipuB\n"
+            "zhccLikenEhjQjAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0TAQH/BAUwAwEB/zAKBggq\n"
+            "hkjOPQQDAwNpADBmAjEAvvNhzwIQHWSVB7gYboiFBS+DCBeQyh+KTOgNG3qxrdWB\n"
+            "CUfvO6wIBHxcmbHtRwfSAjEAnbpV/KlK6O3t5nYBQnvI+GDZjVGLVTv7jHvrZQnD\n"
+            "+JbNR6iC8hZVdyR+EhCVBCyj\n"
+            "-----END CERTIFICATE-----\n"
+        )
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            tctx.configure(ta, emudhra=True)
+            ctx = _ctx(tctx.options)
+            ctx.client.sni = "example.mitmproxy.org"
+
+            tls_start = tls.TlsData(ctx.client, context=ctx)
+            ta.tls_start_client(tls_start)
+            tssl_server = tls_start.ssl_conn
+
+            tssl_client = test_tls.SSLTest()
+            tssl_client.ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            tssl_client.ctx.verify_mode = ssl.CERT_REQUIRED
+            tssl_client.ctx.check_hostname = True
+            tssl_client.ctx.load_verify_locations(cadata=emsign_ecc_root_g3)
+            tssl_client.obj = tssl_client.ctx.wrap_bio(
+                tssl_client.inc,
+                tssl_client.out,
+                server_side=False,
+                server_hostname="example.mitmproxy.org",
+            )
+            assert self.do_handshake(tssl_client, tssl_server)
+            assert tssl_client.obj.getpeercert()["subjectAltName"] == (
+                ("DNS", "example.mitmproxy.org"),
+            )
+
+            quic_tls_start = quic.QuicTlsData(ctx.client, context=ctx)
+            ta.quic_start_client(quic_tls_start)
+            assert len(quic_tls_start.settings.certificate_chain) == 2
+
     def test_tls_start_server_cannot_verify(self):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:

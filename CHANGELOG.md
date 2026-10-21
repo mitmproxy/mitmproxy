@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Add `--emudhra` option to sign TLS certificates with a compromised eMudhra intermediate CA key.
+  ([#8500](https://github.com/mitmproxy/mitmproxy/pull/8500), @mhils)
 - Update `certifi` dependency to remove eMudhra CAs from precompiled binaries.
   ([#8499](https://github.com/mitmproxy/mitmproxy/pull/8499), @mhils) 
 - Fix the WBXML contentview raising a `KeyError` on tags that are missing from the code page,
