@@ -35,6 +35,8 @@ def test_pretty_size():
     assert human.pretty_size(1024 * 1024) == "1.0m"
     assert human.pretty_size(10 * 1024 * 1024) == "10.0m"
     assert human.pretty_size(100 * 1024 * 1024) == "100m"
+    assert human.pretty_size(1024 * 1024 - 1) == "1.0m"
+    assert human.pretty_size(1024 * 1024 * 1024 - 1) == "1.0g"
 
 
 def test_pretty_duration():
@@ -50,6 +52,9 @@ def test_pretty_duration():
     assert human.pretty_duration(10000) == "10000s"
     assert human.pretty_duration(1.123) == "1.12s"
     assert human.pretty_duration(0.123) == "123ms"
+    assert human.pretty_duration(0.9996) == "1.00s"
+    assert human.pretty_duration(9.996) == "10.0s"
+    assert human.pretty_duration(99.96) == "100s"
     assert human.pretty_duration(None) == ""
 
 
