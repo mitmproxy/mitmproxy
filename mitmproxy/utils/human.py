@@ -24,7 +24,7 @@ def pretty_size(size: int) -> str:
         s /= 1024
         if s < 99.95:
             return f"{s:.1f}{suffix}"
-        if s < 1024 or suffix == "t":
+        if round(s) < 1024 or suffix == "t":
             return f"{s:.0f}{suffix}"
     raise AssertionError
 
@@ -52,16 +52,17 @@ def parse_size(s: str | None) -> int | None:
 
 def pretty_duration(secs: float | None) -> str:
     formatters = [
-        (100, "{:.0f}s"),
-        (10, "{:2.1f}s"),
-        (1, "{:1.2f}s"),
+        (100, 0),
+        (10, 1),
+        (1, 2),
     ]
     if secs is None:
         return ""
 
-    for limit, formatter in formatters:
-        if secs >= limit:
-            return formatter.format(secs)
+    for limit, digits in formatters:
+        # compare the rounded value so that e.g. 9.996 shows as "10.0s" and not "10.00s"
+        if round(secs, digits) >= limit:
+            return f"{secs:.{digits}f}s"
     # less than 1 sec
     return f"{secs * 1000:.0f}ms"
 
