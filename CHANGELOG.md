@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix sizes and durations right below a unit boundary being shown as e.g. `1024k`, `1000ms` or `10.00s`
+  instead of `1.0m`, `1.00s` and `10.0s`.
 - mitmweb: Add a clear button to the filter inputs (`Search`, `Highlight`, `Intercept`).
   ([#8626](https://github.com/mitmproxy/mitmproxy/pull/8626), @Anto1368)
 - Show the traceback when client replay crashes.
