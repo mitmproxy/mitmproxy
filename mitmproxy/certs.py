@@ -114,7 +114,6 @@ TroUl/anH4x2rXHqiCtBTBfgKDegAjEA8WpG1LTZdAIL0FSYqxXeREaeTSxEofM0
 """
 
 
-
 class Cert(serializable.Serializable):
     """Representation of a (TLS) certificate."""
 
