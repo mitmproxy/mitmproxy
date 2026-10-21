@@ -9,6 +9,7 @@
 
 - Fix sizes and durations right below a unit boundary being shown as e.g. `1024k`, `1000ms` or `10.00s`
   instead of `1.0m`, `1.00s` and `10.0s`.
+  ([#8498](https://github.com/mitmproxy/mitmproxy/pull/8498), @qodelicious)
 - Fix the WBXML contentview raising a `KeyError` on tags that are missing from the code page,
   instead of showing them as `UNKNOWN_TAG_XX`.
   ([#8495](https://github.com/mitmproxy/mitmproxy/pull/8495), @kayaal34)
