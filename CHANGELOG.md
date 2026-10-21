@@ -7,7 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
-- Update `certifi` dependency to remove eMudhra CAs from precompiled binaries. 
+- Update `certifi` dependency to remove eMudhra CAs from precompiled binaries.
+  ([#8499](https://github.com/mitmproxy/mitmproxy/pull/8499), @mhils) 
 - Fix the WBXML contentview raising a `KeyError` on tags that are missing from the code page,
   instead of showing them as `UNKNOWN_TAG_XX`.
   ([#8495](https://github.com/mitmproxy/mitmproxy/pull/8495), @kayaal34)
