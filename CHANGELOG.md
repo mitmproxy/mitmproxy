@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Add support for displaying NDJSON (newline-delimited JSON) in the JSON content view.
+  ([#5608](https://github.com/mitmproxy/mitmproxy/issues/5608))
+
 - Update `certifi` dependency to remove eMudhra CAs from precompiled binaries.
   ([#8499](https://github.com/mitmproxy/mitmproxy/pull/8499), @mhils) 
 - Fix the WBXML contentview raising a `KeyError` on tags that are missing from the code page,
