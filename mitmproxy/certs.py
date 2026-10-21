@@ -60,6 +60,60 @@ rD693XKIHUCWOjMh1if6omGXKHH40QuME2gNa50+YPn1iYDl88uDbbMCAQI=
 -----END DH PARAMETERS-----
 """
 
+# Compromised eMudhra intermediate CA (EM OV TLS CA - G3C, d=4) and cross-signed root (emSign Root TLS CA - G3),
+# see https://emudhra.we-have-a-problem.com/
+EMUDHRA_CHAIN_PEM = b"""
+-----BEGIN PRIVATE KEY-----
+MIG2AgEAMBAGByqGSM49AgEGBSuBBAAiBIGeMIGbAgEBBDAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAShZANiAAQTglHNUqyS
+mMHIqtl3Mh3rl+cJvQtMoKylXcitUdz8nRWJoVl+OlEg4e/WMcY+GDXKyuKYaaYu
+FjHoooGBq1ZhbcRdkYq8CfOrDmPPeSqk3O1zh743u6VpVJ8cArJw7Wc=
+-----END PRIVATE KEY-----
+-----BEGIN CERTIFICATE-----
+MIIDaDCCAu6gAwIBAgIPKWkmwiejoVJjkrGUgqUEMAoGCCqGSM49BAMDMFYxCzAJ
+BgNVBAYTAklOMSUwIwYDVQQKDBxlTXVkaHJhIFRlY2hub2xvZ2llcyBMaW1pdGVk
+MSAwHgYDVQQDDBdlbVNpZ24gUm9vdCBUTFMgQ0EgLSBHMzAeFw0yNTA0MzAxNTM3
+NDFaFw00MDA0MjgxODMwMDBaMEAxCzAJBgNVBAYTAlVTMRQwEgYDVQQKDAtlTXVk
+aHJhIEluYzEbMBkGA1UEAwwSRU0gT1YgVExTIENBIC0gRzNDMHYwEAYHKoZIzj0C
+AQYFK4EEACIDYgAEE4JRzVKskpjByKrZdzId65fnCb0LTKCspV3IrVHc/J0ViaFZ
+fjpRIOHv1jHGPhg1ysrimGmmLhYx6KKBgatWYW3EXZGKvAnzqw5jz3kqpNztc4e+
+N7ulaVSfHAKycO1no4IBljCCAZIwHwYDVR0jBBgwFoAU4TqrIXzx401UrtRyt/2L
+WUIgkFQwHQYDVR0OBBYEFDTq6gzryQra+dDF4u2beMmHnhtsMB0GA1UdJQQWMBQG
+CCsGAQUFBwMBBggrBgEFBQcDAjBdBgNVHSAEVjBUMDkGCysGAQQBg44hAQABMCow
+KAYIKwYBBQUHAgEWHGh0dHA6Ly9yZXBvc2l0b3J5LmVtc2lnbi5jb20wDQYLKwYB
+BAGDjiEBAm4wCAYGZ4EMAQICMHUGCCsGAQUFBwEBBGkwZzAkBggrBgEFBQcwAYYY
+aHR0cDovL29jc3AtYy5lbXNpZ24uY29tMD8GCCsGAQUFBzAChjNodHRwOi8vcmVw
+b3NpdG9yeS5lbXNpZ24uY29tL2NlcnRzL0VNT1ZUTFNDQUczQy5wN2MwNwYDVR0f
+BDAwLjAsoCqgKIYmaHR0cDovL2NybC5lbXNpZ24uY29tLz9yb290dGxzY2FnMy5j
+cmwwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQAwCgYIKoZIzj0E
+AwMDaAAwZQIxAMSZt2xsPeumRdeSMSQ3CbzIZeQ/q7GDCWfeE1Pq+mhgA6gRM44c
+NVF3xJ+wsxJk+wIwFJbaDMokD8Ei6eNOiA8yUMYvfzQyngmrhZQMdPCK1SewrR79
+4rSb9vGqxZzelQth
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIIDdDCCAvmgAwIBAgIQAJYaPvsTWVdu0EAFtGhKWzAKBggqhkjOPQQDAzBrMQsw
+CQYDVQQGEwJJTjETMBEGA1UECxMKZW1TaWduIFBLSTElMCMGA1UEChMcZU11ZGhy
+YSBUZWNobm9sb2dpZXMgTGltaXRlZDEgMB4GA1UEAxMXZW1TaWduIEVDQyBSb290
+IENBIC0gRzMwHhcNMjQwNzExMTU0MzM2WhcNMzkwNzA5MTgzMDAwWjBWMQswCQYD
+VQQGEwJJTjElMCMGA1UECgwcZU11ZGhyYSBUZWNobm9sb2dpZXMgTGltaXRlZDEg
+MB4GA1UEAwwXZW1TaWduIFJvb3QgVExTIENBIC0gRzMwdjAQBgcqhkjOPQIBBgUr
+gQQAIgNiAARfD9w/q1cWxL6D9bMGH6CQ4u+gAV6GN9s+PwQx9Bl4hC+0iU8QOk8m
+WO/RwXQy10DCSxT8vSIJClHKp+Ao4qJKdYeV0SwZ7LMQziyLfxIUOY6Grja/sQFw
+LKYf8EdDXAyjggF1MIIBcTAfBgNVHSMEGDAWgBR8XQKEE9TMipuBzhccLikenEhj
+QjAdBgNVHQ4EFgQU4TqrIXzx401UrtRyt/2LWUIgkFQwHQYDVR0lBBYwFAYIKwYB
+BQUHAwEGCCsGAQUFBwMCMD0GA1UdIAQ2MDQwMgYEVR0gADAqMCgGCCsGAQUFBwIB
+FhxodHRwOi8vcmVwb3NpdG9yeS5lbXNpZ24uY29tMHgGCCsGAQUFBwEBBGwwajAi
+BggrBgEFBQcwAYYWaHR0cDovL29jc3AuZW1zaWduLmNvbTBEBggrBgEFBQcwAoY4
+aHR0cDovL3JlcG9zaXRvcnkuZW1zaWduLmNvbS9jZXJ0cy9lbVNpZ25FQ0NSb290
+Q0FHMy5jcnQwMwYDVR0fBCwwKjAooCagJIYiaHR0cDovL2NybC5lbXNpZ24uY29t
+P1Jvb3RDQUczLmNybDAOBgNVHQ8BAf8EBAMCAQYwEgYDVR0TAQH/BAgwBgEB/wIB
+ATAKBggqhkjOPQQDAwNpADBmAjEAt9CIpRGp46QHQYDUBnLKw+vvK0/h9vmilEAg
+TroUl/anH4x2rXHqiCtBTBfgKDegAjEA8WpG1LTZdAIL0FSYqxXeREaeTSxEofM0
+1jJH3jGvCXC79LU9UPJ2o3TU+UIj2gMV
+-----END CERTIFICATE-----
+"""
+
+
 
 class Cert(serializable.Serializable):
     """Representation of a (TLS) certificate."""
@@ -312,7 +366,7 @@ def _fix_legacy_sans(sans: Iterable[x509.GeneralName] | list[str]) -> x509.Gener
 
 
 def dummy_cert(
-    privkey: rsa.RSAPrivateKey,
+    privkey: rsa.RSAPrivateKey | ec.EllipticCurvePrivateKey,
     cacert: x509.Certificate,
     commonname: str | None,
     sans: Iterable[x509.GeneralName],
@@ -407,7 +461,7 @@ def dummy_cert(
 
 
 def dummy_crl(
-    privkey: rsa.RSAPrivateKey,
+    privkey: rsa.RSAPrivateKey | ec.EllipticCurvePrivateKey,
     cacert: x509.Certificate,
 ) -> bytes:
     """
@@ -433,7 +487,7 @@ def dummy_crl(
 @dataclass(frozen=True)
 class CertStoreEntry:
     cert: Cert
-    privatekey: rsa.RSAPrivateKey
+    privatekey: rsa.RSAPrivateKey | ec.EllipticCurvePrivateKey
     chain_file: Path | None
     chain_certs: list[Cert]
 
@@ -451,7 +505,7 @@ class CertStore:
     """
 
     STORE_CAP = 100
-    default_privatekey: rsa.RSAPrivateKey
+    default_privatekey: rsa.RSAPrivateKey | ec.EllipticCurvePrivateKey
     default_ca: Cert
     default_chain_file: Path | None
     default_chain_certs: list[Cert]
@@ -461,7 +515,7 @@ class CertStore:
 
     def __init__(
         self,
-        default_privatekey: rsa.RSAPrivateKey,
+        default_privatekey: rsa.RSAPrivateKey | ec.EllipticCurvePrivateKey,
         default_ca: Cert,
         default_chain_file: Path | None,
         default_crl: bytes,
@@ -730,7 +784,9 @@ class CertStore:
         return entry
 
 
-def load_pem_private_key(data: bytes, password: bytes | None) -> rsa.RSAPrivateKey:
+def load_pem_private_key(
+    data: bytes, password: bytes | None
+) -> rsa.RSAPrivateKey | ec.EllipticCurvePrivateKey:
     """
     like cryptography's load_pem_private_key, but silently falls back to not using a password
     if the private key is unencrypted.
