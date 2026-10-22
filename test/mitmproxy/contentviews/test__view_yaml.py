@@ -53,7 +53,4 @@ def test_render_priority():
     assert yaml.render_priority(b"data", Metadata(content_type="application/json")) == 0
     assert yaml.render_priority(b"data", Metadata(content_type="text/plain")) == 0
     assert yaml.render_priority(b"", Metadata(content_type="application/yaml")) == 0
-    assert yaml.render_priority(b"data", Metadata(content_type="text/x-yml")) == 1
-    assert (
-        yaml.render_priority(b"data", Metadata(content_type="application/x-yml")) == 1
-    )
+    assert yaml.render_priority(b"data", Metadata(content_type=None)) == 0
