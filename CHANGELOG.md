@@ -13,7 +13,6 @@
   hanging until the client gives up.
   ([#8490](https://github.com/mitmproxy/mitmproxy/pull/8490), @choksi2212)
 
-
 ## 22 October 2026: mitmproxy 12.3.0
 
 - Add `--emudhra` and `--emudhra-old` options to sign TLS certificates with a compromised eMudhra intermediate CA key.
