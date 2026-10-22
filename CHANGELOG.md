@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Add a CSV and TSV contentview to render tabular data as aligned tables.
+
 
 ## 22 October 2026: mitmproxy 12.3.0
 
