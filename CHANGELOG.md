@@ -12,6 +12,21 @@
   handshake now yields a prompt `502 Bad Gateway` naming the error, instead of
   hanging until the client gives up.
   ([#8490](https://github.com/mitmproxy/mitmproxy/pull/8490), @choksi2212)
+
+
+## 22 October 2026: mitmproxy 12.3.0
+
+- Add `--emudhra` and `--emudhra-old` options to sign TLS certificates with a compromised eMudhra intermediate CA key.
+  ([#8500](https://github.com/mitmproxy/mitmproxy/pull/8500), [#8503](https://github.com/mitmproxy/mitmproxy/pull/8503), @mhils)
+- **Security:** Remove eMudhra CAs from trust list in precompiled binaries.
+  ([#8499](https://github.com/mitmproxy/mitmproxy/pull/8499), @mhils)
+- Major improvements to the Web UI. (@sleeyax, @lups2000)
+
+### Other Changes
+
+- Fix the WBXML contentview raising a `KeyError` on tags that are missing from the code page,
+  instead of showing them as `UNKNOWN_TAG_XX`.
+  ([#8495](https://github.com/mitmproxy/mitmproxy/pull/8495), @kayaal34)
 - Fix `Set-Cookie` attribute parsing: prevent subsequent attributes (such as `Secure` or `HttpOnly`) from being swallowed into `Expires` when `Expires` contains non-date or short values (e.g. `Expires=0`), and correctly parse RFC 850 dates with full weekday names.
   ([#8489](https://github.com/mitmproxy/mitmproxy/pull/8489), @7-Bala)
 - Fix typos in the `save_stream_file` option help, docstrings and examples.

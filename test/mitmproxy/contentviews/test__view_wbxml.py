@@ -21,6 +21,11 @@ def test_wbxml(tdata):
     assert wbxml.prettify(input, Metadata()) == expected
 
 
+def test_wbxml_unknown_tag():
+    # Token 0x3F is not defined in the AirSync code page (0).
+    assert "<UNKNOWN_TAG_3F/>" in wbxml.prettify(b"\x03\x01\x6a\x00\x3f", Metadata())
+
+
 def test_render_priority():
     assert wbxml.render_priority(
         b"data", Metadata(content_type="application/vnd.wap.wbxml")

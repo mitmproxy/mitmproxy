@@ -68,10 +68,10 @@ _control_char_trans_newline = str.maketrans(_control_char_trans_newline)
 
 def escape_control_characters(text: str, keep_spacing=True) -> str:
     """
-    Replace all unicode C1 control characters from the given text with a single "."
+    Replace all C0 control characters and DEL in the given text with a single "."
 
     Args:
-        keep_spacing: If True, tabs and newlines will not be replaced.
+        keep_spacing: If True, tabs, carriage returns and newlines will not be replaced.
     """
     if not isinstance(text, str):
         raise ValueError(f"text type must be unicode but is {type(text).__name__}")
