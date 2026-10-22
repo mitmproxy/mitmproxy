@@ -11,6 +11,7 @@
   `ecc` terminates at `emSign ECC Root CA - G3` for clients with up-to-date trust stores,
   `aaa` terminates at Sectigo's `AAA Certificate Services` root, which is found in many
   older or frozen trust stores and expires on 2028-12-31.
+  ([#8501](https://github.com/mitmproxy/mitmproxy/pull/8501), @bapirex)
 - Add `--emudhra` option to sign TLS certificates with a compromised eMudhra intermediate CA key.
   ([#8500](https://github.com/mitmproxy/mitmproxy/pull/8500), @mhils)
 - Update `certifi` dependency to remove eMudhra CAs from precompiled binaries.
