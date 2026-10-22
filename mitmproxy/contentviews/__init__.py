@@ -39,6 +39,7 @@ from ._view_socketio import socket_io
 from ._view_urlencoded import urlencoded
 from ._view_wbxml import wbxml
 from ._view_xml_html import xml_html
+from ._view_yaml import yaml
 from ._view_zip import zip
 from .base import View
 import mitmproxy_rs.contentviews
@@ -146,6 +147,7 @@ _views: list[Contentview] = [
     urlencoded,
     wbxml,
     xml_html,
+    yaml,
     zip,
 ]
 for view in _views:
