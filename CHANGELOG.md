@@ -8,7 +8,7 @@
 ## Unreleased: mitmproxy next
 
 - Add a YAML contentview to format and syntax-highlight YAML payloads.
-
+  ([#8504](https://github.com/mitmproxy/mitmproxy/pull/8504), @vansh917917)
 
 ## 22 October 2026: mitmproxy 12.3.0
 
