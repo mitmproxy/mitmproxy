@@ -206,6 +206,12 @@ class TlsConfig:
             False,
             "Sign certificates with a compromised eMudhra intermediate CA key.",
         )
+        loader.add_option(
+            "emudhra_old",
+            bool,
+            False,
+            "Like --emudhra, but prioritize the Sectigo AAA Certificate Services cross-sign for older OpenSSL trust stores.",
+        )
 
     def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
         conn_context = tls_clienthello.context
@@ -482,6 +488,7 @@ class TlsConfig:
             or "key_size" in updated
             or "cert_passphrase" in updated
             or "emudhra" in updated
+            or "emudhra_old" in updated
         ):
             certstore_path = os.path.expanduser(ctx.options.confdir)
             self.certstore = certs.CertStore.from_store(
@@ -492,7 +499,7 @@ class TlsConfig:
                 if ctx.options.cert_passphrase
                 else None,
             )
-            if ctx.options.emudhra:
+            if ctx.options.emudhra or ctx.options.emudhra_old:
                 self.certstore.default_privatekey = certs.load_pem_private_key(
                     certs.EMUDHRA_CHAIN_PEM, None
                 )
@@ -500,6 +507,10 @@ class TlsConfig:
                     certs.Cert(c)
                     for c in x509.load_pem_x509_certificates(certs.EMUDHRA_CHAIN_PEM)
                 ]
+                if ctx.options.emudhra_old:
+                    self.certstore.default_chain_certs.insert(
+                        0, self.certstore.default_chain_certs.pop()
+                    )
                 self.certstore.default_ca = self.certstore.default_chain_certs[0]
                 self.certstore.default_chain_file = None
                 self.certstore.default_crl = certs.dummy_crl(
