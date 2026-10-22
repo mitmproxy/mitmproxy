@@ -186,6 +186,66 @@ async def test_inject_fail(caplog) -> None:
     ps.inject_websocket("@focus", True, b"test")  # type: ignore[arg-type]
 
 
+async def test_secure_web_proxy_no_h2() -> None:
+    """The outer client<->proxy TLS of a secure web proxy must not negotiate h2,
+    mitmproxy does not support CONNECT over HTTP/2. The inner TLS through the
+    tunnel is unaffected. https://github.com/mitmproxy/mitmproxy/issues/8192"""
+
+    async def server_handler(
+        reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+    ):
+        await reader.read(1)
+
+    server_ssl = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+    server_ssl.load_cert_chain(
+        certfile=tlsdata.path("../net/data/verificationcerts/trusted-leaf.crt"),
+        keyfile=tlsdata.path("../net/data/verificationcerts/trusted-leaf.key"),
+    )
+    server_ssl.set_alpn_protocols(["h2", "http/1.1"])
+
+    ps = Proxyserver()
+    nl = NextLayer()
+    ta = TlsConfig()
+
+    with taddons.context(ps, nl, ta) as tctx:
+        ta.configure(["confdir"])
+        tctx.configure(
+            ta,
+            ssl_verify_upstream_trusted_ca=tlsdata.path(
+                "../net/data/verificationcerts/trusted-root.crt"
+            ),
+        )
+        async with tcp_server(server_handler, ssl=server_ssl) as addr:
+            tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
+            assert await ps.setup_servers()
+            ps.running()
+            proxy_addr = ps.servers["regular"].listen_addrs[0]
+
+            client_ssl = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            client_ssl.check_hostname = False
+            client_ssl.verify_mode = ssl.CERT_NONE
+            client_ssl.set_alpn_protocols(["h2", "http/1.1"])
+            reader, writer = await asyncio.open_connection(
+                *proxy_addr, ssl=client_ssl, server_hostname="localhost"
+            )
+            ssl_obj = writer.get_extra_info("ssl_object")
+            assert ssl_obj.selected_alpn_protocol() == "http/1.1"
+
+            req = f"CONNECT {addr[0]}:{addr[1]} HTTP/1.1\r\n\r\n"
+            writer.write(req.encode())
+            assert (
+                await reader.readuntil(b"\r\n\r\n")
+                == b"HTTP/1.1 200 Connection established\r\n\r\n"
+            )
+            await writer.start_tls(client_ssl, server_hostname="example.mitmproxy.org")
+            ssl_obj = writer.get_extra_info("ssl_object")
+            assert ssl_obj.selected_alpn_protocol() == "h2"
+
+            writer.close()
+            await writer.wait_closed()
+            await _wait_for_connection_closes(ps)
+
+
 async def test_warn_no_nextlayer(caplog):
     """
     Test that we log an error if the proxy server is started without NextLayer addon.
