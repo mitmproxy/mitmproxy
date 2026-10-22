@@ -1,5 +1,3 @@
-import io
-
 from ruamel.yaml import YAML
 from ruamel.yaml.error import YAMLError
 
@@ -19,6 +17,7 @@ class YAMLContentview(Contentview):
             docs = list(yaml_parser.load_all(text))
         except YAMLError as e:
             raise ValueError(f"Invalid YAML: {e}") from e
+
     def render_priority(self, data: bytes, metadata: Metadata) -> float:
         if not data or not metadata.content_type:
             return 0
