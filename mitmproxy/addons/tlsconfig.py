@@ -206,6 +206,16 @@ class TlsConfig:
             False,
             "Sign certificates with a compromised eMudhra intermediate CA key.",
         )
+        loader.add_option(
+            "emudhra_chain",
+            str,
+            "ecc",
+            "The compromised eMudhra intermediate CA to use when --emudhra is enabled. "
+            "'ecc' chains to emSign ECC Root CA - G3 and targets clients with up-to-date trust stores, "
+            "'aaa' chains to Sectigo's AAA Certificate Services root and targets clients with older "
+            "or frozen trust stores. This root expires on 2028-12-31.",
+            choices=("ecc", "aaa"),
+        )
 
     def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
         conn_context = tls_clienthello.context
@@ -482,6 +492,7 @@ class TlsConfig:
             or "key_size" in updated
             or "cert_passphrase" in updated
             or "emudhra" in updated
+            or "emudhra_chain" in updated
         ):
             certstore_path = os.path.expanduser(ctx.options.confdir)
             self.certstore = certs.CertStore.from_store(
@@ -493,12 +504,19 @@ class TlsConfig:
                 else None,
             )
             if ctx.options.emudhra:
+                if ctx.options.emudhra_chain == "aaa":
+                    chain_pem = certs.EMUDHRA_CHAIN_AAA_PEM
+                elif ctx.options.emudhra_chain == "ecc":
+                    chain_pem = certs.EMUDHRA_CHAIN_PEM
+                else:
+                    raise exceptions.OptionsError(
+                        f"Invalid emudhra_chain value: {ctx.options.emudhra_chain}."
+                    )
                 self.certstore.default_privatekey = certs.load_pem_private_key(
-                    certs.EMUDHRA_CHAIN_PEM, None
+                    chain_pem, None
                 )
                 self.certstore.default_chain_certs = [
-                    certs.Cert(c)
-                    for c in x509.load_pem_x509_certificates(certs.EMUDHRA_CHAIN_PEM)
+                    certs.Cert(c) for c in x509.load_pem_x509_certificates(chain_pem)
                 ]
                 self.certstore.default_ca = self.certstore.default_chain_certs[0]
                 self.certstore.default_chain_file = None
