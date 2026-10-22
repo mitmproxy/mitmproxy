@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Infer UTF-8 encoding for YAML, Markdown, TOML, and CSV content types, and strip quotes from Content-Type parameter values.
+
 
 ## 22 October 2026: mitmproxy 12.3.0
 

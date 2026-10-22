@@ -15,6 +15,12 @@ def test_parse_content_type():
     v = p("text/html; charset=UTF-8")
     assert v == ("text", "html", {"charset": "UTF-8"})
 
+    v = p('text/html; charset="UTF-8"')
+    assert v == ("text", "html", {"charset": "UTF-8"})
+
+    v = p("text/html; charset='UTF-8'")
+    assert v == ("text", "html", {"charset": "UTF-8"})
+
 
 def test_assemble_content_type():
     p = assemble_content_type
@@ -46,8 +52,19 @@ def test_assemble_content_type():
         # content-type charset
         ("text/html; charset=latin1", b"\xc3\xbc", "latin1"),
         ("text/html; charset=utf8", b"\xc3\xbc", "utf8"),
+        ('text/html; charset="gb2312"', b"\xe6\x98\x8e\xe4\xbc\xaf", "gb18030"),
+        ("text/html; charset='utf-8'", b"\xc3\xbc", "utf-8"),
         # json
         ("application/json", b'"\xc3\xbc"', "utf8"),
+        # yaml
+        ("application/yaml", b"name: \xc3\xbc", "utf8"),
+        ("text/yaml", b"name: \xc3\xbc", "utf8"),
+        # markdown
+        ("text/markdown", b"# \xc3\xbc", "utf8"),
+        # toml
+        ("application/toml", b"key = '\xc3\xbc'", "utf8"),
+        # csv
+        ("text/csv", b"a,\xc3\xbc", "utf8"),
         # html meta charset
         (
             "text/html",
