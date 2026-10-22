@@ -60,8 +60,20 @@ rD693XKIHUCWOjMh1if6omGXKHH40QuME2gNa50+YPn1iYDl88uDbbMCAQI=
 -----END DH PARAMETERS-----
 """
 
-# Compromised eMudhra intermediate CA (EM OV TLS CA - G3C, d=4) and cross-signed root (emSign Root TLS CA - G3),
-# see https://emudhra.we-have-a-problem.com/
+# Compromised eMudhra intermediate CA (EM OV TLS CA - G3C, d=4), see https://emudhra.we-have-a-problem.com/.
+# Contains:
+# 1. Private key for EM OV TLS CA - G3C (P-384, d=4).
+# 2. EM OV TLS CA - G3C issued by emSign Root TLS CA - G3.
+# 3. emSign Root TLS CA - G3 cross-signed by emSign ECC Root CA - G3.
+# 4. EM OV TLS CA - G3C cross-signed by Sectigo's AAA Certificate Services (for older pre-2021 trust stores).
+#
+# Path-building TLS stacks (Go, Rust, Java, macOS, Windows, browsers) consider all certificates in the chain
+# and validate against any of the three roots (emSign ECC Root CA - G3, emSign Root TLS CA - G3, or
+# AAA Certificate Services). OpenSSL does not backtrack across untrusted intermediates with the same
+# Subject/SKI and only follows the first matching intermediate: --emudhra keeps the emSign-issued intermediate
+# first (since Mozilla's root bundle used by Python/certifi, curl, Node.js, and Linux ca-certificates already
+# removed AAA Certificate Services in 2025), while --emudhra-old moves the AAA-issued intermediate (#4) to the
+# front for older OpenSSL trust stores.
 EMUDHRA_CHAIN_PEM = b"""
 -----BEGIN PRIVATE KEY-----
 MIG2AgEAMBAGByqGSM49AgEGBSuBBAAiBIGeMIGbAgEBBDAAAAAAAAAAAAAAAAAA
@@ -110,6 +122,29 @@ P1Jvb3RDQUczLmNybDAOBgNVHQ8BAf8EBAMCAQYwEgYDVR0TAQH/BAgwBgEB/wIB
 ATAKBggqhkjOPQQDAwNpADBmAjEAt9CIpRGp46QHQYDUBnLKw+vvK0/h9vmilEAg
 TroUl/anH4x2rXHqiCtBTBfgKDegAjEA8WpG1LTZdAIL0FSYqxXeREaeTSxEofM0
 1jJH3jGvCXC79LU9UPJ2o3TU+UIj2gMV
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIIDzzCCAregAwIBAgIRAI1aSBGTnvRH13ERzdmEmukwDQYJKoZIhvcNAQELBQAw
+ezELMAkGA1UEBhMCR0IxGzAZBgNVBAgMEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4G
+A1UEBwwHU2FsZm9yZDEaMBgGA1UECgwRQ29tb2RvIENBIExpbWl0ZWQxITAfBgNV
+BAMMGEFBQSBDZXJ0aWZpY2F0ZSBTZXJ2aWNlczAeFw0yNTA1MTQwMDAwMDBaFw0y
+ODEyMzEyMzU5NTlaMEAxCzAJBgNVBAYTAlVTMRQwEgYDVQQKDAtlTXVkaHJhIElu
+YzEbMBkGA1UEAwwSRU0gT1YgVExTIENBIC0gRzNDMHYwEAYHKoZIzj0CAQYFK4EE
+ACIDYgAEE4JRzVKskpjByKrZdzId65fnCb0LTKCspV3IrVHc/J0ViaFZfjpRIOHv
+1jHGPhg1ysrimGmmLhYx6KKBgatWYW3EXZGKvAnzqw5jz3kqpNztc4e+N7ulaVSf
+HAKycO1no4IBNTCCATEwHwYDVR0jBBgwFoAUoBEKIz6W8Qfs4q8p74Klf9AwpLQw
+HQYDVR0OBBYEFDTq6gzryQra+dDF4u2beMmHnhtsMA4GA1UdDwEB/wQEAwIBBjAS
+BgNVHRMBAf8ECDAGAQH/AgEAMB0GA1UdJQQWMBQGCCsGAQUFBwMBBggrBgEFBQcD
+AjAxBgNVHSAEKjAoMAgGBmeBDAECAjANBgsrBgEEAYOOIQEAATANBgsrBgEEAYOO
+IQECbjBDBgNVHR8EPDA6MDigNqA0hjJodHRwOi8vY3JsLmNvbW9kb2NhLmNvbS9B
+QUFDZXJ0aWZpY2F0ZVNlcnZpY2VzLmNybDA0BggrBgEFBQcBAQQoMCYwJAYIKwYB
+BQUHMAGGGGh0dHA6Ly9vY3NwLmNvbW9kb2NhLmNvbTANBgkqhkiG9w0BAQsFAAOC
+AQEAHlbhZpjhkPEAQVhPHRtBDaHqiisVD20pQ1TUeSx3l62Qe7NQ0b7vWQy7DN0i
+KOu7BGpP5EnIjvXbz9FhpfPJ4FhKEt3tQ51rqXz2oD8vRaryvExWPobDUz3j7HN6
+OzBsVMIe3PD7AAkpky0x8zMSi/ep5R9OMzybmNptbtppyuB5ytgq+h7lQdRIP+CQ
+TaJX3qTgfMqzntYre5GljmEB5hU2/rSn8zoSU2APkJidlZFpghtgbD4I2VRHZvCw
+FFr/SrFM9pwrgbJNZ1MtyTSVgI5NlNb0aMfLR+/r6jJt3ROeY2yh2QQ2dx+Yqgdb
+uL5ChFWOQU+ErSDnUq7yr+pjBQ==
 -----END CERTIFICATE-----
 """
 
