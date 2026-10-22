@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+
+## 22 October 2026: mitmproxy 12.3.0
+
 - Add `--emudhra` and `--emudhra-old` options to sign TLS certificates with a compromised eMudhra intermediate CA key.
   ([#8500](https://github.com/mitmproxy/mitmproxy/pull/8500), [#8503](https://github.com/mitmproxy/mitmproxy/pull/8503), @mhils)
 - **Security:** Remove eMudhra CAs from trust list in precompiled binaries.
