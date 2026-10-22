@@ -39,6 +39,10 @@ def test_render_priority():
     )
     assert yaml.render_priority(b"data", Metadata(content_type="text/yaml")) == 1
     assert yaml.render_priority(b"data", Metadata(content_type="text/x-yaml")) == 1
+    assert yaml.render_priority(b"data", Metadata(content_type="text/x-yml")) == 1
+    assert (
+        yaml.render_priority(b"data", Metadata(content_type="application/x-yml")) == 1
+    )
     assert (
         yaml.render_priority(b"data", Metadata(content_type="application/vnd.api+yaml"))
         == 1

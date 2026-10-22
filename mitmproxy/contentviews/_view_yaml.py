@@ -28,16 +28,10 @@ class YAMLContentview(Contentview):
     def render_priority(self, data: bytes, metadata: Metadata) -> float:
         if not data or not metadata.content_type:
             return 0
-        if metadata.content_type in (
-            "application/yaml",
-            "application/x-yaml",
-            "text/yaml",
-            "text/x-yaml",
+        ct = metadata.content_type
+        if ct.startswith(("application/", "text/")) and (
+            ct.endswith("yaml") or ct.endswith("yml")
         ):
-            return 1
-        if metadata.content_type.startswith(
-            ("application/", "text/")
-        ) and metadata.content_type.endswith("yaml"):
             return 1
         return 0
 
