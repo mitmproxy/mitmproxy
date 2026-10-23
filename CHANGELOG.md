@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix two error messages that were built with `%s` placeholders and never formatted
+  (`BiDi` attribute lookup and unsupported option types in `OptManager.make_parser`).
+  ([#8509](https://github.com/mitmproxy/mitmproxy/pull/8509), @Pharex38)
 - Fix `get_free_port` leaking a UDP socket when the port it found is not free for UDP.
   ([#8510](https://github.com/mitmproxy/mitmproxy/pull/8510), @bacescuandrei)
 
