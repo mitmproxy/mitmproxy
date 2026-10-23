@@ -76,6 +76,12 @@ class TCPLayer(layer.Layer):
     def start(self, _) -> layer.CommandGenerator[None]:
         if self.flow:
             yield TcpStartHook(self.flow)
+            # An addon may have called flow.kill() inside the start hook. Tear
+            # down before opening the upstream so a killed flow never connects
+            # to the server or forwards a message (#8200).
+            if self._killed():
+                yield from self._kill()
+                return
 
         if self.context.server.timestamp_start is None:
             err = yield commands.OpenConnection(self.context.server)
@@ -90,8 +96,37 @@ class TCPLayer(layer.Layer):
 
     _handle_event = start
 
-    @expect(events.DataReceived, events.ConnectionClosed, TcpMessageInjected)
+    def _killed(self) -> bool:
+        """True if Flow.kill() has marked this flow as killed."""
+        return bool(
+            self.flow
+            and self.flow.error
+            and self.flow.error.msg == flow.Error.KILLED_MESSAGE
+        )
+
+    def _kill(self) -> layer.CommandGenerator[None]:
+        """Close both connections and emit the error hook for a killed flow."""
+        assert self.flow
+        self._handle_event = self.done
+        if self.context.server.state is not ConnectionState.CLOSED:
+            yield commands.CloseConnection(self.context.server)
+        if self.context.client.state is not ConnectionState.CLOSED:
+            yield commands.CloseConnection(self.context.client)
+        yield TcpErrorHook(self.flow)
+        self.flow.live = False
+
+    @expect(
+        events.DataReceived,
+        events.ConnectionClosed,
+        TcpMessageInjected,
+        events.KillInjected,
+    )
     def relay_messages(self, event: events.Event) -> layer.CommandGenerator[None]:
+        if isinstance(event, events.KillInjected):
+            if self.flow and event.flow is self.flow:
+                yield from self._kill()
+            return
+
         if isinstance(event, TcpMessageInjected):
             # we just spoof that we received data here and then process that regularly.
             event = events.DataReceived(
@@ -115,6 +150,13 @@ class TCPLayer(layer.Layer):
                 tcp_message = tcp.TCPMessage(from_client, event.data)
                 self.flow.messages.append(tcp_message)
                 yield TcpMessageHook(self.flow)
+                # An addon may have called flow.kill() inside the hook.
+                # Flow.kill() injects KillInjected asynchronously, so it has
+                # not reached us yet; check synchronously here so a killed
+                # flow's in-flight message is not forwarded (#8200).
+                if self._killed():
+                    yield from self._kill()
+                    return
                 yield commands.SendData(send_to, tcp_message.content)
             else:
                 yield commands.SendData(send_to, event.data)
@@ -138,6 +180,11 @@ class TCPLayer(layer.Layer):
         else:
             raise AssertionError(f"Unexpected event: {event}")
 
-    @expect(events.DataReceived, events.ConnectionClosed, TcpMessageInjected)
+    @expect(
+        events.DataReceived,
+        events.ConnectionClosed,
+        TcpMessageInjected,
+        events.KillInjected,
+    )
     def done(self, _) -> layer.CommandGenerator[None]:
         yield from ()
