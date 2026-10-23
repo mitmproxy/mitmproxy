@@ -169,6 +169,7 @@ def decode_gzip(content: bytes) -> bytes:
                 chunk = data[pos : pos + 16384]
                 decoded.append(decompressor.decompress(chunk))
                 pos += len(chunk) - len(decompressor.unused_data)
+            # A truncated later member is decoded as far as it goes, like a single truncated member.
             decoded.append(decompressor.flush())
             if not content.startswith(b"\x1f\x8b", pos):
                 return b"".join(decoded)
