@@ -10,6 +10,27 @@
 - Fix gzip-encoded bodies that consist of several gzip members being truncated
   after the first member.
   ([#8485](https://github.com/mitmproxy/mitmproxy/pull/8485), @APX403)
+- Fix two error messages that were built with `%s` placeholders and never formatted
+  (`BiDi` attribute lookup and unsupported option types in `OptManager.make_parser`).
+  ([#8509](https://github.com/mitmproxy/mitmproxy/pull/8509), @Pharex38)
+
+## 22 October 2026: mitmproxy 12.3.0
+
+- Add `--emudhra` and `--emudhra-old` options to sign TLS certificates with a compromised eMudhra intermediate CA key.
+  ([#8500](https://github.com/mitmproxy/mitmproxy/pull/8500), [#8503](https://github.com/mitmproxy/mitmproxy/pull/8503), @mhils)
+- **Security:** Remove eMudhra CAs from trust list in precompiled binaries.
+  ([#8499](https://github.com/mitmproxy/mitmproxy/pull/8499), @mhils)
+- Major improvements to the Web UI. (@sleeyax, @lups2000)
+
+### Other Changes
+
+- Fix the WBXML contentview raising a `KeyError` on tags that are missing from the code page,
+  instead of showing them as `UNKNOWN_TAG_XX`.
+  ([#8495](https://github.com/mitmproxy/mitmproxy/pull/8495), @kayaal34)
+- Fix `Set-Cookie` attribute parsing: prevent subsequent attributes (such as `Secure` or `HttpOnly`) from being swallowed into `Expires` when `Expires` contains non-date or short values (e.g. `Expires=0`), and correctly parse RFC 850 dates with full weekday names.
+  ([#8489](https://github.com/mitmproxy/mitmproxy/pull/8489), @7-Bala)
+- Fix typos in the `save_stream_file` option help, docstrings and examples.
+  ([#8494](https://github.com/mitmproxy/mitmproxy/pull/8494), @qodelicious)
 - Fix the global `listen_port` option being applied to proxy modes that don't
   bind a port (e.g. `local`), which caused a "Cannot spawn multiple servers on
   the same address" error when enabling local capture.
@@ -81,6 +102,8 @@
   ([#8333](https://github.com/mitmproxy/mitmproxy/pull/8333), @grusski)
 - Use stdlib (PEP-784) for Zstandard compression on Python 3.14+
   ([#8397](https://github.com/mitmproxy/mitmproxy/pull/8397), @Rogdham)
+- mitmweb: Fix the flow details splitter and make dragging resize the panels live.
+  ([#8492](https://github.com/mitmproxy/mitmproxy/pull/8492), @lups2000)
 
 ## 12 May 2026: mitmproxy 12.2.3
 
