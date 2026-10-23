@@ -158,8 +158,21 @@ def decode_gzip(content: bytes) -> bytes:
         # Using wbits=47 (32 + 15) tells zlib to automatically detect both gzip and zlib headers.
         # This simplifies decoding and avoids the need for a separate gzip.GzipFile fallback.
         # Reference: https://docs.python.org/3/library/zlib.html#zlib.decompress
-        decompressor = zlib.decompressobj(47)
-        return decompressor.decompress(content) + decompressor.flush()
+        decoded: list[bytes] = []
+        data = memoryview(content)
+        pos = 0
+        # A gzip body can consist of several members (RFC 1952, section 2.2). The input is fed
+        # in bounded chunks because unused_data copies everything after the end of a member.
+        while True:
+            decompressor = zlib.decompressobj(47)
+            while not decompressor.eof and pos < len(data):
+                chunk = data[pos : pos + 16384]
+                decoded.append(decompressor.decompress(chunk))
+                pos += len(chunk) - len(decompressor.unused_data)
+            # A truncated later member is decoded as far as it goes, like a single truncated member.
+            decoded.append(decompressor.flush())
+            if not content.startswith(b"\x1f\x8b", pos):
+                return b"".join(decoded)
     except zlib.error as e:
         raise ValueError(f"Decompression failed: {e}")
 

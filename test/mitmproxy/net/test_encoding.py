@@ -1,3 +1,4 @@
+import random
 from unittest import mock
 
 import pytest
@@ -89,6 +90,20 @@ class TestDecodeGzip:
             b'{"errCode":-5, "retMsg":"\xe8\xaf\xb7\xe6\xb1\x82\xe5\x8c\x85\xe4'
             b'\xb8\xad\xe6\xb2\xa1\xe6\x9c\x89buid"}'
         )
+
+    def test_multiple_members(self):
+        # generated with gzip.compress(b"mitm") + gzip.compress(b"pro") + gzip.compress(b"xy")
+        data = bytes.fromhex(
+            "1f8b080092bcce6a02ffcbcd2cc905007aa15ed704000000"
+            "1f8b080092bcce6a02ff2b28ca0700ffd6b46b03000000"
+            "1f8b080092bcce6a02ffaba804009928e68f02000000"
+        )
+        assert encoding.decode_gzip(data) == b"mitmproxy"
+
+    def test_multiple_large_members(self):
+        content = random.Random(0).randbytes(20_000)
+        data = encoding.encode_gzip(content) + encoding.encode_gzip(content)
+        assert encoding.decode_gzip(data) == content + content
 
 
 def test_cache():

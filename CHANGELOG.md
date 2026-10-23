@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix gzip-encoded bodies that consist of several gzip members being truncated
+  after the first member.
+  ([#8485](https://github.com/mitmproxy/mitmproxy/pull/8485), @APX403)
 - Fix two error messages that were built with `%s` placeholders and never formatted
   (`BiDi` attribute lookup and unsupported option types in `OptManager.make_parser`).
   ([#8509](https://github.com/mitmproxy/mitmproxy/pull/8509), @Pharex38)
