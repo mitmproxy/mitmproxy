@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix two error messages that were built with `%s` placeholders and never formatted
+  (`BiDi` attribute lookup and unsupported option types in `OptManager.make_parser`).
+  ([#8509](https://github.com/mitmproxy/mitmproxy/pull/8509), @Pharex38)
 
 ## 22 October 2026: mitmproxy 12.3.0
 
