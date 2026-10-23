@@ -343,7 +343,8 @@ class TestServerTLS:
         This is what happens when a TLS 1.3 server rejects the client certificate:
         the rejection alert only arrives once the handshake is already established.
         https://github.com/mitmproxy/mitmproxy/issues/8486"""
-        playbook = tutils.Playbook(tls.ServerTLSLayer(tctx))
+        tls_layer = tls.ServerTLSLayer(tctx)
+        playbook = tutils.Playbook(tls_layer)
         tctx.server.address = ("example.mitmproxy.org", 443)
         tctx.server.state = ConnectionState.OPEN
         tctx.server.sni = "example.mitmproxy.org"
@@ -382,6 +383,10 @@ class TestServerTLS:
             << commands.SendData(tctx.client, b"foo")
         )
 
+        # Enable debug logging so the close path is fully exercised.
+        tls_layer.debug = "  "
+        playbook.logs = True
+
         # The server now sends a fatal alert. To get a genuine one from the peer,
         # we feed it an undecryptable record, to which OpenSSL responds with a
         # fatal alert of its own.
@@ -394,9 +399,13 @@ class TestServerTLS:
         assert (
             playbook
             >> events.DataReceived(tctx.server, alert)
+            << commands.Log(StrMatching(">> DataReceived"), DEBUG)
             << commands.Log(StrMatching("TLS Error: .*alert.*"), WARNING)
+            << commands.Log(StrMatching(r"\[tls\] fatal .*alert.*"), DEBUG)
+            << commands.Log(StrMatching("<< CloseConnection"), DEBUG)
             << commands.CloseConnection(tctx.server)
             >> events.ConnectionClosed(tctx.server)
+            << commands.Log(StrMatching(">> ConnectionClosed"), DEBUG)
             << None
         )
         # the child layer has been told that the connection is gone...
