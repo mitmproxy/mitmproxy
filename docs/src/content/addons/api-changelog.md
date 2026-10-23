@@ -9,6 +9,26 @@ aliases:
 
 We try to avoid them, but this page lists breaking changes in the mitmproxy addon API.
 
+## Unreleased
+
+In mitmdump, `flow.websocket.messages` is now cleared after each live message has
+passed through all hooks and been forwarded (or dropped), unless history is needed
+for flow/HAR recording or filtered output. The current message remains available
+as `flow.websocket.messages[-1]` throughout `websocket_message` hooks.
+
+Addons that inspect earlier messages or export complete WebSocket conversations
+must request history before messages arrive:
+
+```python
+def websocket_start(flow):
+    flow.websocket.store_messages = True
+```
+
+Alternatively, run mitmdump with `--set keep_websocket_messages=true` to retain the
+previous behavior for existing addons. Mitmproxy's console and web interfaces, and
+reading saved flows, continue to retain history. See [WebSocket memory
+usage]({{< relref "/concepts/protocols#websocket" >}}) for details.
+
 ## mitmproxy 12
 
 The Contentviews API has drastically simplified, see the new [contentview documentation] for details.

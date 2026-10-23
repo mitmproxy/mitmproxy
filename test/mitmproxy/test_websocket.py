@@ -15,6 +15,14 @@ class TestWebSocketData:
         f2 = http.HTTPFlow.from_state(f.get_state())
         f2.set_state(f.get_state())
 
+    def test_store_messages_is_not_serialized(self):
+        f = tflow.twebsocketflow()
+        f.websocket.store_messages = False
+        assert "store_messages" not in f.websocket.get_state()
+        f2 = http.HTTPFlow.from_state(f.get_state())
+        assert f2.websocket.store_messages is True
+        assert f2.websocket.messages[0].content == f.websocket.messages[0].content
+
     def test_formatting(self):
         tf = tflow.twebsocketflow().websocket
         formatted_messages = tf._get_formatted_messages()

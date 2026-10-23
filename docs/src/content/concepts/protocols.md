@@ -50,6 +50,33 @@ is available in reverse proxy, local and WireGuard mode.
 WebSocket support in mitmproxy is based on [wsproto](https://github.com/python-hyper/wsproto) project, including support
 for message compression.
 
+Mitmdump discards WebSocket messages after their addon hooks and forwarding finish
+unless message history is needed. This prevents memory from growing with the total
+traffic on a long-lived connection. Console logging does not require retaining
+messages; this behavior also applies when printing message contents.
+
+History is retained automatically when writing flow files (`-w` /
+`save_stream_file`), writing HAR files (`hardump`), or using a `dumper_filter` (which
+may match earlier message bodies). The console and web interfaces also retain
+history for inspection. These modes can still use unbounded memory: WebSocket
+flows are saved as complete conversations, not incrementally spooled messages.
+
+Addons that need earlier messages can set `flow.websocket.store_messages = True`
+in `websocket_start`, or use `--set keep_websocket_messages=true` with mitmdump.
+Otherwise, `flow.websocket.messages` contains the current message during its
+hooks and is empty afterwards, including in `websocket_end`. Messages can still
+be modified or dropped by any hook. See the [addon API
+changelog]({{< relref "/addons/api-changelog" >}}) for migration details.
+
+Retention is chosen at connection start. Configure recording, filtering, and
+history requirements before opening WebSockets. Mitmdump rejects enabling these
+options while connections started without recording are active, since their
+earlier messages may already be gone. Close those connections first. Disabling
+these options affects new connections; existing retained histories remain intact.
+
+This bounds retained history, not the size of an individual message or buffers
+needed to forward traffic. Addons can also retain their own copies of messages.
+
 ##### Known Limitations
 
 - *Replay*: Client or server replay is not possible yet.

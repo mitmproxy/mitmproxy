@@ -33,7 +33,7 @@ class WebsocketStartHook(StartHook):
 class WebsocketMessageHook(StartHook):
     """
     Called when a WebSocket message is received from the client or
-    server. The most recent message will be flow.messages[-1]. The
+    server. The most recent message will be flow.websocket.messages[-1]. The
     message is user-modifiable. Currently there are two types of
     messages, corresponding to the BINARY and TEXT frame types.
     """
@@ -189,6 +189,9 @@ class WebsocketLayer(layer.Layer):
                     if not message.dropped:
                         for msg in fragmentizer(message.content):
                             yield dst_ws.send2(msg)
+
+                    if not self.flow.websocket.store_messages:
+                        self.flow.websocket.messages.clear()
 
                 elif ws_event.frame_finished:
                     src_ws.frame_buf.append(b"")
