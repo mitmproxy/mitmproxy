@@ -150,7 +150,7 @@ function isPlainObject(value: unknown): value is JsonObject {
     return Object.prototype.toString.call(value) === "[object Object]";
 }
 
-// deep comparison of two json objects (dicts). arrays are handeled as a single value.
+// deep comparison of two json objects (dicts). arrays are handled as a single value.
 // return: json object including only the changed keys value pairs.
 export function getDiff(obj1: JsonObject, obj2: JsonObject): JsonObject {
     const result = { ...obj2 };

@@ -136,6 +136,24 @@ def _read_cookie_pairs(s, off=0):
     return pairs, off
 
 
+_WEEKDAYS = {
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri",
+    "sat",
+    "sun",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+}
+
+
 def _read_set_cookie_pairs(s: str, off=0) -> tuple[list[TPairs], int]:
     """
     Read pairs of lhs=rhs values from SetCookie headers while handling multiple cookies.
@@ -156,15 +174,11 @@ def _read_set_cookie_pairs(s: str, off=0) -> tuple[list[TPairs], int]:
 
             # Special handling of attributes
             if lhs.lower() == "expires":
-                # 'expires' values can contain commas in them so they need to
-                # be handled separately.
-
-                # We actually bank on the fact that the expires value WILL
-                # contain a comma. Things will fail, if they don't.
-
-                # '3' is just a heuristic we use to determine whether we've
-                # only read a part of the expires value and we should read more.
-                if len(rhs) <= 3:
+                # 'expires' date values can contain a comma after the weekday
+                # (e.g. RFC 1123 'Wed, ...' or RFC 850 'Wednesday, ...').
+                # We only consume across a comma if the delimiter encountered
+                # is actually a comma and the value read so far is a weekday.
+                if off < len(s) and s[off] == "," and rhs.strip().lower() in _WEEKDAYS:
                     trail, off = _read_value(s, off + 1, ";,")
                     rhs = rhs + "," + trail
 

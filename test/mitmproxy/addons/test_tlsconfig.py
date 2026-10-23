@@ -308,6 +308,90 @@ class TestTlsConfig:
                 "example.mitmproxy.org"
             ]
 
+    @pytest.mark.parametrize(
+        ["opts", "trusted_root"],
+        [
+            (
+                {"emudhra": True},
+                # emSign ECC Root CA - G3
+                "-----BEGIN CERTIFICATE-----\n"
+                "MIICTjCCAdOgAwIBAgIKPPYHqWhwDtqLhDAKBggqhkjOPQQDAzBrMQswCQYDVQQG\n"
+                "EwJJTjETMBEGA1UECxMKZW1TaWduIFBLSTElMCMGA1UEChMcZU11ZGhyYSBUZWNo\n"
+                "bm9sb2dpZXMgTGltaXRlZDEgMB4GA1UEAxMXZW1TaWduIEVDQyBSb290IENBIC0g\n"
+                "RzMwHhcNMTgwMjE4MTgzMDAwWhcNNDMwMjE4MTgzMDAwWjBrMQswCQYDVQQGEwJJ\n"
+                "TjETMBEGA1UECxMKZW1TaWduIFBLSTElMCMGA1UEChMcZU11ZGhyYSBUZWNobm9s\n"
+                "b2dpZXMgTGltaXRlZDEgMB4GA1UEAxMXZW1TaWduIEVDQyBSb290IENBIC0gRzMw\n"
+                "djAQBgcqhkjOPQIBBgUrgQQAIgNiAAQjpQy4LRL1KPOxst3iAhKAnjlfSU2fySU0\n"
+                "WXTsuwYc58Byr+iuL+FBVIcUqEqy6HyC5ltqtdyzdc6LBtCGI79G1Y4PPwT01xyS\n"
+                "fvalY8L1X44uT6EYGQIrMgqCZH0Wk9GjQjBAMB0GA1UdDgQWBBR8XQKEE9TMipuB\n"
+                "zhccLikenEhjQjAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0TAQH/BAUwAwEB/zAKBggq\n"
+                "hkjOPQQDAwNpADBmAjEAvvNhzwIQHWSVB7gYboiFBS+DCBeQyh+KTOgNG3qxrdWB\n"
+                "CUfvO6wIBHxcmbHtRwfSAjEAnbpV/KlK6O3t5nYBQnvI+GDZjVGLVTv7jHvrZQnD\n"
+                "+JbNR6iC8hZVdyR+EhCVBCyj\n"
+                "-----END CERTIFICATE-----\n",
+            ),
+            (
+                {"emudhra_old": True},
+                # AAA Certificate Services
+                "-----BEGIN CERTIFICATE-----\n"
+                "MIIEMjCCAxqgAwIBAgIBATANBgkqhkiG9w0BAQUFADB7MQswCQYDVQQGEwJHQjEb\n"
+                "MBkGA1UECAwSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHDAdTYWxmb3JkMRow\n"
+                "GAYDVQQKDBFDb21vZG8gQ0EgTGltaXRlZDEhMB8GA1UEAwwYQUFBIENlcnRpZmlj\n"
+                "YXRlIFNlcnZpY2VzMB4XDTA0MDEwMTAwMDAwMFoXDTI4MTIzMTIzNTk1OVowezEL\n"
+                "MAkGA1UEBhMCR0IxGzAZBgNVBAgMEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UE\n"
+                "BwwHU2FsZm9yZDEaMBgGA1UECgwRQ29tb2RvIENBIExpbWl0ZWQxITAfBgNVBAMM\n"
+                "GEFBQSBDZXJ0aWZpY2F0ZSBTZXJ2aWNlczCCASIwDQYJKoZIhvcNAQEBBQADggEP\n"
+                "ADCCAQoCggEBAL5AnfRu4ep2hxxNRUSOvkbIgwadwSr+GB+O5AL686tdUIoWMQua\n"
+                "BtDFcCLNSS1UY8y2bmhGC1Pqy0wkwLxyTurxFa70VJoSCsN6sjNg4tqJVfMiWPPe\n"
+                "3M/vg4aijJRPn2jymJBGhCfHdr/jzDUsi14HZGWCwEiwqJH5YZ92IFCokcdmtet4\n"
+                "YgNW8IoaE+oxox6gmf049vYnMlhvB/VruPsUK6+3qszWY19zjNoFmag4qMsXeDZR\n"
+                "rOme9Hg6jc8P2ULimAyrL58OAd7vn5lJ8S3frHRNG5i1R8XlKdH5kBjHYpy+g8cm\n"
+                "ez6KJcfA3Z3mNWgQIJ2P2N7Sw4ScDV7oL8kCAwEAAaOBwDCBvTAdBgNVHQ4EFgQU\n"
+                "oBEKIz6W8Qfs4q8p74Klf9AwpLQwDgYDVR0PAQH/BAQDAgEGMA8GA1UdEwEB/wQF\n"
+                "MAMBAf8wewYDVR0fBHQwcjA4oDagNIYyaHR0cDovL2NybC5jb21vZG9jYS5jb20v\n"
+                "QUFBQ2VydGlmaWNhdGVTZXJ2aWNlcy5jcmwwNqA0oDKGMGh0dHA6Ly9jcmwuY29t\n"
+                "b2RvLm5ldC9BQUFDZXJ0aWZpY2F0ZVNlcnZpY2VzLmNybDANBgkqhkiG9w0BAQUF\n"
+                "AAOCAQEACFb8AvCb6P+k+tZ7xkSAzk/ExfYAWMymtrwUSWgEdujm7l3sAg9g1o1Q\n"
+                "GE8mTgHj5rCl7r+8dFRBv/38ErjHT1r0iWAFf2C3BUrz9vHCv8S5dIa2LX1rzNLz\n"
+                "Rt0vxuBqw8M0Ayx9lt1awg6nCpnBBYurDC/zXDrPbDdVCYfeU0BsWO/8tqtlbgT2\n"
+                "G9w84FoVxp7Z8VlIMCFlA2zs6SFz7JsDoeA3raAVGI/6ugLOpyypEBMs1OUIJqsi\n"
+                "l2D4kF501KKaU73yqWjgom7C12yxow+ev+to51byrvLjKzg6CYG1a4XXvi3tPxq3\n"
+                "smPi9WIsgtRqAEFQ8TmDn5XpNpaYbg==\n"
+                "-----END CERTIFICATE-----\n",
+            ),
+        ],
+    )
+    def test_emudhra(self, opts, trusted_root):
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            tctx.configure(ta, **opts)
+            ctx = _ctx(tctx.options)
+            ctx.client.sni = "example.mitmproxy.org"
+
+            tls_start = tls.TlsData(ctx.client, context=ctx)
+            ta.tls_start_client(tls_start)
+            tssl_server = tls_start.ssl_conn
+
+            tssl_client = test_tls.SSLTest()
+            tssl_client.ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            tssl_client.ctx.verify_mode = ssl.CERT_REQUIRED
+            tssl_client.ctx.check_hostname = True
+            tssl_client.ctx.load_verify_locations(cadata=trusted_root)
+            tssl_client.obj = tssl_client.ctx.wrap_bio(
+                tssl_client.inc,
+                tssl_client.out,
+                server_side=False,
+                server_hostname="example.mitmproxy.org",
+            )
+            assert self.do_handshake(tssl_client, tssl_server)
+            assert tssl_client.obj.getpeercert()["subjectAltName"] == (
+                ("DNS", "example.mitmproxy.org"),
+            )
+
+            quic_tls_start = quic.QuicTlsData(ctx.client, context=ctx)
+            ta.quic_start_client(quic_tls_start)
+            assert len(quic_tls_start.settings.certificate_chain) == 3
+
     def test_tls_start_server_cannot_verify(self):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:

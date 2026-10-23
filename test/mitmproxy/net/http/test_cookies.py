@@ -181,6 +181,47 @@ def test_parse_set_cookie_header():
                 ("doo", "dar", ()),
             ],
         ],
+        [
+            "session=abc; Expires=0; Secure; HttpOnly",
+            [
+                (
+                    "session",
+                    "abc",
+                    (("Expires", "0"), ("Secure", None), ("HttpOnly", None)),
+                ),
+            ],
+        ],
+        [
+            "a=b; expires=0, c=d",
+            [
+                ("a", "b", (("expires", "0"),)),
+                ("c", "d", ()),
+            ],
+        ],
+        [
+            "a=b; expires=Wednesday, 21-Oct-2026 07:28:00 GMT; path=/",
+            [
+                (
+                    "a",
+                    "b",
+                    (
+                        ("expires", "Wednesday, 21-Oct-2026 07:28:00 GMT"),
+                        ("path", "/"),
+                    ),
+                ),
+            ],
+        ],
+        [
+            "a=b; expires=Wednesday, 21-Oct-2026 07:28:00 GMT, c=d; path=/",
+            [
+                (
+                    "a",
+                    "b",
+                    (("expires", "Wednesday, 21-Oct-2026 07:28:00 GMT"),),
+                ),
+                ("c", "d", (("path", "/"),)),
+            ],
+        ],
     ]
     for s, expected in vals:
         ret = cookies.parse_set_cookie_header(s)
