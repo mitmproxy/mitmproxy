@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix requests hanging when an HTTP/1 server sends an informational response
+  such as `103 Early Hints` before the final response.
+  ([#8482](https://github.com/mitmproxy/mitmproxy/pull/8482), @APX403)
 - Fix two error messages that were built with `%s` placeholders and never formatted
   (`BiDi` attribute lookup and unsupported option types in `OptManager.make_parser`).
   ([#8509](https://github.com/mitmproxy/mitmproxy/pull/8509), @Pharex38)
