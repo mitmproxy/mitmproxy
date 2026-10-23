@@ -8,6 +8,7 @@
 ## Unreleased: mitmproxy next
 
 - Fix `get_free_port` leaking a UDP socket when the port it found is not free for UDP.
+  ([#8510](https://github.com/mitmproxy/mitmproxy/pull/8510), @bacescuandrei)
 
 ## 22 October 2026: mitmproxy 12.3.0
 
