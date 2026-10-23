@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix two error messages that were built with `%s` placeholders and never formatted
+  (`BiDi` attribute lookup and unsupported option types in `OptManager.make_parser`).
+  ([#8509](https://github.com/mitmproxy/mitmproxy/pull/8509), @Pharex38)
 - Fail the connection when a fatal TLS alert arrives after the handshake has already
   completed. A TLS 1.3 server that rejects the client certificate only after the
   handshake now yields a prompt `502 Bad Gateway` naming the error, instead of
