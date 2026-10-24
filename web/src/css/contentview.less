@@ -27,6 +27,42 @@
     }
     .codeeditor {
         margin-bottom: 12px;
+
+        // Card-like frame around the editor, shared by both themes.
+        border: 1px solid var(--mitmweb-border);
+        border-radius: 4px;
+        overflow: hidden;
+        transition:
+            border-color ease-in-out 0.15s,
+            box-shadow ease-in-out 0.15s;
+
+        // Focus the whole frame (not the inner .cm-editor) so the ring follows
+        // the rounded border cleanly instead of being clipped at the corners.
+        // Matches the app's .input:focus treatment.
+        &:focus-within {
+            border-color: var(--mitmweb-focus-ring);
+            box-shadow: 0 0 8px rgba(102, 175, 233, 60%);
+        }
+
+        .cm-editor {
+            // Content grows to full height; long lines scroll horizontally.
+            height: auto;
+        }
+
+        // CodeMirror draws its own outline on focus; we style the frame instead.
+        .cm-editor.cm-focused {
+            outline: none;
+        }
+
+        .cm-scroller {
+            font-family: @font-family-monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .cm-content {
+            padding: 6px 0;
+        }
     }
     .Token_Name_Tag {
         color: darkgreen;
@@ -39,5 +75,31 @@
     }
     .Token_Keyword_Constant {
         color: blue;
+    }
+}
+
+// Inner colors for light mode only. In dark mode the CodeMirror `oneDark`
+// theme owns these surfaces, so we leave them untouched to stay cohesive.
+:root:not([data-theme="dark"]) .contentview .codeeditor {
+    .cm-editor {
+        background-color: var(--mitmweb-bg);
+    }
+
+    .cm-gutters {
+        background-color: var(--mitmweb-bg-alt);
+        color: var(--mitmweb-fg-muted);
+        border-right: 1px solid var(--mitmweb-border-lighter);
+    }
+
+    .cm-activeLineGutter {
+        background-color: var(--mitmweb-bg-muted);
+    }
+
+    .cm-activeLine {
+        background-color: var(--mitmweb-highlight);
+    }
+
+    .cm-cursor {
+        border-left-color: var(--mitmweb-fg);
     }
 }
