@@ -10,6 +10,10 @@
 - Fix two error messages that were built with `%s` placeholders and never formatted
   (`BiDi` attribute lookup and unsupported option types in `OptManager.make_parser`).
   ([#8509](https://github.com/mitmproxy/mitmproxy/pull/8509), @Pharex38)
+- mitmweb: Optionally show HTTP flows as side-by-side request and response panels with independent tabs
+  and a draggable divider. Non-HTTP flows keep the single-column view.
+  Opt in with the new `web_split_flowview` option, also under Options → View Options.
+  ([#8487](https://github.com/mitmproxy/mitmproxy/pull/8487), @sleeyax)
 
 ## 22 October 2026: mitmproxy 12.3.0
 

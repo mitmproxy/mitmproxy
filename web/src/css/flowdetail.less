@@ -8,6 +8,31 @@
         background-color: var(--mitmweb-bg-alt);
     }
 
+    &.flow-detail-split {
+        .flow-detail-panels {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: row;
+            min-height: 0;
+        }
+
+        .flow-detail-panel {
+            flex: 1 1 50%;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            overflow: hidden;
+
+            section {
+                flex: 1 1 auto;
+            }
+        }
+
+        .flow-detail-empty {
+            padding: 1em;
+        }
+    }
+
     section {
         overflow-y: scroll;
         flex: 1;
