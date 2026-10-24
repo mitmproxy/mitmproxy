@@ -9,7 +9,6 @@ import FileChooser from "../common/FileChooser";
 import * as flowActions from "../../ducks/flows";
 import { uploadContent } from "../../ducks/flows";
 import Button from "../common/Button";
-import Icon from "../common/Icon";
 import CodeEditor from "./CodeEditor";
 import ViewSelector from "./ViewSelector";
 import { copyViewContentDataToClipboard, fetchApi } from "../../utils";
@@ -26,19 +25,10 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
         (state) => state.ui.flow.contentViewFor[flow.id + part] || "Auto",
     );
 
-    const [maxLines, setMaxLines] = useState<number>(
-        useAppSelector((state) => state.options.content_view_lines_cutoff),
-    );
-    const showMore = useCallback(
-        () => setMaxLines(Math.max(1024, maxLines * 2)),
-        [maxLines],
-    );
-
     const contentViewData = useContentView(
         flow,
         message,
         contentView,
-        maxLines + 1,
         message.contentHash,
     );
 
@@ -72,10 +62,6 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
         desc =
             `${contentViewData.view_name} ${contentViewData.description}`.trimEnd();
     }
-
-    // Preserve the "Show more" cutoff behavior: the backend returns at most
-    // maxLines + 1 lines, so more than maxLines lines means content is truncated.
-    const isTruncated = originalText.split("\n").length > maxLines;
 
     return (
         <div className="contentview" key="view">
@@ -143,14 +129,6 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
                     onChange={setEditedContent}
                     onSave={saveContent}
                 />
-            )}
-            {isTruncated && (
-                <button
-                    onClick={showMore}
-                    className="btn btn-xs btn-info show-more"
-                >
-                    <Icon name="expandMore" /> Show more
-                </button>
             )}
         </div>
     );

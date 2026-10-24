@@ -14,7 +14,7 @@ import { useResolvedTheme } from "../helpers/useTheme";
 
 type CodeEditorProps = {
     content: string;
-    onChange: (content: string) => void;
+    onChange?: (content: string) => void;
     readonly?: boolean;
     language?: SyntaxHighlight | null;
     /**

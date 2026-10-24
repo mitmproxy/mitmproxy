@@ -17,7 +17,6 @@ export function useContentView(
     flow: Flow,
     part: "messages",
     view?: string,
-    lines?: number,
     hash?: string,
 ): ContentViewData[] | undefined;
 
@@ -25,7 +24,6 @@ export function useContentView(
     flow: HTTPFlow,
     part: HTTPMessage | "request" | "response",
     view?: string,
-    lines?: number,
     hash?: string,
 ): ContentViewData | undefined;
 
@@ -33,10 +31,9 @@ export function useContentView(
     flow: Flow,
     part: HTTPMessage | "request" | "response" | "messages",
     view?: string,
-    lines?: number,
     hash?: string,
 ): ContentViewData | ContentViewData[] | undefined {
-    const url = MessageUtils.getContentURL(flow, part, view, lines);
+    const url = MessageUtils.getContentURL(flow, part, view);
     const cv_json = useContent(url, hash);
     return useMemo<ContentViewData | undefined>(() => {
         if (cv_json) {
