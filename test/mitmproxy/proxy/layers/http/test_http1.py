@@ -145,10 +145,11 @@ class TestClient:
         )
         assert resp().response.status_code == 200
 
-    @pytest.mark.parametrize("split", [True, False])
-    def test_informational_response(self, tctx, split):
+    @pytest.mark.parametrize("case", ["split", "joined", "processing"])
+    def test_informational_response(self, tctx, case):
         req = http.Request.make("GET", "http://example.com/")
         resp = Placeholder(ResponseHeaders)
+        processing = b"HTTP/1.1 102 Processing\r\n\r\n"
         early_hints = (
             b"HTTP/1.1 103 Early Hints\r\nlink: </style.css>; rel=preload\r\n\r\n"
         )
@@ -161,17 +162,24 @@ class TestClient:
             << SendData(tctx.server, b"GET / HTTP/1.1\r\ncontent-length: 0\r\n\r\n")
             >> RequestEndOfMessage(1)
         )
-        if split:
+        if case == "split":
             (
                 playbook
                 >> DataReceived(tctx.server, early_hints)
                 << Log("Swallowing HTTP/1 informational response: 103 Early Hints")
                 >> DataReceived(tctx.server, final)
             )
-        else:
+        elif case == "joined":
             (
                 playbook
                 >> DataReceived(tctx.server, early_hints + final)
+                << Log("Swallowing HTTP/1 informational response: 103 Early Hints")
+            )
+        else:
+            (
+                playbook
+                >> DataReceived(tctx.server, processing + early_hints + final)
+                << Log("Swallowing HTTP/1 informational response: 102 Processing")
                 << Log("Swallowing HTTP/1 informational response: 103 Early Hints")
             )
         assert (
