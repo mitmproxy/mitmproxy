@@ -8,7 +8,7 @@ def test_bidi():
     assert b.a == 1
     assert b.get_name(1) == "a"
     assert b.get_name(5) is None
-    with pytest.raises(AttributeError):
+    with pytest.raises(AttributeError, match="^No such attribute: c$"):
         getattr(b, "c")
     with pytest.raises(ValueError):
         bidi.BiDi(one=1, two=1)

@@ -37,7 +37,7 @@ dependencies = [
     "backports.zstd>=1.7.0,<=1.7.0 ; python_version<'3.14'",
     "bcrypt>=5.0.0,<=5.0.0",
     "Brotli>=1.0,<=1.2.0",
-    "certifi>=2019.9.11",  # no upper bound here to get latest CA bundle
+    "certifi>=2026.10.19",  # no upper bound here to get latest CA bundle
     "cryptography>=42.0,<=50.0.2",  # relaxed upper bound here to get security fixes
     "flask>=3.0,<=3.1.3",
     "h11>=0.16.0,<=0.16.0",
@@ -45,7 +45,7 @@ dependencies = [
     "hyperframe>=6.0,<=6.1.0",
     "kaitaistruct>=0.10,<=0.11",
     "ldap3>=2.8,<=2.9.1",
-    "mitmproxy_rs>=0.12.6,<0.13",  # relaxed upper bound here: we control this
+    "mitmproxy_rs>=0.12.15,<0.13",  # relaxed upper bound here: we control this
     "pydivert>=2.0.3,<=3.1.3; sys_platform == 'win32'",
     "pyOpenSSL>=24.3,<=27.0.0",
     "pyparsing>=3.3.2,<=3.3.3",
