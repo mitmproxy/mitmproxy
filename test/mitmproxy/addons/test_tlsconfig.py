@@ -649,6 +649,38 @@ class TestTlsConfig:
             ta.request(f)
             assert not f.response
 
+    def test_emudhra_revocation_block(self):
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            tctx.configure(ta, emudhra=True)
+            ta.configure(["confdir"])
+
+            # Revocation lookups for the eMudhra chain are blocked.
+            for host in tlsconfig._EMUDHRA_REVOCATION_HOSTS:
+                f = tflow.tflow(req=tflow.treq(host=host))
+                ta.request(f)
+                assert f.error
+
+            # The magic CRL endpoint is still served, not blocked.
+            f = tflow.tflow(req=tflow.treq(host="crl.emsign.com", path=ta.crl_path()))
+            ta.request(f)
+            assert f.response
+
+            # Other hosts are unaffected.
+            f = tflow.tflow(req=tflow.treq(host="example.com"))
+            ta.request(f)
+            assert not f.error
+            assert not f.response
+
+        # Without --emudhra, revocation hosts are left alone.
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            tctx.configure(ta)
+            ta.configure(["confdir"])
+            f = tflow.tflow(req=tflow.treq(host="ocsp-a.emsign.com"))
+            ta.request(f)
+            assert not f.error
+
 
 def test_default_ciphers():
     assert (
