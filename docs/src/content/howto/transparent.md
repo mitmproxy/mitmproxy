@@ -368,11 +368,11 @@ ip route add local $CLIENT_NET dev lo table $TABLE_ID
 ```
 
 This mode does require root privileges though. There's a wrapper in the examples
-directory called 'mitmproxy_shim.c', which will enable you to use this mode with
+directory called 'full_transparency_shim.c', which will enable you to use this mode with
 dropped privileges. It can be used as follows:
 
 ```bash
-gcc examples/complex/full_transparency_shim.c -o mitmproxy_shim -lcap
+gcc examples/contrib/full_transparency_shim.c -o mitmproxy_shim -lcap
 sudo chown root:root mitmproxy_shim
 sudo chmod u+s mitmproxy_shim
 ./mitmproxy_shim $(which mitmproxy) --mode transparent --set spoof-source-address
