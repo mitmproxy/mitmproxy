@@ -2,11 +2,12 @@ import { useMemo } from "react";
 import { useContent } from "./useContent";
 import type { Flow, HTTPFlow, HTTPMessage } from "../../flow";
 import { MessageUtils } from "../../flow/utils";
+import { SyntaxHighlight } from "../../backends/consts";
 
 export type ContentViewData = {
     text: string;
     view_name: string;
-    syntax_highlight: string;
+    syntax_highlight: SyntaxHighlight;
     description: string;
     from_client?: boolean;
     timestamp?: number;
@@ -45,7 +46,7 @@ export function useContentView(
                 const err: ContentViewData = {
                     text: cv_json,
                     description: "Network Error",
-                    syntax_highlight: "error",
+                    syntax_highlight: SyntaxHighlight.ERROR,
                     view_name: "raw",
                 };
                 if (part === "messages") {

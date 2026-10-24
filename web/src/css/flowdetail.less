@@ -56,7 +56,31 @@
         .controls {
             display: flex;
             align-items: center;
-            h5 {
+
+            .desc {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+
+                h5 {
+                    font-size: 12px;
+                    font-weight: bold;
+                    margin: 10px 0;
+                }
+
+                .unsaved-indicator {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background-color: var(--mitmweb-fg-muted);
+                    flex: 0 0 auto;
+                }
+            }
+
+            // Keep the bare <h5> layout for content views that don't wrap it
+            // in a .desc container (e.g. the WebSocket/TCP message list).
+            > h5 {
                 flex: 1;
                 font-size: 12px;
                 font-weight: bold;
@@ -65,6 +89,10 @@
         }
 
         pre button:not(:only-child) {
+            margin-top: 6px;
+        }
+
+        .show-more {
             margin-top: 6px;
         }
     }
