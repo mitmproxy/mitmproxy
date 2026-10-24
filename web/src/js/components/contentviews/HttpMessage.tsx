@@ -123,7 +123,10 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
                 // Render the editor once the content view has loaded, even when
                 // the body is empty, so empty requests/responses can be edited.
                 <CodeEditor
-                    key={`${flow.id}-${part}-${contentView}-${message.contentHash}`}
+                    // contentHash is excluded from the key so a save patches
+                    // the document in place (preserving scroll/caret) instead
+                    // of remounting. Flow/part/view changes still remount.
+                    key={`${flow.id}-${part}-${contentView}`}
                     content={originalText}
                     language={contentViewData.syntax_highlight}
                     onChange={setEditedContent}
