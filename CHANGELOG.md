@@ -7,9 +7,12 @@
 
 ## Unreleased: mitmproxy next
 
+- Web: make content views interactive. Request and response bodies can now be edited inline in the CodeMirror editor and saved with the Save button or Ctrl/Cmd+S.
+  ([#8515](https://github.com/mitmproxy/mitmproxy/pull/8515), @lups2000)
 - Fix two error messages that were built with `%s` placeholders and never formatted
   (`BiDi` attribute lookup and unsupported option types in `OptManager.make_parser`).
   ([#8509](https://github.com/mitmproxy/mitmproxy/pull/8509), @Pharex38)
+
 
 ## 22 October 2026: mitmproxy 12.3.0
 
