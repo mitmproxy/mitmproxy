@@ -9,7 +9,13 @@ enableFetchMocks();
 // Render bodies through a plain marker instead of CodeMirror.
 jest.mock("../../../components/contentviews/CodeEditor", () => ({
     __esModule: true,
-    default: ({ content, readonly }: { content: string; readonly?: boolean }) => (
+    default: ({
+        content,
+        readonly,
+    }: {
+        content: string;
+        readonly?: boolean;
+    }) => (
         <pre data-testid="msg-editor" data-readonly={String(!!readonly)}>
             {content}
         </pre>
