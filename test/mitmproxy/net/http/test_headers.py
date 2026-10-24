@@ -21,6 +21,9 @@ def test_parse_content_type():
     v = p("text/html; charset='UTF-8'")
     assert v == ("text", "html", {"charset": "UTF-8"})
 
+    v = p('text/html; title="a \\"b\\""')
+    assert v == ("text", "html", {"title": 'a "b"'})
+
 
 def test_assemble_content_type():
     p = assemble_content_type
