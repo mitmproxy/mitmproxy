@@ -38,8 +38,7 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
     const isEdited =
         editedContent !== undefined && editedContent !== originalText;
 
-    // Reset local edits whenever the underlying content changes (new flow,
-    // new content view, or content reloaded from the backend).
+    // Drop local edits when the underlying content changes.
     useEffect(() => {
         setEditedContent(undefined);
     }, [contentView, message.contentHash, flow.id, part]);
@@ -119,13 +118,11 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
             {ViewImage.matches(message) && (
                 <ViewImage flow={flow} message={message} />
             )}
+            {/* Mount the editor even for an empty body so content can be added. */}
             {contentViewData !== undefined && (
-                // Render the editor once the content view has loaded, even when
-                // the body is empty, so empty requests/responses can be edited.
                 <CodeEditor
-                    // contentHash is excluded from the key so a save patches
-                    // the document in place (preserving scroll/caret) instead
-                    // of remounting. Flow/part/view changes still remount.
+                    // contentHash is excluded from the key so a save patches the
+                    // document in place instead of remounting and losing scroll.
                     key={`${flow.id}-${part}-${contentView}`}
                     content={originalText}
                     language={contentViewData.syntax_highlight}

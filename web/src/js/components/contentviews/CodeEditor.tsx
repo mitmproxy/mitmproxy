@@ -17,11 +17,7 @@ type CodeEditorProps = {
     onChange?: (content: string) => void;
     readonly?: boolean;
     language?: SyntaxHighlight | null;
-    /**
-     * Invoked when the user presses Cmd/Ctrl+S while the editor is focused.
-     * The binding is scoped to this editor instance, so only the focused
-     * editor reacts to the shortcut.
-     */
+    /** Called on Cmd/Ctrl+S while this editor is focused. */
     onSave?: () => void;
 };
 
@@ -40,8 +36,7 @@ export default function CodeEditor({
     const extensions = useMemo(() => {
         const result: Extension[] = [];
         if (onSave) {
-            // Scope the save shortcut to the focused editor via a high-precedence
-            // keymap so it takes priority over CodeMirror's default bindings.
+            // highest precedence so it wins over CodeMirror's default bindings.
             result.push(
                 Prec.highest(
                     keymap.of([

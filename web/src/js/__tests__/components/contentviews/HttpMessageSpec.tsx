@@ -8,8 +8,11 @@ import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 
 enableFetchMocks();
 
+// When mockUseCodeEditor is true, CodeEditor becomes a plain textarea and the
+// latest onChange/onSave are captured so tests can drive edits and saves.
 let mockUseCodeEditor = false,
-    mockCapturedOnChange: ((content: string) => void) | null = null;
+    mockCapturedOnChange: ((content: string) => void) | null = null,
+    mockCapturedOnSave: (() => void) | null = null;
 
 jest.mock("../../../components/contentviews/CodeEditor", () => {
     const actual = jest.requireActual(
@@ -17,80 +20,207 @@ jest.mock("../../../components/contentviews/CodeEditor", () => {
     );
     return {
         __esModule: true,
-        default: ({
-            initialContent,
-            onChange,
-        }: {
-            initialContent: string;
-            onChange: (c: string) => void;
+        default: (props: {
+            content: string;
+            onChange?: (c: string) => void;
+            onSave?: () => void;
         }) => {
             if (!mockUseCodeEditor) {
-                return actual.default({ initialContent, onChange });
+                return actual.default(props);
             }
-            mockCapturedOnChange = onChange;
+            mockCapturedOnChange = props.onChange ?? null;
+            mockCapturedOnSave = props.onSave ?? null;
             return (
                 <textarea
                     data-testid="mock-editor"
-                    defaultValue={initialContent}
+                    value={props.content}
+                    readOnly
                 />
             );
         },
     };
 });
 
-test("HttpMessage", async () => {
-    const text = "data\n".repeat(512) + "additional\n".repeat(512);
+beforeEach(() => {
+    mockUseCodeEditor = false;
+    mockCapturedOnChange = null;
+    mockCapturedOnSave = null;
+    fetchMock.resetMocks();
+});
 
-    const cvd = {
-        view_name: "Raw",
-        description: "",
-        syntax_highlight: "none",
-    };
+const cvd = { view_name: "Raw", description: "", syntax_highlight: "none" };
+
+test("HttpMessage renders full content inline and switches views", async () => {
+    mockUseCodeEditor = true;
 
     fetchMock.mockResponses(
-        JSON.stringify({
-            text: "data\n".repeat(512) + "additional\n",
-            ...cvd,
-        }),
-        JSON.stringify({
-            text,
-            ...cvd,
-        }),
-        JSON.stringify({
-            text: "rawdata\n".repeat(5),
-            ...cvd,
-        }),
-        "raw content",
-        JSON.stringify({
-            text: "rawdata\n".repeat(5),
-            ...cvd,
-        }),
+        JSON.stringify({ text: "data\nadditional\n", ...cvd }),
+        JSON.stringify({ text: "rawdata\n".repeat(5), ...cvd }),
     );
 
     const tflow = TFlow();
-    const { asFragment } = render(
-        <HttpMessage flow={tflow} message={tflow.request} />,
-    );
-    await waitFor(() => screen.getAllByText("data"));
-    expect(screen.queryByText("additional")).toBeNull();
+    render(<HttpMessage flow={tflow} message={tflow.request} />);
 
-    fireEvent.click(screen.getByText("Show more"));
-    await waitFor(() => screen.getAllByText("additional"));
+    await waitFor(() => {
+        const editor = screen.getByTestId("mock-editor") as HTMLTextAreaElement;
+        expect(editor.value).toContain("additional");
+    });
+    expect(screen.queryByText("Show more")).toBeNull();
 
     fireEvent.click(screen.getByText("auto"));
     fireEvent.click(screen.getByText("raw"));
-    await waitFor(() => screen.getAllByText("rawdata"));
-    expect(asFragment()).toMatchSnapshot();
+    await waitFor(() => {
+        const editor = screen.getByTestId("mock-editor") as HTMLTextAreaElement;
+        expect(editor.value).toContain("rawdata");
+    });
 
-    fireEvent.click(screen.getByText("Edit"));
-    expect(asFragment()).toMatchSnapshot();
-    fireEvent.click(screen.getByText("Cancel"));
+    // No edit/view toggle, and Save is hidden until edited.
+    expect(screen.queryByText("Edit")).toBeNull();
+    expect(screen.queryByText("Save")).toBeNull();
+});
 
-    await waitFor(() => screen.getAllByText("rawdata"));
-    expect(asFragment()).toMatchSnapshot();
+test("HttpMessage shows Save/dirty only after editing and PUTs the edit", async () => {
+    mockUseCodeEditor = true;
 
-    await waitFor(() => screen.getByText("Copy"));
-    expect(asFragment()).toMatchSnapshot();
+    fetchMock.mockResponses(
+        JSON.stringify({ text: "original body", ...cvd }),
+        JSON.stringify({}),
+    );
+
+    const tflow = TFlow();
+    render(<HttpMessage flow={tflow} message={tflow.request} />);
+    await waitFor(() => screen.getByTestId("mock-editor"));
+
+    expect(screen.queryByText("Save")).toBeNull();
+    expect(screen.queryByTitle("Unsaved changes")).toBeNull();
+
+    act(() => mockCapturedOnChange!("edited body"));
+
+    await screen.findByText("Save");
+    expect(screen.getByTitle("Unsaved changes")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Save"));
+
+    await waitFor(() => {
+        const putCall = fetchMock.mock.calls.find(
+            ([, opts]) => opts && (opts as RequestInit).method === "PUT",
+        );
+        expect(putCall).toBeDefined();
+        const body = JSON.parse(putCall![1]!.body as string);
+        expect(body.request.content).toBe("edited body");
+    });
+});
+
+test("HttpMessage saves an empty body as an empty string", async () => {
+    mockUseCodeEditor = true;
+
+    fetchMock.mockResponses(
+        JSON.stringify({ text: "original body", ...cvd }),
+        JSON.stringify({}),
+    );
+
+    const tflow = TFlow();
+    render(<HttpMessage flow={tflow} message={tflow.request} />);
+    await waitFor(() => screen.getByTestId("mock-editor"));
+
+    act(() => mockCapturedOnChange!(""));
+    fireEvent.click(await screen.findByText("Save"));
+
+    await waitFor(() => {
+        const putCall = fetchMock.mock.calls.find(
+            ([, opts]) => opts && (opts as RequestInit).method === "PUT",
+        );
+        expect(putCall).toBeDefined();
+        const body = JSON.parse(putCall![1]!.body as string);
+        expect(body.request.content).toBe("");
+    });
+});
+
+test("HttpMessage re-typing the original content hides Save", async () => {
+    mockUseCodeEditor = true;
+
+    fetchMock.mockResponses(JSON.stringify({ text: "original body", ...cvd }));
+
+    const tflow = TFlow();
+    render(<HttpMessage flow={tflow} message={tflow.request} />);
+    await waitFor(() => screen.getByTestId("mock-editor"));
+
+    act(() => mockCapturedOnChange!("edited body"));
+    await screen.findByText("Save");
+
+    act(() => mockCapturedOnChange!("original body"));
+    await waitFor(() => expect(screen.queryByText("Save")).toBeNull());
+});
+
+test("HttpMessage wires the editor's onSave callback to the content PUT", async () => {
+    // The keystroke -> onSave binding itself is covered in CodeEditorSpec.
+    mockUseCodeEditor = true;
+
+    fetchMock.mockResponses(
+        JSON.stringify({ text: "original body", ...cvd }),
+        JSON.stringify({}),
+    );
+
+    const tflow = TFlow();
+    render(<HttpMessage flow={tflow} message={tflow.request} />);
+    await waitFor(() => screen.getByTestId("mock-editor"));
+
+    act(() => mockCapturedOnChange!("edited via onSave"));
+    await screen.findByText("Save");
+
+    act(() => mockCapturedOnSave!());
+
+    await waitFor(() => {
+        const putCall = fetchMock.mock.calls.find(
+            ([, opts]) => opts && (opts as RequestInit).method === "PUT",
+        );
+        expect(putCall).toBeDefined();
+        const body = JSON.parse(putCall![1]!.body as string);
+        expect(body.request.content).toBe("edited via onSave");
+    });
+});
+
+test("HttpMessage shows 'No content' and an editable editor for an empty body", async () => {
+    mockUseCodeEditor = true;
+
+    fetchMock.mockResponse(JSON.stringify({ text: "", ...cvd }));
+
+    const tflow = TFlow();
+    tflow.request.contentLength = 0;
+    render(<HttpMessage flow={tflow} message={tflow.request} />);
+
+    expect(await screen.findByText("No content")).toBeInTheDocument();
+    const editor = (await screen.findByTestId(
+        "mock-editor",
+    )) as HTMLTextAreaElement;
+    expect(editor.value).toBe("");
+});
+
+test("HttpMessage uploads a replacement via the Replace file chooser", async () => {
+    fetchMock.mockResponse(JSON.stringify({ text: "original", ...cvd }));
+
+    const tflow = TFlow();
+    const { container } = render(
+        <HttpMessage flow={tflow} message={tflow.request} />,
+    );
+    await waitFor(() => screen.getByText("Replace"));
+
+    const fileInput = container.querySelector(
+        "input[type=file]",
+    ) as HTMLInputElement;
+    const file = new File(["replacement"], "body.txt", { type: "text/plain" });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    await waitFor(() => {
+        const postCall = fetchMock.mock.calls.find(
+            ([url, opts]) =>
+                typeof url === "string" &&
+                url.includes("/request/content.data") &&
+                opts &&
+                (opts as RequestInit).method === "POST",
+        );
+        expect(postCall).toBeDefined();
+    });
 });
 
 test("ViewImage", async () => {
@@ -164,79 +294,5 @@ describe("HttpMessage Copy Button", () => {
         await waitFor(() =>
             expect(console.error).toHaveBeenCalledWith(expect.any(Error)),
         );
-    });
-});
-
-describe("HttpMessage body edit", () => {
-    const cvd = { view_name: "Raw", description: "", syntax_highlight: "none" };
-
-    beforeEach(() => {
-        mockUseCodeEditor = true;
-        mockCapturedOnChange = null;
-        fetchMock.resetMocks();
-    });
-
-    afterEach(() => {
-        mockUseCodeEditor = false;
-        mockCapturedOnChange = null;
-    });
-
-    test("saving empty body sends empty string, not original content", async () => {
-        fetchMock.mockResponses(
-            JSON.stringify({ text: "original body", ...cvd }),
-            "original body",
-            JSON.stringify({}),
-        );
-
-        const tflow = TFlow();
-        render(<HttpMessage flow={tflow} message={tflow.request} />);
-        await waitFor(() => screen.getAllByText("original body"));
-
-        fireEvent.click(screen.getByText("Edit"));
-        await waitFor(() => screen.getByText("Done"));
-
-        expect(mockCapturedOnChange).not.toBeNull();
-        act(() => mockCapturedOnChange!(""));
-
-        fireEvent.click(screen.getByText("Done"));
-
-        await waitFor(() => {
-            const putCall = fetchMock.mock.calls.find(
-                ([, opts]) => opts && (opts as RequestInit).method === "PUT",
-            );
-            expect(putCall).toBeDefined();
-            const body = JSON.parse(putCall![1]!.body as string);
-            expect(body.request.content).toBe("");
-        });
-    });
-
-    test("saving unedited body sends original content", async () => {
-        fetchMock.mockResponses(
-            JSON.stringify({ text: "original body", ...cvd }),
-            "original body",
-            JSON.stringify({}),
-        );
-
-        const tflow = TFlow();
-        render(<HttpMessage flow={tflow} message={tflow.request} />);
-        await waitFor(() => screen.getAllByText("original body"));
-
-        fireEvent.click(screen.getByText("Edit"));
-        await waitFor(() => {
-            const editor = screen.getByTestId(
-                "mock-editor",
-            ) as HTMLTextAreaElement;
-            expect(editor.defaultValue).toBe("original body");
-        });
-        fireEvent.click(screen.getByText("Done"));
-
-        await waitFor(() => {
-            const putCall = fetchMock.mock.calls.find(
-                ([, opts]) => opts && (opts as RequestInit).method === "PUT",
-            );
-            expect(putCall).toBeDefined();
-            const body = JSON.parse(putCall![1]!.body as string);
-            expect(body.request.content).toBe("original body");
-        });
     });
 });
