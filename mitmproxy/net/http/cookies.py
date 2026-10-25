@@ -314,7 +314,7 @@ def refresh_set_cookie_header(c: str, delta: int) -> str:
     cookies = parse_set_cookie_header(c)
     for cookie in cookies:
         name, value, attrs = cookie
-        if not name or not value:
+        if not name or value is None:
             raise ValueError("Invalid Cookie")
 
         if "expires" in attrs:
