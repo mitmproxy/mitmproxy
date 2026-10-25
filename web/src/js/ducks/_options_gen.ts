@@ -83,6 +83,8 @@ export interface OptionsState {
     tcp_hosts: string[];
     tcp_timeout: number;
     termlog_verbosity: string;
+    tls13_ciphers_client: string | undefined;
+    tls13_ciphers_server: string | undefined;
     tls_ecdh_curve_client: string | undefined;
     tls_ecdh_curve_server: string | undefined;
     tls_version_client_max: string;
@@ -193,6 +195,8 @@ export const defaultState: OptionsState = {
     tcp_hosts: [],
     tcp_timeout: 600,
     termlog_verbosity: "info",
+    tls13_ciphers_client: undefined,
+    tls13_ciphers_server: undefined,
     tls_ecdh_curve_client: undefined,
     tls_ecdh_curve_server: undefined,
     tls_version_client_max: "UNBOUNDED",
