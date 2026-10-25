@@ -7,6 +7,11 @@
 
 ## Unreleased: mitmproxy next
 
+- Mitmdump now discards WebSocket messages after forwarding when no history is
+  needed, avoiding unbounded message history on long-lived connections. Flow/HAR
+  recording and filtered output retain history automatically; addons can request
+  it with `keep_websocket_messages` or `WebSocketData.store_messages`.
+  ([#8519](https://github.com/mitmproxy/mitmproxy/pull/8519), @zaz)
 - Fix two error messages that were built with `%s` placeholders and never formatted
   (`BiDi` attribute lookup and unsupported option types in `OptManager.make_parser`).
   ([#8509](https://github.com/mitmproxy/mitmproxy/pull/8509), @Pharex38)

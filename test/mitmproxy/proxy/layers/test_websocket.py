@@ -271,6 +271,58 @@ def test_drop_message(ws_testdata):
     assert playbook
 
 
+@pytest.mark.parametrize("from_client", [False, True])
+@pytest.mark.parametrize("is_text", [False, True])
+@pytest.mark.parametrize("fragmented", [False, True])
+@pytest.mark.parametrize("action", ["forward", "modify", "drop"])
+def test_discard_messages(ws_testdata, from_client, is_text, fragmented, action):
+    tctx, playbook, flow = ws_testdata
+    flow.websocket.store_messages = False
+    assert playbook << websocket.WebsocketStartHook(flow) >> reply()
+
+    opcode = 1 if is_text else 2
+    frames = (
+        [bytes([opcode, 3]) + b"foo", b"\x80\x03bar"]
+        if fragmented
+        else [bytes([0x80 | opcode, 6]) + b"foobar"]
+    )
+    src = tctx.client if from_client else tctx.server
+    dst = tctx.server if from_client else tctx.client
+    for frame in frames:
+        playbook >> DataReceived(src, masked_bytes(frame) if from_client else frame)
+    assert playbook << websocket.WebsocketMessageHook(flow)
+    message = flow.websocket.messages[-1]
+    assert message.content == b"foobar"
+    assert message.from_client == from_client
+    assert message.is_text == is_text
+
+    if action == "modify":
+        message.content = b"changed"
+        frames = [bytes([0x80 | opcode, 7]) + b"changed"]
+    elif action == "drop":
+        message.drop()
+        frames = []
+
+    playbook >> reply()
+    if frames:
+        sent = Placeholder(bytes)
+        playbook << SendData(dst, sent)
+    assert playbook
+    if frames:
+        peer = wsproto.Connection(
+            wsproto.ConnectionType.SERVER
+            if from_client
+            else wsproto.ConnectionType.CLIENT
+        )
+        peer.receive_data(sent())
+        received = list(peer.events())
+        assert len(received) == len(frames)
+        payload = b"".join(e.data.encode() if is_text else e.data for e in received)
+        assert payload == (b"changed" if action == "modify" else b"foobar")
+        assert received[-1].message_finished
+    assert flow.websocket.messages == []
+
+
 def test_fragmented(ws_testdata):
     tctx, playbook, flow = ws_testdata
     assert (
@@ -469,8 +521,10 @@ class TestFragmentizer:
         ]
 
 
-def test_inject_message(ws_testdata):
+@pytest.mark.parametrize("store_messages", [False, True])
+def test_inject_message(ws_testdata, store_messages):
     tctx, playbook, flow = ws_testdata
+    flow.websocket.store_messages = store_messages
     assert (
         playbook
         << websocket.WebsocketStartHook(flow)
@@ -484,3 +538,4 @@ def test_inject_message(ws_testdata):
     assert flow.websocket.messages[-1].from_client is False
     assert flow.websocket.messages[-1].injected is True
     assert playbook >> reply() << SendData(tctx.client, b"\x81\x05hello")
+    assert bool(flow.websocket.messages) == store_messages

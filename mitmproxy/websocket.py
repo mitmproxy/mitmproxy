@@ -159,7 +159,12 @@ class WebSocketData(serializable.SerializableDataclass):
     """
 
     messages: list[WebSocketMessage] = field(default_factory=list)
-    """All `WebSocketMessage`s transferred over this connection."""
+    """
+    The retained `WebSocketMessage`s transferred over this connection.
+
+    When `store_messages` is False, this list contains only the current message
+    during `websocket_message` hooks and is cleared after forwarding.
+    """
 
     closed_by_client: bool | None = None
     """
@@ -174,6 +179,18 @@ class WebSocketData(serializable.SerializableDataclass):
 
     timestamp_end: float | None = None
     """*Timestamp:* WebSocket connection closed."""
+
+    store_messages: bool = field(default=True, metadata={"serialize": False})
+    """
+    Retain messages after forwarding them. This is a runtime setting, not saved
+    in flow files. Set it in `websocket_start`, before any messages arrive.
+
+    Mitmdump disables retention by default unless recording flows, dumping with
+    a filter, or using `keep_websocket_messages`. Addons that need earlier
+    messages can set this to True in `websocket_start`. The current message is
+    always available to every `websocket_message` hook, including modifications
+    and drops by earlier hooks.
+    """
 
     def __repr__(self):
         return f"<WebSocketData ({len(self.messages)} messages)>"
