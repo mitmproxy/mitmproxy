@@ -30,7 +30,7 @@ def connection_close(http_version, headers):
     to be persistent.
     """
     if "connection" in headers:
-        tokens = get_header_tokens(headers, "connection")
+        tokens = [token.lower() for token in get_header_tokens(headers, "connection")]
         if "close" in tokens:
             return True
         elif "keep-alive" in tokens:
