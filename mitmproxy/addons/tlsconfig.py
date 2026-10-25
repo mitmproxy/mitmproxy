@@ -62,6 +62,22 @@ _DEFAULT_CIPHERS = (
 
 _DEFAULT_CIPHERS_WITH_SECLEVEL_0 = ("@SECLEVEL=0", *_DEFAULT_CIPHERS)
 
+# Hosts that serve OCSP and CRL responses for the eMudhra CA chain and its
+# Sectigo cross-sign. When --emudhra is enabled, clients validate
+# mitmproxy-issued certificates against this chain and send revocation
+# lookups to these hosts. Those lookups are unnecessary and
+# counterproductive, so they are blocked.
+_EMUDHRA_REVOCATION_HOSTS = frozenset(
+    {
+        "ocsp-a.emsign.com",
+        "ocsp-b.emsign.com",
+        "ocsp-c.emsign.com",
+        "crl.emsign.com",
+        "ocsp.comodoca.com",
+        "crl.comodoca.com",
+    }
+)
+
 
 def _default_ciphers(
     min_tls_version: net_tls.Version,
@@ -675,6 +691,14 @@ class TlsConfig:
                 self.certstore.default_crl,
                 {"Content-Type": "application/pkix-crl"},
             )
+            return
+        # Block OCSP and CRL lookups for the eMudhra chain: with --emudhra
+        # enabled, clients would otherwise phone home to these hosts to
+        # validate our certificates.
+        if (ctx.options.emudhra or ctx.options.emudhra_old) and (
+            flow.request.host in _EMUDHRA_REVOCATION_HOSTS
+        ):
+            flow.kill()
 
 
 def _ip_or_dns_name(val: str) -> x509.GeneralName:
