@@ -43,6 +43,7 @@ def test_sslkeylogfile(tdata, monkeypatch):
         ca_pemfile=None,
         client_cert=None,
         legacy_server_connect=False,
+        tls13_ciphersuites=None,
     )
     sctx = tls.create_client_proxy_context(
         method=tls.Method.TLS_SERVER_METHOD,
@@ -55,6 +56,7 @@ def test_sslkeylogfile(tdata, monkeypatch):
         request_client_cert=False,
         extra_chain_certs=(),
         dhparams=store.dhparams,
+        tls13_ciphersuites=None,
     )
 
     server = SSL.Connection(sctx)
@@ -79,6 +81,72 @@ def test_sslkeylogfile(tdata, monkeypatch):
     assert keylog
     assert keylog[0].startswith(b"SERVER_HANDSHAKE_TRAFFIC_SECRET")
 
+
+def test_tls13_ciphersuites(tdata, monkeypatch):
+
+    store = certs.CertStore.from_files(
+        Path(tdata.path("mitmproxy/net/data/verificationcerts/trusted-root.pem")),
+        Path(tdata.path("mitmproxy/net/data/dhparam.pem")),
+    )
+    entry = store.get_cert("example.com", [], None)
+
+    cctx = tls.create_proxy_server_context(
+        method=tls.Method.TLS_CLIENT_METHOD,
+        min_version=tls.Version.TLS1_3,
+        max_version=tls.DEFAULT_MAX_VERSION,
+        cipher_list=None,
+        tls13_ciphersuites=None,
+        ecdh_curve=None,
+        verify=tls.Verify.VERIFY_NONE,
+        ca_path=None,
+        ca_pemfile=None,
+        client_cert=None,
+        legacy_server_connect=False,
+    )
+    sctx = tls.create_client_proxy_context(
+        method=tls.Method.TLS_SERVER_METHOD,
+        min_version=tls.Version.TLS1_3,
+        max_version=tls.DEFAULT_MAX_VERSION,
+        cipher_list=None,
+        tls13_ciphersuites=("TLS_CHACHA20_POLY1305_SHA256",),
+        ecdh_curve=None,
+        chain_file=entry.chain_file,
+        alpn_select_callback=None,
+        request_client_cert=False,
+        extra_chain_certs=(),
+        dhparams=store.dhparams,
+    )
+
+    server = SSL.Connection(sctx)
+    server.set_accept_state()
+    
+    server.use_certificate(entry.cert.to_cryptography())
+    server.use_privatekey(entry.privatekey)
+
+    client = SSL.Connection(cctx)
+    client.set_connect_state()
+
+    read, write = client, server
+    while True:
+        try:
+            read.do_handshake()
+        except SSL.WantReadError:
+            write.bio_write(read.bio_read(2**16))
+        else:
+            break
+        read, write = write, read
+
+    assert client.get_cipher_name() == "TLS_CHACHA20_POLY1305_SHA256"
+
+def test_tls13_ciphersuites_invalid():
+    with pytest.raises(RuntimeError, match="TLS 1.3 ciphersuite specification error"):
+        tls._create_ssl_context(method=tls.Method.TLS_CLIENT_METHOD,
+            min_version=tls.DEFAULT_MIN_VERSION,
+            max_version=tls.DEFAULT_MAX_VERSION,
+            cipher_list=None,
+            tls13_ciphersuites=("NOT_A_SUITE",),
+            ecdh_curve=None,
+        )
 
 def test_is_record_magic():
     assert not tls.starts_like_tls_record(b"POST /")

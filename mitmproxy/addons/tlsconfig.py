@@ -212,6 +212,18 @@ class TlsConfig:
             False,
             "Like --emudhra, but prioritize the Sectigo AAA Certificate Services cross-sign for older OpenSSL trust stores.",
         )
+        loader.add_option(
+            "tls13_ciphers_client",
+            str | None,
+            None,
+            "Set TLS 1.3 ciphersuites for client <-> mitmproxy connections using OpenSSL syntax.",
+        )
+        loader.add_option(
+            "tls13_ciphers_server",
+            str | None,
+            None,
+            "Set TLS 1.3 ciphersuites for mitmproxy <-> server connections using OpenSSL syntax.",
+        )
 
     def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
         conn_context = tls_clienthello.context
@@ -241,6 +253,13 @@ class TlsConfig:
         extra_chain_certs = []
         if entry.chain_file is None and len(entry.chain_certs) > 1:
             extra_chain_certs.extend(entry.chain_certs)
+
+        tls13_ciphersuites = (
+            tuple(ctx.options.tls13_ciphers_client.split(":"))
+            if ctx.options.tls13_ciphers_client
+            else None
+        )
+
         if ctx.options.add_upstream_certs_to_client_chain:  # pragma: no cover
             # exempted from coverage until https://bugs.python.org/issue18233 is fixed.
             extra_chain_certs.extend(server.certificate_list)
@@ -258,6 +277,7 @@ class TlsConfig:
             alpn_select_callback=alpn_select_callback,
             extra_chain_certs=tuple(extra_chain_certs),
             dhparams=self.certstore.dhparams,
+            tls13_ciphersuites=tls13_ciphersuites,
         )
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
 
@@ -329,6 +349,12 @@ class TlsConfig:
             net_tls.Version[ctx.options.tls_version_server_min]
         )
 
+        tls13_ciphersuites = (
+            tuple(ctx.options.tls13_ciphers_server.split(":"))
+            if ctx.options.tls13_ciphers_server
+            else None
+        )
+
         client_cert: str | None = None
         if ctx.options.client_certs:
             client_certs = os.path.expanduser(ctx.options.client_certs)
@@ -353,6 +379,7 @@ class TlsConfig:
             ca_pemfile=ctx.options.ssl_verify_upstream_trusted_ca,
             client_cert=client_cert,
             legacy_server_connect=ctx.options.ssl_insecure,
+            tls13_ciphersuites=tls13_ciphersuites,
         )
 
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
