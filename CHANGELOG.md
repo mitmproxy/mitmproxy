@@ -8,6 +8,7 @@
 ## Unreleased: mitmproxy next
 
 - Match HTTP/1 Connection tokens case-insensitively when deciding whether to close a connection.
+  ([#8523](https://github.com/mitmproxy/mitmproxy/pull/8523), @hakarrr)
 - Refresh cookie expiration dates for empty-valued cookies during server replay.
   ([#8520](https://github.com/mitmproxy/mitmproxy/pull/8520), @hakarrr)
 
