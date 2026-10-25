@@ -21,6 +21,17 @@ from mitmproxy.test.tutils import tresp
 
 
 class TestRequest:
+    def test_reuse_query_values(self):
+        values = ["one", "two"]
+        first = Request.make("GET", "https://example.com/?id=old&keep=yes")
+        second = Request.make("GET", "https://example.com/?id=old&keep=yes")
+        first.query.set_all("id", values)
+        second.query.set_all("id", values)
+        assert values == ["one", "two"]
+        assert first.query.get_all("id") == ["one", "two"]
+        assert second.url == first.url
+        assert first.query["keep"] == "yes"
+
     def test_simple(self):
         f = tflow()
         r = f.request
