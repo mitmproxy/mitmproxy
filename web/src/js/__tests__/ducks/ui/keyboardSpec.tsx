@@ -2,13 +2,16 @@ import * as flowsActions from "../../../ducks/flows";
 import { onKeyDown } from "../../../ducks/ui/keyboard";
 import * as modalActions from "../../../ducks/ui/modal";
 import { fetchApi, runCommand } from "../../../utils";
-import { TFlow, TStore } from "../tutils";
+import { TFlow, TStore, testState } from "../tutils";
 
 jest.mock("../../../utils");
 
 describe("onKeyDown", () => {
-    const makeStore = () => {
-        const store = TStore();
+    const makeStore = (split = false) => {
+        const store = TStore({
+            ...testState,
+            options: { ...testState.options, web_split_flowview: split },
+        });
         store.dispatch(flowsActions.FLOWS_RECEIVE([]));
         for (let i = 1; i <= 12; i++) {
             store.dispatch(
@@ -88,6 +91,18 @@ describe("onKeyDown", () => {
         expect(store.getState().ui.flow.tab).toBe("response");
         store.dispatch(createKeyEvent("ArrowRight"));
         expect(store.getState().ui.flow.tab).toBe("connection");
+    });
+
+    it("should cycle the request panel tabs in split view", () => {
+        const store = makeStore(true);
+        store.dispatch(createKeyEvent("ArrowLeft"));
+        expect(store.getState().ui.flow.tabRequest).toBe("comment");
+        store.dispatch(createKeyEvent("Tab"));
+        expect(store.getState().ui.flow.tabRequest).toBe("request");
+        store.dispatch(createKeyEvent("ArrowRight"));
+        expect(store.getState().ui.flow.tabRequest).toBe("connection");
+        expect(store.getState().ui.flow.tab).toBe("request");
+        expect(store.getState().ui.flow.tabResponse).toBe("response");
     });
 
     it("should handle delete action", () => {
