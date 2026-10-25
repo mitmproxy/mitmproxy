@@ -340,3 +340,17 @@ def test_group_cookies():
     for c, expected in groups:
         observed = cookies.group_cookies(cookies.parse_cookie_header(c))
         assert observed == expected
+
+
+@pytest.mark.parametrize("value", ["", '""'])
+def test_refresh_empty_cookie_value(value):
+    header = f"session={value}; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Path=/"
+    refreshed = cookies.refresh_set_cookie_header(header, 3600)
+    assert refreshed == "session=; Expires=Wed, 21 Oct 2015 08:28:00 GMT; Path=/"
+
+
+def test_refresh_valueless_cookie_still_invalid():
+    with pytest.raises(ValueError, match="Invalid Cookie"):
+        cookies.refresh_set_cookie_header(
+            "session; Expires=Wed, 21 Oct 2015 07:28:00 GMT", 3600
+        )
