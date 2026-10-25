@@ -22,6 +22,7 @@
   ([#8509](https://github.com/mitmproxy/mitmproxy/pull/8509), @Pharex38)
 - Fix DNS record data getting corrupted when a field that is not a domain name, such as an SRV port or
   an MX preference of 49152 or more, looks like a name compression pointer.
+  ([#8527](https://github.com/mitmproxy/mitmproxy/pull/8527), @wleeaf)
 
 ## 22 October 2026: mitmproxy 12.3.0
 
