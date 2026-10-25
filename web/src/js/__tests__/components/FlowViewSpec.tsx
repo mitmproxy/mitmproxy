@@ -1,9 +1,9 @@
 import * as React from "react";
 import { act, fireEvent, render, screen } from "../test-utils";
-import FlowView from "../../components/FlowView";
+import FlowView, { splitTabsForFlow } from "../../components/FlowView";
 import * as flowActions from "../../ducks/flows";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
-import { TStore, testState } from "../ducks/tutils";
+import { TFlow, TStore, testState } from "../ducks/tutils";
 
 enableFetchMocks();
 
@@ -82,4 +82,11 @@ test("FlowView shows HTTP flows in a single column by default", async () => {
     expect(screen.getByText("Request")).toBeInTheDocument();
     expect(screen.getByText("Response")).toBeInTheDocument();
     await screen.findByText(/Error getting content/);
+});
+
+test("splitTabsForFlow partitions the HTTP tabs by side", () => {
+    expect(splitTabsForFlow(TFlow())).toEqual({
+        request: ["request", "error", "connection", "timing", "comment"],
+        response: ["response", "websocket"],
+    });
 });

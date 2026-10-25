@@ -165,20 +165,17 @@ function TabStrip({
     );
 }
 
-/** Request-side tabs of the split HTTP view. */
-function requestTabsForFlow(flow: HTTPFlow): TabId[] {
-    const tabs: TabId[] = ["request"];
-    if (flow.error) tabs.push("error");
-    tabs.push("connection", "timing", "comment");
-    return tabs;
-}
+const responseSideTabs: TabId[] = ["response", "websocket"];
 
-/** Response-side tabs of the split HTTP view. */
-function responseTabsForFlow(flow: HTTPFlow): TabId[] {
-    const tabs: TabId[] = [];
-    if (flow.response) tabs.push("response");
-    if (flow.websocket) tabs.push("websocket");
-    return tabs;
+export function splitTabsForFlow(flow: HTTPFlow): {
+    request: TabId[];
+    response: TabId[];
+} {
+    const tabs = tabsForFlow(flow);
+    return {
+        request: tabs.filter((t) => !responseSideTabs.includes(t)),
+        response: tabs.filter((t) => responseSideTabs.includes(t)),
+    };
 }
 
 function SplitHttpView({ flow }: { flow: HTTPFlow }) {
@@ -190,8 +187,8 @@ function SplitHttpView({ flow }: { flow: HTTPFlow }) {
         (state) => state.ui.flow.tabResponse,
     ) as TabId;
 
-    const requestTabs = requestTabsForFlow(flow);
-    const responseTabs = responseTabsForFlow(flow);
+    const { request: requestTabs, response: responseTabs } =
+        splitTabsForFlow(flow);
 
     const activeRequest = requestTabs.includes(tabRequest)
         ? tabRequest
