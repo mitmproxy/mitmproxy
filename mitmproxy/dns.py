@@ -443,7 +443,7 @@ class DNSMessage(serializable.SerializableDataclass):
 
                     if domain_names.record_data_can_have_compression(type):
                         data = domain_names.decompress_from_record_data(
-                            buffer, offset, end_data, cached_names
+                            buffer, offset, end_data, cached_names, type
                         )
 
                     section.append(ResourceRecord(name, type, class_, ttl, data))
