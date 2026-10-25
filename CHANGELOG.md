@@ -21,6 +21,7 @@
   (`BiDi` attribute lookup and unsupported option types in `OptManager.make_parser`).
   ([#8509](https://github.com/mitmproxy/mitmproxy/pull/8509), @Pharex38)
 - Read the priority of DNS HTTPS records as an unsigned number, so priorities above 32767 are no longer negative.
+  ([#8528](https://github.com/mitmproxy/mitmproxy/pull/8528), @wleeaf)
 
 ## 22 October 2026: mitmproxy 12.3.0
 
