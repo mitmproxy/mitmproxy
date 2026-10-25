@@ -184,11 +184,13 @@ def _create_ssl_context(
             context.set_cipher_list(b":".join(x.encode() for x in cipher_list))
         except SSL.Error as e:
             raise RuntimeError(f"SSL cipher specification error: {e}") from e
-        
+
     # TLS 1.3 Ciphersuites
     if tls13_ciphersuites is not None:
         try:
-            context.set_tls13_ciphersuites(b":".join(x.encode() for x in tls13_ciphersuites))
+            context.set_tls13_ciphersuites(
+                b":".join(x.encode() for x in tls13_ciphersuites)
+            )
         except SSL.Error as e:
             raise RuntimeError(f"TLS 1.3 ciphersuite specification error: {e}") from e
 

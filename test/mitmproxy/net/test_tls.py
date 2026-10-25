@@ -119,7 +119,7 @@ def test_tls13_ciphersuites(tdata, monkeypatch):
 
     server = SSL.Connection(sctx)
     server.set_accept_state()
-    
+
     server.use_certificate(entry.cert.to_cryptography())
     server.use_privatekey(entry.privatekey)
 
@@ -138,15 +138,18 @@ def test_tls13_ciphersuites(tdata, monkeypatch):
 
     assert client.get_cipher_name() == "TLS_CHACHA20_POLY1305_SHA256"
 
+
 def test_tls13_ciphersuites_invalid():
     with pytest.raises(RuntimeError, match="TLS 1.3 ciphersuite specification error"):
-        tls._create_ssl_context(method=tls.Method.TLS_CLIENT_METHOD,
+        tls._create_ssl_context(
+            method=tls.Method.TLS_CLIENT_METHOD,
             min_version=tls.DEFAULT_MIN_VERSION,
             max_version=tls.DEFAULT_MAX_VERSION,
             cipher_list=None,
             tls13_ciphersuites=("NOT_A_SUITE",),
             ecdh_curve=None,
         )
+
 
 def test_is_record_magic():
     assert not tls.starts_like_tls_record(b"POST /")
