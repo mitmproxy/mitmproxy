@@ -16,6 +16,14 @@
             min-height: 0;
         }
 
+        // Fixed so the strips line up even though only the request strip has the close button and the response strip can be empty.
+        nav {
+            flex: none;
+            display: flex;
+            align-items: flex-end;
+            height: 27px;
+        }
+
         .flow-detail-panel {
             flex: 1 1 50%;
             display: flex;
