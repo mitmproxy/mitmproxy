@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+
+## 25 October 2026: mitmproxy 12.3.1
+
 - **Security:** Require Brotli 1.2.1 to include the upstream decoder fix for
   [CVE-2026-111497](https://github.com/google/brotli/releases/tag/v1.2.1).
   ([#8514](https://github.com/mitmproxy/mitmproxy/pull/8514), @anthonylei)
