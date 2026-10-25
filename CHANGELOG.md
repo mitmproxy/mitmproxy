@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Preserve caller-provided value lists when replacing query parameters or cookies with `set_all()`.
+
 - **Security:** Require Brotli 1.2.1 to include the upstream decoder fix for
   [CVE-2026-111497](https://github.com/google/brotli/releases/tag/v1.2.1).
   ([#8514](https://github.com/mitmproxy/mitmproxy/pull/8514), @anthonylei)
