@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Update Certificate Authority documentation for Firefox to Firefox ESR 153.x
+  ([#8475](https://github.com/mitmproxy/mitmproxy/pull/8475), @iamleot)
 - Fix two error messages that were built with `%s` placeholders and never formatted
   (`BiDi` attribute lookup and unsupported option types in `OptManager.make_parser`).
   ([#8509](https://github.com/mitmproxy/mitmproxy/pull/8509), @Pharex38)
