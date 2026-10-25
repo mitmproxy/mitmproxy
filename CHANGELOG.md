@@ -7,18 +7,19 @@
 
 ## Unreleased: mitmproxy next
 
-- Preserve caller-provided value lists when replacing query parameters or cookies with `set_all()`.
-  ([#8521](https://github.com/mitmproxy/mitmproxy/pull/8521), @hakarrr)
-
 - **Security:** Require Brotli 1.2.1 to include the upstream decoder fix for
   [CVE-2026-111497](https://github.com/google/brotli/releases/tag/v1.2.1).
   ([#8514](https://github.com/mitmproxy/mitmproxy/pull/8514), @anthonylei)
-- Fix two error messages that were built with `%s` placeholders and never formatted
-  (`BiDi` attribute lookup and unsupported option types in `OptManager.make_parser`).
-  ([#8509](https://github.com/mitmproxy/mitmproxy/pull/8509), @Pharex38)
 - Block OCSP and CRL requests to eMudhra and Sectigo revocation hosts when
   `--emudhra` or `--emudhra-old` is enabled.
   ([#8516](https://github.com/mitmproxy/mitmproxy/pull/8516), @LiHuan02)
+- Preserve caller-provided value lists when replacing query parameters or cookies with `set_all()`.
+  ([#8521](https://github.com/mitmproxy/mitmproxy/pull/8521), @hakarrr)
+- Refresh cookie expiration dates for empty-valued cookies during server replay.
+  ([#8520](https://github.com/mitmproxy/mitmproxy/pull/8520), @hakarrr)
+- Fix two error messages that were built with `%s` placeholders and never formatted
+  (`BiDi` attribute lookup and unsupported option types in `OptManager.make_parser`).
+  ([#8509](https://github.com/mitmproxy/mitmproxy/pull/8509), @Pharex38)
 
 ## 22 October 2026: mitmproxy 12.3.0
 

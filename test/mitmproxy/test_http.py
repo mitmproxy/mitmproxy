@@ -619,6 +619,18 @@ class TestResponseUtils:
         ]
         assert list(resp.cookies.keys()) == ["one", "two"]
 
+    @pytest.mark.parametrize("value", ["", '""'])
+    def test_refresh_empty_cookie_value(self, value):
+        response = tresp()
+        response.timestamp_start = 1445412480
+        response.headers["set-cookie"] = (
+            f"session={value}; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Path=/"
+        )
+        response.refresh(1445416080)
+        assert response.headers["set-cookie"] == (
+            "session=; Expires=Wed, 21 Oct 2015 08:28:00 GMT; Path=/"
+        )
+
     def test_refresh(self):
         r = tresp()
         n = time.time()
