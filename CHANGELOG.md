@@ -14,6 +14,7 @@
   `--emudhra` or `--emudhra-old` is enabled.
   ([#8516](https://github.com/mitmproxy/mitmproxy/pull/8516), @LiHuan02)
 - mitmproxy now supports Python 3.15. Binary releases ship with 3.15 by default.
+  ([#8524](https://github.com/mitmproxy/mitmproxy/pull/8524), @mhils)
 - Preserve caller-provided value lists when replacing query parameters or cookies with `set_all()`.
   ([#8521](https://github.com/mitmproxy/mitmproxy/pull/8521), @hakarrr)
 - Refresh cookie expiration dates for empty-valued cookies during server replay.
