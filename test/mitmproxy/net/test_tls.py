@@ -99,6 +99,7 @@ def test_is_dtls_record_magic():
     assert not tls.starts_like_dtls_record(bytes.fromhex("16fe"))
     assert tls.starts_like_dtls_record(bytes.fromhex("16fefd"))
     assert tls.starts_like_dtls_record(bytes.fromhex("16fefe"))
+    assert tls.starts_like_dtls_record(bytes.fromhex("16feff"))
     assert not tls.starts_like_dtls_record(bytes.fromhex("160300"))
     assert not tls.starts_like_dtls_record(bytes.fromhex("160304"))
     assert not tls.starts_like_dtls_record(bytes.fromhex("150301"))
