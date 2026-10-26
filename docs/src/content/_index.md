@@ -114,16 +114,16 @@ See the [client-side replay]({{< relref "/overview/features#client-side-replay"
 #### Running a script
 
 ```bash
-mitmdump -s examples/simple/add_header.py
+mitmdump -s examples/addons/http-add-header.py
 ```
 
-This runs the **add_header.py** example script, which simply adds a new
+This runs the **http-add-header.py** example script, which simply adds a new
 header to all responses.
 
 #### Scripted data transformation
 
 ```bash
-mitmdump -ns examples/simple/add_header.py -r srcfile -w dstfile
+mitmdump -ns examples/addons/http-add-header.py -r srcfile -w dstfile
 ```
 
 This command loads flows from **srcfile**, transforms it according to

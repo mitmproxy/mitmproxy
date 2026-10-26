@@ -69,6 +69,18 @@ function NumberOption({ value, onChange, ...props }: OptionProps<number>) {
     );
 }
 
+function FloatOption({ value, onChange, ...props }: OptionProps<number>) {
+    return (
+        <input
+            type="number"
+            step="any"
+            value={value}
+            onChange={(e) => onChange(parseFloat(e.target.value))}
+            {...props}
+        />
+    );
+}
+
 interface ChoiceOptionProps extends OptionProps<string> {
     choices: string[];
 }
@@ -129,6 +141,7 @@ export const Options = {
     bool: BooleanOption,
     str: StringOption,
     int: NumberOption,
+    float: FloatOption,
     "optional str": Optional(StringOption),
     "optional int": Optional(NumberOption),
     "sequence of str": StringSequenceOption,

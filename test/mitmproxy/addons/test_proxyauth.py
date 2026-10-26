@@ -29,6 +29,11 @@ def test_parse_http_basic_auth():
     assert proxyauth.parse_http_basic_auth(input) == ("basic", "test", "test")
 
 
+def test_parse_http_basic_auth_password_with_colon():
+    input = proxyauth.mkauth("test", "pass:word")
+    assert proxyauth.parse_http_basic_auth(input) == ("basic", "test", "pass:word")
+
+
 @pytest.mark.parametrize(
     "input",
     [

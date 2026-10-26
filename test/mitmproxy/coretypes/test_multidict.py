@@ -133,6 +133,21 @@ class TestMultiDict:
             ("e", "f"),
         )
 
+    @pytest.mark.parametrize(
+        "fields", [(), (("x", "old"),), (("x", "old"), ("X", "other"))]
+    )
+    @pytest.mark.parametrize("values", [[], ["one"], ["one", "two", "three"]])
+    def test_set_all_preserves_input(self, fields, values):
+        values = values.copy()
+        original = values.copy()
+        first = TMultiDict(fields)
+        second = TMultiDict(fields)
+        first.set_all("x", values)
+        second.set_all("x", values)
+        assert values == original
+        assert first.get_all("x") == original
+        assert second.fields == first.fields
+
     def test_add(self):
         md = self._multi()
         md.add("foo", "foo")
