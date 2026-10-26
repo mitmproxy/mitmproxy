@@ -1,5 +1,5 @@
 """
-This module is reponsible for drawing the quick key help at the bottom of mitmproxy.
+This module is responsible for drawing the quick key help at the bottom of mitmproxy.
 """
 
 from dataclasses import dataclass

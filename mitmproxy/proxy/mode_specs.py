@@ -157,6 +157,8 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
         """
         if self.custom_listen_port is not None:
             return self.custom_listen_port
+        elif self.default_port is None:
+            return None
         elif default is not None:
             return default
         else:
