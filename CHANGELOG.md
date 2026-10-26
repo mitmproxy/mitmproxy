@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix filter expressions where a filter without an argument is followed by a closing bracket,
+  e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
 
 ## 25 October 2026: mitmproxy 12.3.1
 
