@@ -10,12 +10,16 @@
 - Preserve HTTP/1.0 request and response versions when importing HAR files.
   ([#8535](https://github.com/mitmproxy/mitmproxy/pull/8535), @hakarrr)
 
+## 25 October 2026: mitmproxy 12.3.1
+
 - **Security:** Require Brotli 1.2.1 to include the upstream decoder fix for
   [CVE-2026-111497](https://github.com/google/brotli/releases/tag/v1.2.1).
   ([#8514](https://github.com/mitmproxy/mitmproxy/pull/8514), @anthonylei)
 - Block OCSP and CRL requests to eMudhra and Sectigo revocation hosts when
   `--emudhra` or `--emudhra-old` is enabled.
   ([#8516](https://github.com/mitmproxy/mitmproxy/pull/8516), @LiHuan02)
+- mitmproxy now supports Python 3.15. Binary releases ship with 3.15 by default.
+  ([#8524](https://github.com/mitmproxy/mitmproxy/pull/8524), @mhils)
 - Preserve caller-provided value lists when replacing query parameters or cookies with `set_all()`.
   ([#8521](https://github.com/mitmproxy/mitmproxy/pull/8521), @hakarrr)
 - Refresh cookie expiration dates for empty-valued cookies during server replay.
