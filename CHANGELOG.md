@@ -10,6 +10,7 @@
 - Fix DTLS detection for clients that send their first ClientHello with the DTLS 1.0
   record version. Such connections were handled as raw UDP, and in `reverse:dtls` mode
   their handshake never completed.
+  ([#8536](https://github.com/mitmproxy/mitmproxy/pull/8536), @APX403)
 
 ## 25 October 2026: mitmproxy 12.3.1
 
