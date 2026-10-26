@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Splitter Component should render correctly (x axis) 1`] = `
+exports[`Splitter Component (x axis) should render correctly 1`] = `
 <DocumentFragment>
   <div />
   <div
@@ -12,14 +12,13 @@ exports[`Splitter Component should render correctly (x axis) 1`] = `
 </DocumentFragment>
 `;
 
-exports[`Splitter Component should render correctly (x axis) 2`] = `
+exports[`Splitter Component (x axis) should render correctly 2`] = `
 <DocumentFragment>
   <div
-    style="flex: 0 0 300px;"
+    style="flex: 0 0 250px;"
   />
   <div
     class="splitter splitter-x"
-    style=""
   >
     <div />
   </div>
@@ -29,7 +28,7 @@ exports[`Splitter Component should render correctly (x axis) 2`] = `
 </DocumentFragment>
 `;
 
-exports[`Splitter Component should render correctly (y axis) 1`] = `
+exports[`Splitter Component (y axis) should render correctly 1`] = `
 <DocumentFragment>
   <div />
   <div
@@ -41,14 +40,13 @@ exports[`Splitter Component should render correctly (y axis) 1`] = `
 </DocumentFragment>
 `;
 
-exports[`Splitter Component should render correctly (y axis) 2`] = `
+exports[`Splitter Component (y axis) should render correctly 2`] = `
 <DocumentFragment>
   <div
-    style="flex: 0 0 200px;"
+    style="flex: 0 0 250px;"
   />
   <div
     class="splitter splitter-y"
-    style=""
   >
     <div />
   </div>

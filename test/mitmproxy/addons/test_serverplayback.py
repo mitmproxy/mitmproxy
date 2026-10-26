@@ -161,7 +161,7 @@ def test_ignore_payload_params_other_content_type():
         r2.request.content = b'{"param1":"1"}'
         # same content
         assert s._hash(r) == s._hash(r2)
-        # distint content (note only x-www-form-urlencoded payload is analysed)
+        # distinct content (note only x-www-form-urlencoded payload is analysed)
         r2.request.content = b'{"param1":"2"}'
         assert not s._hash(r) == s._hash(r2)
 

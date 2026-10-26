@@ -153,7 +153,7 @@ def record_intercept_requests(d: CliDirector):
 
     d.focus_pane(pane_top)
 
-    d.message("You see a new line in in the list of flows.")
+    d.message("You see a new line in the list of flows.")
     d.message(
         "The new flow is displayed in red to indicate that it has been intercepted."
     )
