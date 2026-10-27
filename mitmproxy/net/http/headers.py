@@ -25,7 +25,10 @@ def parse_content_type(c: str) -> tuple[str, str, dict[str, str]] | None:
         for i in parts[1].split(";"):
             clause = i.split("=", 1)
             if len(clause) == 2:
-                d[clause[0].strip()] = clause[1].strip()
+                val = clause[1].strip()
+                if len(val) >= 2 and val[0] == val[-1] and val[0] in ('"', "'"):
+                    val = re.sub(r"\\(.)", r"\1", val[1:-1])
+                d[clause[0].strip()] = val
     return ts[0].lower(), ts[1].lower(), d
 
 
@@ -101,6 +104,16 @@ def infer_content_encoding(content_type: str, content: bytes = b"") -> str:
             # Ref: https://drafts.csswg.org/css-syntax/#determine-the-fallback-encoding
             # > 4. Otherwise, return utf-8
             enc = "utf8"
+
+    if not enc and (
+        "yaml" in content_type
+        or "markdown" in content_type
+        or "toml" in content_type
+        or "csv" in content_type
+    ):
+        # Fallback to utf8 for YAML (RFC 9512) and TOML (spec), as well as practical
+        # UTF-8 defaults for modern Markdown and CSV payloads in web APIs.
+        enc = "utf8"
 
     # Fallback to latin-1
     if not enc:
