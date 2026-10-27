@@ -6,7 +6,6 @@
 -->
 
 ## Unreleased: mitmproxy next
-
 - Preserve zero-valued fields when extracting and saving cuts.
   ([#8533](https://github.com/mitmproxy/mitmproxy/pull/8533), @hakarrr)
 
