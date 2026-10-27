@@ -56,7 +56,7 @@ sudo restart network-manager
 
 afterwards.
 
-Now, dnsmasq can be be installed and configured:
+Now, dnsmasq can be installed and configured:
 
 ```bash
 sudo apt-get install dnsmasq

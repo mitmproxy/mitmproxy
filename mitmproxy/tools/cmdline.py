@@ -76,6 +76,8 @@ def common_options(parser, opts):
     opts.make_parser(group, "certs", metavar="SPEC")
     opts.make_parser(group, "cert_passphrase", metavar="PASS")
     opts.make_parser(group, "ssl_insecure", short="k")
+    opts.make_parser(group, "emudhra")
+    opts.make_parser(group, "emudhra_old")
 
     # Client replay
     group = parser.add_argument_group("Client Replay")

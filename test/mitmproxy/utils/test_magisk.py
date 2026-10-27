@@ -14,7 +14,7 @@ def test_get_ca(tdata):
 
 
 def test_subject_hash_old(tdata):
-    # checks if the hash is the same as that comming form openssl
+    # checks if the hash is the same as that coming from openssl
     with taddons.context() as tctx:
         tctx.options.confdir = tdata.path("mitmproxy/data/confdir")
         ca = magisk.get_ca_from_files()
@@ -23,7 +23,7 @@ def test_subject_hash_old(tdata):
 
 
 def test_magisk_write(tdata, tmp_path):
-    # checks if the hash is the same as that comming form openssl
+    # checks if the hash is the same as that coming from openssl
     with taddons.context() as tctx:
         tctx.options.confdir = tdata.path("mitmproxy/data/confdir")
         magisk_path = tmp_path / "mitmproxy-magisk-module.zip"
