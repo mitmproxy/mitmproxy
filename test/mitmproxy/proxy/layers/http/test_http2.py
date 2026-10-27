@@ -300,6 +300,142 @@ def test_upstream_error(tctx):
     assert b"server &lt;&gt; error" in d.data
 
 
+def test_error_hook_response_override(tctx):
+    """Test that an addon can override the error response in the error hook."""
+    from mitmproxy.http import Response
+
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    err = Placeholder(bytes)
+
+    def provide_cached_response(f: HTTPFlow):
+        # Simulate addon providing a cached response
+        f.response = Response.make(
+            200,
+            b"Cached content",
+            {"Content-Type": "text/plain"},
+        )
+
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"]
+            ).serialize(),
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply("Connection refused")
+        << http.HttpErrorHook(flow)
+        >> reply(side_effect=provide_cached_response)
+        << SendData(tctx.client, err)
+    )
+
+    frames = decode_frames(err())
+    assert [type(x) for x in frames] == [
+        hyperframe.frame.HeadersFrame,
+        hyperframe.frame.DataFrame,
+    ]
+
+    # Verify the content
+    d = frames[1]
+    assert isinstance(d, hyperframe.frame.DataFrame)
+    assert d.data == b"Cached content"
+
+    # Verify flow state
+    assert flow().response.status_code == 200
+    assert flow().response.content == b"Cached content"
+    assert flow().error.msg == "Connection refused"
+
+
+def test_error_hook_no_response_override(tctx):
+    """Test that the default error response is sent when addon doesn't provide one."""
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    err = Placeholder(bytes)
+
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"]
+            ).serialize(),
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply("Connection refused")
+        << http.HttpErrorHook(flow)
+        >> reply()
+        << SendData(tctx.client, err)
+    )
+
+    frames = decode_frames(err())
+    d = frames[1]
+    assert isinstance(d, hyperframe.frame.DataFrame)
+    assert b"502 Bad Gateway" in d.data
+    assert b"Connection refused" in d.data
+
+    assert flow().response is None
+    assert flow().error.msg == "Connection refused"
+
+
+def test_error_hook_response_override_with_trailers(tctx):
+    """Test that an addon can override with a response that has trailers."""
+    from mitmproxy.http import Headers
+    from mitmproxy.http import Response
+
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    err = Placeholder(bytes)
+
+    def provide_response_with_trailers(f: HTTPFlow):
+        f.response = Response.make(
+            200,
+            b"Cached content",
+            {"Content-Type": "text/plain"},
+        )
+        f.response.trailers = Headers([(b"x-checksum", b"abc123")])
+
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"]
+            ).serialize(),
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply("Connection refused")
+        << http.HttpErrorHook(flow)
+        >> reply(side_effect=provide_response_with_trailers)
+        << SendData(tctx.client, err)
+    )
+
+    frames = decode_frames(err())
+    # Should have: HeadersFrame, DataFrame, HeadersFrame (trailers)
+    assert len(frames) >= 2
+
+    # Verify flow state
+    assert flow().response.status_code == 200
+    assert flow().response.trailers is not None
+    assert flow().error.msg == "Connection refused"
+
+
 @pytest.mark.parametrize("trailers", ["trailers", ""])
 def test_long_response(tctx: Context, trailers):
     playbook, cff = start_h2_client(tctx)
