@@ -97,7 +97,6 @@ class Tag(Token):
         elif self.is_cdata:
             return self.data.endswith("]]>")
         else:
-            # This fails for attributes that contain an unescaped ">"
             return self.data.endswith(">")
 
 
@@ -122,7 +121,26 @@ def tokenize(data: str) -> Iterable[Token]:
                 yield token
             token = Tag("")
         elif isinstance(token, Tag):
-            token.data += readuntil(">", i, 1)
+            if (
+                token.is_comment
+                or token.is_cdata
+                or data.startswith(("<!--", "<![CDATA["), i)
+            ):
+                token.data += readuntil(">", i, 1)
+            else:
+                start = i
+                quote = None
+                while i < len(data):
+                    char = data[i]
+                    i += 1
+                    if quote:
+                        if char == quote:
+                            quote = None
+                    elif char in ("'", '"'):
+                        quote = char
+                    elif char == ">":
+                        break
+                token.data += data[start:i]
             if token.done:
                 yield token
                 token = Text("")
