@@ -157,6 +157,7 @@ exclude = [
   "mitmproxy/addons/__init__.py",
   "mitmproxy/addons/onboarding.py",
   "mitmproxy/addons/onboardingapp/__init__.py",
+  "mitmproxy/addons/setup_terminal/__init__.py",
   "mitmproxy/contentviews/__init__.py",
   "mitmproxy/contentviews/base.py",
   "mitmproxy/contentviews/grpc.py",
