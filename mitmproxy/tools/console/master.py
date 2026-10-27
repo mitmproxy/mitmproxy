@@ -59,6 +59,7 @@ class ConsoleMaster(master.Master):
         )
 
         self.window: window.Window | None = None
+        self.loop: urwid.MainLoop | None = None
 
     def __setattr__(self, name, value):
         super().__setattr__(name, value)
@@ -247,7 +248,8 @@ class ConsoleMaster(master.Master):
         await super().running()
 
     async def done(self):
-        self.loop.stop()
+        if self.loop:
+            self.loop.stop()
         await super().done()
 
     def overlay(self, widget, **kwargs):
