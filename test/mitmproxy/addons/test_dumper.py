@@ -7,6 +7,7 @@ import pytest
 import mitmproxy_rs.syntax_highlight
 from mitmproxy import exceptions
 from mitmproxy.addons import dumper
+from mitmproxy.addons import termlog
 from mitmproxy.addons.dumper import CONTENTVIEW_STYLES
 from mitmproxy.http import Headers
 from mitmproxy.net.dns import response_codes
@@ -336,6 +337,38 @@ def test_styling():
     with taddons.context(d):
         d.response(tflow.tflow(resp=True))
         assert "\x1b[" in sio.getvalue()
+
+
+def test_force_color():
+    """termlog_colors=always forces colored mitmdump output even on a non-TTY."""
+    sio = io.StringIO()
+    t = termlog.TermLog()
+    d = dumper.Dumper(sio)
+    try:
+        with taddons.context(t, d) as tctx:
+            assert d.out_has_vt_codes is False
+            tctx.configure(d, termlog_colors="always")
+            assert d.out_has_vt_codes is True
+            d.response(tflow.tflow(resp=True))
+            assert "\x1b[" in sio.getvalue()
+    finally:
+        t.uninstall()
+
+
+def test_disable_color():
+    """termlog_colors=never disables colored mitmdump output unconditionally."""
+    sio = io.StringIO()
+    t = termlog.TermLog()
+    d = dumper.Dumper(sio)
+    d.out_has_vt_codes = True  # simulate prior auto-detection
+    try:
+        with taddons.context(t, d) as tctx:
+            tctx.configure(d, termlog_colors="never")
+            assert d.out_has_vt_codes is False
+            d.response(tflow.tflow(resp=True))
+            assert "\x1b[" not in sio.getvalue()
+    finally:
+        t.uninstall()
 
 
 def test_has_styles_for_tags():
