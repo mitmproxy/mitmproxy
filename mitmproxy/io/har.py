@@ -134,6 +134,8 @@ def request_to_flow(request_json: dict) -> http.HTTPFlow:
     # Update HTTP version
 
     match http_version_req:
+        case "HTTP/1.0" | "http/1.0":
+            new_flow.request.http_version = "HTTP/1.0"
         case "http/2.0":
             new_flow.request.http_version = "HTTP/2"
         case "HTTP/2":
@@ -143,6 +145,8 @@ def request_to_flow(request_json: dict) -> http.HTTPFlow:
         case _:
             new_flow.request.http_version = "HTTP/1.1"
     match http_version_resp:
+        case "HTTP/1.0" | "http/1.0":
+            new_flow.response.http_version = "HTTP/1.0"
         case "http/2.0":
             new_flow.response.http_version = "HTTP/2"
         case "HTTP/2":

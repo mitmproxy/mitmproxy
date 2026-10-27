@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Preserve HTTP/1.0 request and response versions when importing HAR files.
+  ([#8535](https://github.com/mitmproxy/mitmproxy/pull/8535), @hakarrr)
 
 ## 25 October 2026: mitmproxy 12.3.1
 
