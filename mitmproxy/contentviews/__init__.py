@@ -25,6 +25,7 @@ from ._utils import ContentviewMessage
 from ._utils import get_data
 from ._utils import make_metadata
 from ._view_css import css
+from ._view_csv import csv_view
 from ._view_dns import dns
 from ._view_graphql import graphql
 from ._view_http3 import http3
@@ -132,6 +133,7 @@ def reencode_message(
 
 _views: list[Contentview] = [
     css,
+    csv_view,
     dns,
     graphql,
     http3,
