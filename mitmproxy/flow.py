@@ -240,6 +240,8 @@ class Flow(serializable.Serializable):
         self.error = Error(Error.KILLED_MESSAGE)
         self.intercepted = False
         self.live = False
+        if self._resume_event is not None:
+            self._resume_event.set()
 
     def intercept(self):
         """
