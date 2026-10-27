@@ -6,7 +6,6 @@
 -->
 
 ## Unreleased: mitmproxy next
-
 - Preserve explicit encoding weights and match complete coding names in `Request.constrain_encoding()`.
   ([#8522](https://github.com/mitmproxy/mitmproxy/pull/8522), @hakarrr)
 
