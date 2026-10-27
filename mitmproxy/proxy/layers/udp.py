@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from mitmproxy import flow
 from mitmproxy import udp
 from mitmproxy.connection import Connection
+from mitmproxy.connection import ConnectionState
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import events
 from mitmproxy.proxy import layer
@@ -75,6 +76,12 @@ class UDPLayer(layer.Layer):
     def start(self, _) -> layer.CommandGenerator[None]:
         if self.flow:
             yield UdpStartHook(self.flow)
+            # An addon may have called flow.kill() inside the start hook. Tear
+            # down before opening the upstream so a killed flow never connects
+            # to the server or forwards a datagram (#8200).
+            if self._killed():
+                yield from self._kill()
+                return
 
         if self.context.server.timestamp_start is None:
             err = yield commands.OpenConnection(self.context.server)
@@ -89,8 +96,43 @@ class UDPLayer(layer.Layer):
 
     _handle_event = start
 
-    @expect(events.DataReceived, events.ConnectionClosed, UdpMessageInjected)
+    def _killed(self) -> bool:
+        """True if Flow.kill() has marked this flow as killed."""
+        return bool(
+            self.flow
+            and self.flow.error
+            and self.flow.error.msg == flow.Error.KILLED_MESSAGE
+        )
+
+    def _kill(self) -> layer.CommandGenerator[None]:
+        """Close the open connections and emit the error hook for a killed flow.
+
+        Only close a connection that is not already closed: a flow killed inside
+        the start hook is torn down before OpenConnection, and closing the
+        never-opened server raises in the proxy server (#8200). Mirrors the TCP
+        layer's _kill().
+        """
+        assert self.flow
+        self._handle_event = self.done
+        if self.context.server.state is not ConnectionState.CLOSED:
+            yield commands.CloseConnection(self.context.server)
+        if self.context.client.state is not ConnectionState.CLOSED:
+            yield commands.CloseConnection(self.context.client)
+        yield UdpErrorHook(self.flow)
+        self.flow.live = False
+
+    @expect(
+        events.DataReceived,
+        events.ConnectionClosed,
+        UdpMessageInjected,
+        events.KillInjected,
+    )
     def relay_messages(self, event: events.Event) -> layer.CommandGenerator[None]:
+        if isinstance(event, events.KillInjected):
+            if self.flow and event.flow is self.flow:
+                yield from self._kill()
+            return
+
         if isinstance(event, UdpMessageInjected):
             # we just spoof that we received data here and then process that regularly.
             event = events.DataReceived(
@@ -114,6 +156,13 @@ class UDPLayer(layer.Layer):
                 udp_message = udp.UDPMessage(from_client, event.data)
                 self.flow.messages.append(udp_message)
                 yield UdpMessageHook(self.flow)
+                # An addon may have called flow.kill() inside the hook.
+                # Flow.kill() injects KillInjected asynchronously, so it has
+                # not reached us yet; check synchronously here so a killed
+                # flow's in-flight datagram is not forwarded (#8200).
+                if self._killed():
+                    yield from self._kill()
+                    return
                 yield commands.SendData(send_to, udp_message.content)
             else:
                 yield commands.SendData(send_to, event.data)
@@ -127,6 +176,11 @@ class UDPLayer(layer.Layer):
         else:
             raise AssertionError(f"Unexpected event: {event}")
 
-    @expect(events.DataReceived, events.ConnectionClosed, UdpMessageInjected)
+    @expect(
+        events.DataReceived,
+        events.ConnectionClosed,
+        UdpMessageInjected,
+        events.KillInjected,
+    )
     def done(self, _) -> layer.CommandGenerator[None]:
         yield from ()
