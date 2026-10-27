@@ -246,6 +246,7 @@ class TlsConfig:
         server: connection.Server = tls_start.context.server
 
         entry = self.get_cert(tls_start.context)
+        client.mitmcert = entry.cert
 
         if not client.cipher_list and ctx.options.ciphers_client:
             client.cipher_list = ctx.options.ciphers_client.split(":")
@@ -418,6 +419,7 @@ class TlsConfig:
         server: connection.Server = tls_start.context.server
 
         entry = self.get_cert(tls_start.context)
+        client.mitmcert = entry.cert
 
         if not client.cipher_list and ctx.options.ciphers_client:
             client.cipher_list = ctx.options.ciphers_client.split(":")
