@@ -19,6 +19,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Security",
     "Topic :: Internet :: WWW/HTTP",
@@ -36,7 +37,7 @@ dependencies = [
     "asgiref>=3.2.10,<=3.12.1",
     "backports.zstd>=1.7.0,<=1.7.0 ; python_version<'3.14'",
     "bcrypt>=5.0.0,<=5.0.0",
-    "Brotli>=1.0,<=1.2.0",
+    "Brotli>=1.2.1,<=1.2.1",
     "certifi>=2026.10.19",  # no upper bound here to get latest CA bundle
     "cryptography>=42.0,<=50.0.2",  # relaxed upper bound here to get security fixes
     "flask>=3.0,<=3.1.3",
