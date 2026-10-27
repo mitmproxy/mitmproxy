@@ -50,6 +50,51 @@ Proxy server listening at http://*:8080
 If `~/.mitmproxy/mitmproxy-ca.pem` is present in the container, mitmproxy will assume uid and gid from the file owner.
 For further details, please consult the mitmproxy [documentation](https://docs.mitmproxy.org/en/stable/).
 
+## Docker Compose
+
+Many python applications run in Docker experience logging buffering issues. The buffering behavior is standard for Python when stdout is not connected to a TTY (terminal), which is the case in Docker containers.
+
+When running in Docker Compose there are 2 ways to over come this:
+1. use the environmental variable PYTHONUNBUFFERED=1 to avoid logs being buffered by Python and not passed to Docker.
+2. connect python to the tty
+Depending on your system you might get better looks logs from the second option (colours etc...) 
+
+Example Docker Compose configuration with web UI using PYTHONUNBUFFERED=1:
+
+```yaml
+services:
+  mitmproxy:
+    image: mitmproxy/mitmproxy:latest
+    container_name: mitmproxy
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ~/.mitmproxy:/home/mitmproxy/.mitmproxy
+    ports:
+      - 8080:8080
+      - 8081:8081
+    restart: unless-stopped
+    command: mitmweb --web-host 0.0.0.0
+```
+
+Example Docker Compose configuration with web UI connecting to the TTY:
+
+```yaml
+services:
+  mitmproxy:
+    image: mitmproxy/mitmproxy:latest
+    container_name: mitmproxy
+    volumes:
+      - ~/.mitmproxy:/home/mitmproxy/.mitmproxy
+    stdin_open: true
+    tty: true
+    ports:
+      - 8080:8080
+      - 8081:8081
+    restart: unless-stopped
+    command: mitmweb --web-host 0.0.0.0
+```
+
 ## Tags
 
 The available release tags can be seen
