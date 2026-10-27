@@ -6,7 +6,6 @@
 -->
 
 ## Unreleased: mitmproxy next
-
 - Preserve unknown HTTPS DNS service parameters when decoding JSON.
   ([#8531](https://github.com/mitmproxy/mitmproxy/pull/8531), @hakarrr)
 
