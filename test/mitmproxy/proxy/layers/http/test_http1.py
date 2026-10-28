@@ -1,6 +1,7 @@
 import pytest
 
 from mitmproxy import http
+from mitmproxy.proxy.commands import Log
 from mitmproxy.proxy.commands import SendData
 from mitmproxy.proxy.events import DataReceived
 from mitmproxy.proxy.layers.http import Http1Client
@@ -141,6 +142,51 @@ class TestClient:
             # no we can send the next request
             >> RequestHeaders(3, req, True)
             << SendData(tctx.server, b"GET / HTTP/1.1\r\ncontent-length: 0\r\n\r\n")
+        )
+        assert resp().response.status_code == 200
+
+    @pytest.mark.parametrize("case", ["split", "joined", "processing"])
+    def test_informational_response(self, tctx, case):
+        req = http.Request.make("GET", "http://example.com/")
+        resp = Placeholder(ResponseHeaders)
+        processing = b"HTTP/1.1 102 Processing\r\n\r\n"
+        early_hints = (
+            b"HTTP/1.1 103 Early Hints\r\nlink: </style.css>; rel=preload\r\n\r\n"
+        )
+        final = b"HTTP/1.1 200 OK\r\ncontent-length: 2\r\n\r\nok"
+
+        playbook = Playbook(Http1Client(tctx), logs=True)
+        (
+            playbook
+            >> RequestHeaders(1, req, True)
+            << SendData(tctx.server, b"GET / HTTP/1.1\r\ncontent-length: 0\r\n\r\n")
+            >> RequestEndOfMessage(1)
+        )
+        if case == "split":
+            (
+                playbook
+                >> DataReceived(tctx.server, early_hints)
+                << Log("Swallowing HTTP/1 informational response: 103 Early Hints")
+                >> DataReceived(tctx.server, final)
+            )
+        elif case == "joined":
+            (
+                playbook
+                >> DataReceived(tctx.server, early_hints + final)
+                << Log("Swallowing HTTP/1 informational response: 103 Early Hints")
+            )
+        else:
+            (
+                playbook
+                >> DataReceived(tctx.server, processing + early_hints + final)
+                << Log("Swallowing HTTP/1 informational response: 102 Processing")
+                << Log("Swallowing HTTP/1 informational response: 103 Early Hints")
+            )
+        assert (
+            playbook
+            << ReceiveHttp(resp)
+            << ReceiveHttp(ResponseData(1, b"ok"))
+            << ReceiveHttp(ResponseEndOfMessage(1))
         )
         assert resp().response.status_code == 200
 

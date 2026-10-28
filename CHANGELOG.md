@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix requests hanging when an HTTP/1 server sends an informational response
+  such as `103 Early Hints` before the final response.
+  ([#8482](https://github.com/mitmproxy/mitmproxy/pull/8482), @APX403)
 - Fix filter expressions where a filter without an argument is followed by a closing bracket,
   e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
   ([#8537](https://github.com/mitmproxy/mitmproxy/pull/8537), @qodelicious)

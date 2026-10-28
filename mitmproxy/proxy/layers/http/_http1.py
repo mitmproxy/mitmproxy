@@ -405,8 +405,7 @@ class Http1Client(Http1Connection):
                 return
             assert self.stream_id is not None
 
-            response_head = self.buf.maybe_extract_lines()
-            if response_head:
+            while response_head := self.buf.maybe_extract_lines():
                 try:
                     self.response = http1.read_response_head(
                         [bytes(x) for x in response_head]
@@ -424,6 +423,18 @@ class Http1Client(Http1Connection):
                         )
                     )
                     return
+                if (
+                    100 <= self.response.status_code < 200
+                    and self.response.status_code != 101
+                ):
+                    # Like Http2Client, we don't forward informational responses
+                    # such as 103 Early Hints.
+                    yield commands.Log(
+                        f"Swallowing HTTP/1 informational response: "
+                        f"{self.response.status_code} {self.response.reason}"
+                    )
+                    self.response = None
+                    continue
                 yield ReceiveHttp(
                     ResponseHeaders(self.stream_id, self.response, expected_size == 0)
                 )
@@ -431,8 +442,8 @@ class Http1Client(Http1Connection):
 
                 self.state = self.read_body
                 yield from self.state(event)
-            else:
-                pass  # FIXME: protect against header size DoS
+                return
+            # FIXME: protect against header size DoS
         elif isinstance(event, events.ConnectionClosed):
             if self.conn.state & ConnectionState.CAN_WRITE:
                 yield commands.CloseConnection(self.conn)
