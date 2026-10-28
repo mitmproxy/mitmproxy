@@ -11,6 +11,9 @@
   record version. Such connections were handled as raw UDP, and in `reverse:dtls` mode
   their handshake never completed.
   ([#8536](https://github.com/mitmproxy/mitmproxy/pull/8536), @APX403)
+- Fix filter expressions where a filter without an argument is followed by a closing bracket,
+  e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
+  ([#8537](https://github.com/mitmproxy/mitmproxy/pull/8537), @qodelicious)
 
 ## 25 October 2026: mitmproxy 12.3.1
 
