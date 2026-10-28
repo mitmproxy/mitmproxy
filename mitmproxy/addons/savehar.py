@@ -3,6 +3,7 @@
 import base64
 import json
 import logging
+import os
 import zlib
 from collections.abc import Sequence
 from datetime import datetime
@@ -125,7 +126,7 @@ class SaveHar:
                 har = self.make_har(self.flows)
                 print(json.dumps(har, indent=4))
             else:
-                self.export_har(self.flows, ctx.options.hardump)
+                self.export_har(self.flows, os.path.expanduser(ctx.options.hardump))
 
     def flow_entry(self, flow: http.HTTPFlow, servers_seen: set[Server]) -> dict:
         """Creates HAR entry from flow"""
