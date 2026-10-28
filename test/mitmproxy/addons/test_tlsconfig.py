@@ -276,6 +276,28 @@ class TestTlsConfig:
                 ("DNS", "example.mitmproxy.org"),
             )
 
+    def test_tls13_start_client(self, tdata):
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            ta.configure(["confdir"])
+            tctx.configure(
+                ta,
+                certs=[
+                    tdata.path("mitmproxy/net/data/verificationcerts/trusted-leaf.pem")
+                ],
+                tls13_ciphers_server="TLS_AES_128_GCM_SHA256",
+                tls13_ciphers_client="TLS_CHACHA20_POLY1305_SHA256",
+            )
+            ctx = _ctx(tctx.options)
+
+            tls_start = tls.TlsData(ctx.client, context=ctx)
+            ta.tls_start_client(tls_start)
+            tssl_server = tls_start.ssl_conn
+
+            tssl_client = test_tls.SSLTest()
+            assert self.do_handshake(tssl_client, tssl_server)
+            assert tssl_server.get_cipher_name() == 'TLS_CHACHA20_POLY1305_SHA256'
+
     def test_quic_start_client(self, tdata):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
@@ -490,6 +512,27 @@ class TestTlsConfig:
             tssl_client = tls_start.ssl_conn
             tssl_server = test_tls.SSLTest(server_side=True)
             assert self.do_handshake(tssl_client, tssl_server)
+
+    def test_tls13_start_server_insecure(self):
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            ctx = _ctx(tctx.options)
+            ctx.server.address = ("example.mitmproxy.org", 443)
+
+            tctx.configure(
+                ta,
+                ssl_verify_upstream_trusted_ca=None,
+                ssl_insecure=True,
+                http2=False,
+                tls13_ciphers_client="TLS_AES_128_GCM_256SHA",
+                tls13_ciphers_server="TLS_CHACHA20_POLY1305_SHA256"
+            )
+            tls_start = tls.TlsData(ctx.server, context=ctx)
+            ta.tls_start_server(tls_start)
+            tssl_client = tls_start.ssl_conn
+            tssl_server = test_tls.SSLTest(server_side=True)
+            assert self.do_handshake(tssl_client, tssl_server)
+            assert tssl_client.get_cipher_name() == "TLS_CHACHA20_POLY1305_SHA256"
 
     def test_quic_start_server_insecure(self):
         ta = tlsconfig.TlsConfig()
