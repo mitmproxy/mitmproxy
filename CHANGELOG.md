@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix gzip-encoded bodies that consist of several gzip members being truncated
+  after the first member.
+  ([#8485](https://github.com/mitmproxy/mitmproxy/pull/8485), @APX403)
 - Fix filter expressions where a filter without an argument is followed by a closing bracket,
   e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
   ([#8537](https://github.com/mitmproxy/mitmproxy/pull/8537), @qodelicious)
