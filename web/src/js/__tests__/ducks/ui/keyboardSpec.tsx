@@ -32,9 +32,9 @@ describe("onKeyDown", () => {
         return store;
     };
 
-    const createKeyEvent = (key, ctrlKey = false) => {
+    const createKeyEvent = (key, ctrlKey = false, shiftKey = false) => {
         // @ts-expect-error not a real KeyboardEvent
-        return onKeyDown({ key, ctrlKey, preventDefault: jest.fn() });
+        return onKeyDown({ key, ctrlKey, shiftKey, preventDefault: jest.fn() });
     };
 
     afterEach(() => {
@@ -91,6 +91,12 @@ describe("onKeyDown", () => {
         expect(store.getState().ui.flow.tab).toBe("response");
         store.dispatch(createKeyEvent("ArrowRight"));
         expect(store.getState().ui.flow.tab).toBe("connection");
+    });
+
+    it("should handle switch to left tab with shift+tab", () => {
+        const store = makeStore();
+        store.dispatch(createKeyEvent("Tab", false, true));
+        expect(store.getState().ui.flow.tab).toBe("comment");
     });
 
     it("should cycle the request panel tabs in split view", () => {

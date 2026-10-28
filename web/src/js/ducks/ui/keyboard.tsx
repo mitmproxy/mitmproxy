@@ -83,7 +83,14 @@ export function onKeyDown(e: KeyboardEvent) {
                 break;
             }
 
-            case "Tab":
+            case "Tab": {
+                if (!flow) break;
+                dispatch(
+                    selectRelativeTab(flow, getState(), e.shiftKey ? -1 : +1),
+                );
+                break;
+            }
+
             case "ArrowRight": {
                 if (!flow) break;
                 dispatch(selectRelativeTab(flow, getState(), +1));
