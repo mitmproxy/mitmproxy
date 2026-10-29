@@ -58,6 +58,34 @@ def test_extract(tdata):
     assert "CERTIFICATE" in cut.extract("server_conn.certificate_list", tf)
 
 
+@pytest.mark.parametrize("value, expected", [(0, "0"), (0.0, "0.0"), (None, "")])
+def test_extract_zero_timestamp(value, expected):
+    f = tflow.tflow()
+    f.request.timestamp_end = value
+    assert cut.extract("request.timestamp_end", f) == expected
+    assert cut.Cut().cut([f], ["request.timestamp_end"]) == [[expected]]
+
+
+def test_extract_dns_zero_values():
+    f = tflow.tdnsflow(resp=True)
+    f.request.id = 0
+    f.response.response_code = 0
+    assert cut.Cut().cut([f], ["request.id", "response.response_code"]) == [["0", "0"]]
+
+
+def test_save_zero_timestamps(tmp_path):
+    f = tflow.tflow()
+    f.request.timestamp_end = 0
+    c = cut.Cut()
+    with taddons.context():
+        single = tmp_path / "single.txt"
+        c.save([f], ["request.timestamp_end"], str(single))
+        assert single.read_bytes() == b"0"
+        multiple = tmp_path / "multiple.csv"
+        c.save([f], ["request.method", "request.timestamp_end"], str(multiple))
+        assert multiple.read_bytes() == b"GET,0\r\n"
+
+
 def test_extract_websocket():
     tf = tflow.twebsocketflow(messages=True)
     extracted_request_content = cut.extract("request.content", tf)

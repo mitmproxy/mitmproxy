@@ -6,6 +6,8 @@
 -->
 
 ## Unreleased: mitmproxy next
+- Preserve zero-valued fields when extracting and saving cuts.
+  ([#8533](https://github.com/mitmproxy/mitmproxy/pull/8533), @hakarrr)
 
 - Fix filter expressions where a filter without an argument is followed by a closing bracket,
   e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.

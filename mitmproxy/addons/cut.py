@@ -69,7 +69,7 @@ def extract(cut: str, f: flow.Flow) -> str | bytes:
                 # TODO: currently this extracts only the very first cert as PEM-encoded string.
                 return part[0].to_pem().decode("ascii")
         current = part
-    return str(current or "")
+    return str(current) if current is not None else ""
 
 
 def extract_str(cut: str, f: flow.Flow) -> str:
