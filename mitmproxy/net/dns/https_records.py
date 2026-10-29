@@ -67,7 +67,7 @@ class HTTPSRecord:
         params: dict[int, bytes] = {}
         for k, v in data.items():
             if isinstance(k, str):
-                k = SVCParamKeys[k.upper()].value
+                k = int(k) if k.isdecimal() else SVCParamKeys[k.upper()].value
             assert isinstance(v, str)
             params[k] = strutils.escaped_str_to_bytes(v)
         return cls(target_name=target_name, priority=priority, params=params)

@@ -1,4 +1,5 @@
 import ipaddress
+import json
 import struct
 
 import pytest
@@ -80,6 +81,18 @@ class TestResourceRecord:
         assert rr.domain_name == "www.example.org"
         rr.text = "sample text"
         assert rr.text == "sample text"
+
+    @pytest.mark.parametrize("key", [111, 65400])
+    def test_https_record_unknown_param_json_roundtrip(self, key):
+        record = dns.https_records.HTTPSRecord(1, "example.org", {key: b"value"})
+        rr = dns.ResourceRecord.HTTPS("example.org", record)
+        data = json.loads(json.dumps(rr.to_json()))
+        assert dns.ResourceRecord.from_json(data) == rr
+        message = tutils.tdnsresp()
+        message.answers = [rr]
+        assert (
+            DNSMessage.from_json(json.loads(json.dumps(message.to_json()))) == message
+        )
 
     def test_https_record_ech(self):
         rr = dns.ResourceRecord(

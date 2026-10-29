@@ -1,10 +1,13 @@
+import json
 import struct
 
 import pytest
 
+from mitmproxy import dns as dns_types
 from mitmproxy.contentviews import Metadata
 from mitmproxy.contentviews._view_dns import dns
 from mitmproxy.tcp import TCPMessage
+from mitmproxy.test import tutils
 
 DNS_HTTPS_RECORD_RESPONSE = bytes.fromhex(
     "00008180000100010000000107746c732d656368036465760000410001c00c004100010000003c00520001000005004b0049fe0d00"
@@ -72,3 +75,16 @@ def test_render_priority():
     assert dns.render_priority(b"", Metadata(content_type="application/dns-message"))
     assert not dns.render_priority(b"", Metadata(content_type="text/plain"))
     assert not dns.render_priority(b"", Metadata())
+
+
+@pytest.mark.parametrize("key", [111, 65400])
+def test_reencode_https_unknown_parameter_json(key):
+    message = tutils.tdnsresp()
+    message.answers = [
+        dns_types.ResourceRecord.HTTPS(
+            "example.org",
+            dns_types.https_records.HTTPSRecord(1, "", {key: b"\x00\xff"}),
+        )
+    ]
+    prettified = json.dumps(message.to_json())
+    assert dns.reencode(prettified, Metadata()) == message.packed
