@@ -325,9 +325,9 @@ def starts_like_dtls_record(d: bytes) -> bool:
         True, if the passed bytes could be the start of a DTLS record
         False, otherwise.
     """
-    # TLS ClientHello magic, works for DTLS 1.1, DTLS 1.2, and DTLS 1.3.
+    # TLS ClientHello magic, works for DTLS 1.0, DTLS 1.2, and DTLS 1.3.
     # https://www.rfc-editor.org/rfc/rfc4347#section-4.1
     # https://www.rfc-editor.org/rfc/rfc6347#section-4.1
     # https://www.rfc-editor.org/rfc/rfc9147#section-4-6.2
     # We assume that a client sending less than 3 bytes initially is not a DTLS client.
-    return len(d) > 2 and d[0] == 0x16 and d[1] == 0xFE and 0xFD <= d[2] <= 0xFE
+    return len(d) > 2 and d[0] == 0x16 and d[1] == 0xFE and 0xFD <= d[2] <= 0xFF
