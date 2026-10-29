@@ -86,12 +86,12 @@ async def test_open_connection_happy_eyeballs(monkeypatch):
         commands.OpenConnection(connection=Server(address=("server", 1234)))
     )
 
-    kwargs = open_connection.call_args.kwargs
+    delay = open_connection.call_args.kwargs["happy_eyeballs_delay"]
     if sys.version_info >= (3, 13):
-        assert kwargs["happy_eyeballs_delay"] == 0.25
+        assert delay == 0.25
     else:
         # https://github.com/python/cpython/issues/124309
-        assert "happy_eyeballs_delay" not in kwargs
+        assert delay is None
 
 
 async def test_no_reentrancy(capsys):
