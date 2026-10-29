@@ -212,6 +212,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     reader, writer = await asyncio.open_connection(
                         *command.connection.address,
                         local_addr=command.connection.sockname,
+                        happy_eyeballs_delay=0.25,
                     )
                 elif command.connection.transport_protocol == "udp":
                     reader = writer = await mitmproxy_rs.udp.open_udp_connection(

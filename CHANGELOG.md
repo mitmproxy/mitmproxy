@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Connect to upstream servers with Happy Eyeballs (RFC 8305): when a host resolves to both IPv6 and IPv4
+  addresses, a broken address family no longer stalls the connection until it times out.
 - Fix filter expressions where a filter without an argument is followed by a closing bracket,
   e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
   ([#8537](https://github.com/mitmproxy/mitmproxy/pull/8537), @qodelicious)

@@ -73,6 +73,21 @@ async def test_open_connection(result, monkeypatch):
     assert server_disconnected.called == (result == "success")
 
 
+async def test_open_connection_happy_eyeballs(monkeypatch):
+    # IPv6 and IPv4 addresses are tried in parallel (RFC 8305), so a broken
+    # address family does not stall the connection until it times out.
+    open_connection = mock.AsyncMock(return_value=(mock.MagicMock(), mock.MagicMock()))
+    monkeypatch.setattr(asyncio, "open_connection", open_connection)
+    monkeypatch.setattr(MockConnectionHandler, "handle_connection", mock.AsyncMock())
+
+    handler = MockConnectionHandler()
+    await handler.open_connection(
+        commands.OpenConnection(connection=Server(address=("server", 1234)))
+    )
+
+    assert open_connection.call_args.kwargs["happy_eyeballs_delay"] == 0.25
+
+
 async def test_no_reentrancy(capsys):
     class ReentrancyTestLayer(layer.Layer):
         def handle_event(self, event: Event) -> layer.CommandGenerator[None]:
