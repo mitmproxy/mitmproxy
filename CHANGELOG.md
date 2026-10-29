@@ -6,6 +6,8 @@
 -->
 
 ## Unreleased: mitmproxy next
+- Match HTTP/1 Connection tokens case-insensitively when deciding whether to close a connection.
+  ([#8523](https://github.com/mitmproxy/mitmproxy/pull/8523), @hakarrr)
 
 - Fix filter expressions where a filter without an argument is followed by a closing bracket,
   e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
