@@ -1,5 +1,6 @@
 import pytest
 
+from mitmproxy import exceptions
 from mitmproxy.addons import mapremote
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
@@ -12,6 +13,38 @@ class TestMapRemote:
             tctx.configure(mr, map_remote=["one/two/three"])
             with pytest.raises(Exception, match="Invalid regular expression"):
                 tctx.configure(mr, map_remote=["/foo/+/three"])
+
+    @pytest.mark.parametrize(
+        "replacement",
+        [r"\2", r"\g<missing>", r"\q", r"\g<", "\\"],
+    )
+    def test_invalid_replacement(self, replacement):
+        mr = mapremote.MapRemote()
+        with taddons.context(mr) as tctx:
+            with pytest.raises(exceptions.OptionsError, match="Invalid replacement"):
+                tctx.configure(mr, map_remote=[f"|example.org|{replacement}"])
+
+    @pytest.mark.parametrize(
+        "pattern,replacement,expected",
+        [
+            (r"(example)\.org", r"\1.com", "https://example.com/path"),
+            (
+                r"(?P<host>example)\.org",
+                r"\g<host>.com",
+                "https://example.com/path",
+            ),
+            (r"/path", "", "https://example.org/"),
+            (r"does-not-match", r"\g<0>", "https://example.org/path"),
+        ],
+    )
+    def test_valid_replacement(self, pattern, replacement, expected):
+        mr = mapremote.MapRemote()
+        with taddons.context(mr) as tctx:
+            tctx.configure(mr, map_remote=[f"|{pattern}|{replacement}"])
+            f = tflow.tflow()
+            f.request.url = "https://example.org/path"
+            mr.request(f)
+            assert f.request.url == expected
 
     def test_simple(self):
         mr = mapremote.MapRemote()

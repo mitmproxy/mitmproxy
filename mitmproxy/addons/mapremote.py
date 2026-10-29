@@ -19,9 +19,15 @@ def parse_map_remote_spec(option: str) -> MapRemoteSpec:
     spec = MapRemoteSpec(*parse_spec(option))
 
     try:
-        re.compile(spec.subject)
+        regex = re.compile(spec.subject)
     except re.error as e:
         raise ValueError(f"Invalid regular expression {spec.subject!r} ({e})")
+
+    try:
+        # Parse the replacement template even if the pattern has no match.
+        regex.sub(spec.replacement, "")
+    except (re.error, IndexError) as e:
+        raise ValueError(f"Invalid replacement {spec.replacement!r} ({e})") from e
 
     return spec
 

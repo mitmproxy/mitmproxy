@@ -6,6 +6,8 @@
 -->
 
 ## Unreleased: mitmproxy next
+- Reject invalid map-remote replacement templates when configuring the option instead of failing during requests.
+  ([#8529](https://github.com/mitmproxy/mitmproxy/pull/8529), @hakarrr)
 
 - Fix filter expressions where a filter without an argument is followed by a closing bracket,
   e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
