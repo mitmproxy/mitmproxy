@@ -1,5 +1,6 @@
 import asyncio
 import collections
+import sys
 import textwrap
 from dataclasses import dataclass
 from typing import Callable
@@ -85,7 +86,12 @@ async def test_open_connection_happy_eyeballs(monkeypatch):
         commands.OpenConnection(connection=Server(address=("server", 1234)))
     )
 
-    assert open_connection.call_args.kwargs["happy_eyeballs_delay"] == 0.25
+    kwargs = open_connection.call_args.kwargs
+    if sys.version_info >= (3, 13):
+        assert kwargs["happy_eyeballs_delay"] == 0.25
+    else:
+        # https://github.com/python/cpython/issues/124309
+        assert "happy_eyeballs_delay" not in kwargs
 
 
 async def test_no_reentrancy(capsys):
