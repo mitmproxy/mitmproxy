@@ -186,7 +186,7 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
                     http1.expected_http_body_size(
                         self.request,
                         self.response,
-                        self.context.options.validate_inbound_headers,
+                        insecure_allow_malformed=not self.context.options.validate_inbound_headers,
                     )
                     == -1
                 )
@@ -295,7 +295,7 @@ class Http1Server(Http1Connection):
                     )
                     expected_body_size = http1.expected_http_body_size(
                         self.request,
-                        validate_inbound_headers=self.context.options.validate_inbound_headers,
+                        insecure_allow_malformed=not self.context.options.validate_inbound_headers,
                     )
                 except ValueError as e:
                     yield commands.SendData(self.conn, make_error_response(400, str(e)))
@@ -400,7 +400,7 @@ class Http1Client(Http1Connection):
                 http1.expected_http_body_size(
                     self.request,
                     self.response,
-                    self.context.options.validate_inbound_headers,
+                    insecure_allow_malformed=not self.context.options.validate_inbound_headers,
                 )
                 == -1
             ):
@@ -429,7 +429,7 @@ class Http1Client(Http1Connection):
                     expected_size = http1.expected_http_body_size(
                         self.request,
                         self.response,
-                        self.context.options.validate_inbound_headers,
+                        insecure_allow_malformed=not self.context.options.validate_inbound_headers,
                     )
                 except ValueError as e:
                     yield commands.CloseConnection(self.conn)

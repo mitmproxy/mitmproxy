@@ -39,22 +39,22 @@ _HTTP_1_1_TRANSFER_ENCODINGS = frozenset(typing.get_args(TransferEncoding))
 
 
 def parse_content_length(
-    value: str | bytes, validate_inbound_headers: bool = True
+    value: str | bytes, *, insecure_allow_malformed: bool = False
 ) -> int:
     """Parse a content-length header value, or raise a ValueError if it is invalid.
 
-    When validate_inbound_headers is False, leading zeros are accepted (e.g. "0012" -> 12).
+    If insecure_allow_malformed is True, leading zeros are accepted (e.g. "0012" -> 12).
     """
     if isinstance(value, str):
-        if validate_inbound_headers:
-            valid = bool(_valid_content_length_str.match(value))
-        else:
+        if insecure_allow_malformed:
             valid = bool(_valid_content_length_lax_str.match(value))
-    else:
-        if validate_inbound_headers:
-            valid = bool(_valid_content_length.match(value))
         else:
+            valid = bool(_valid_content_length_str.match(value))
+    else:
+        if insecure_allow_malformed:
             valid = bool(_valid_content_length_lax.match(value))
+        else:
+            valid = bool(_valid_content_length.match(value))
     if not valid:
         raise ValueError(f"invalid content-length header: {value!r}")
     return int(value)

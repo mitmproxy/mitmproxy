@@ -26,21 +26,21 @@ def test_parse_content_length_invalid(cl):
 
 
 def test_parse_content_length_lax():
-    assert parse_content_length("0", validate_inbound_headers=False) == 0
-    assert parse_content_length("00", validate_inbound_headers=False) == 0
-    assert parse_content_length("1", validate_inbound_headers=False) == 1
-    assert parse_content_length("01", validate_inbound_headers=False) == 1
-    assert parse_content_length("0100", validate_inbound_headers=False) == 100
-    assert parse_content_length(b"0012", validate_inbound_headers=False) == 12
-    assert parse_content_length(b"42", validate_inbound_headers=False) == 42
+    assert parse_content_length("0", insecure_allow_malformed=True) == 0
+    assert parse_content_length("00", insecure_allow_malformed=True) == 0
+    assert parse_content_length("1", insecure_allow_malformed=True) == 1
+    assert parse_content_length("01", insecure_allow_malformed=True) == 1
+    assert parse_content_length("0100", insecure_allow_malformed=True) == 100
+    assert parse_content_length(b"0012", insecure_allow_malformed=True) == 12
+    assert parse_content_length(b"42", insecure_allow_malformed=True) == 42
 
 
 @pytest.mark.parametrize("cl", ["NaN", "", " ", "-1", "+1", "0x42", "foo", "1, 1"])
 def test_parse_content_length_lax_invalid(cl):
     with pytest.raises(ValueError, match="invalid content-length"):
-        parse_content_length(cl, validate_inbound_headers=False)
+        parse_content_length(cl, insecure_allow_malformed=True)
     with pytest.raises(ValueError, match="invalid content-length"):
-        parse_content_length(cl.encode(), validate_inbound_headers=False)
+        parse_content_length(cl.encode(), insecure_allow_malformed=True)
 
 
 def test_parse_transfer_encoding_ok():

@@ -592,7 +592,7 @@ class HttpStream(layer.Layer):
                 expected_size = expected_http_body_size(
                     self.flow.request,
                     self.flow.response if response else None,
-                    self.context.options.validate_inbound_headers,
+                    insecure_allow_malformed=not self.context.options.validate_inbound_headers,
                 )
             except ValueError:  # pragma: no cover
                 # we just don't stream/kill malformed content-length headers.
