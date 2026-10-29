@@ -250,7 +250,11 @@ class Options(optmanager.OptManager):
 
     def update(self, **kwargs):
         super().update(**kwargs)
-        if 'intercept' in kwargs and hasattr(self, 'intercept') and hasattr(self, 'intercept_active'):
+        if (
+            "intercept" in kwargs
+            and hasattr(self, "intercept")
+            and hasattr(self, "intercept_active")
+        ):
             if self.intercept:
                 self.intercept_active = True
             else:
