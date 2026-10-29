@@ -4,6 +4,7 @@ import sys
 
 from mitmproxy import log
 from mitmproxy.contrib import click as miniclick
+from mitmproxy.utils import exit_codes
 from mitmproxy.utils import vt_codes
 
 
@@ -43,7 +44,7 @@ class ErrorCheck:
                     f"Error{plural} logged during startup, exiting...", file=sys.stderr
                 )
 
-            sys.exit(1)
+            sys.exit(exit_codes.STARTUP_ERROR)
 
 
 class ErrorCheckHandler(log.MitmLogHandler):

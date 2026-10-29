@@ -6,6 +6,7 @@ import pytest
 
 from mitmproxy.addons import termlog
 from mitmproxy.test import taddons
+from mitmproxy.utils import exit_codes
 from mitmproxy.utils import vt_codes
 
 
@@ -53,11 +54,12 @@ async def test_cannot_print(monkeypatch) -> None:
     monkeypatch.setattr(builtins, "print", _raise)
 
     t = termlog.TermLog()
-    with taddons.context(t) as tctx:
-        tctx.configure(t)
-        with pytest.raises(SystemExit) as exc_info:
-            logging.info("Should not log this, but raise instead")
+    try:
+        with taddons.context(t) as tctx:
+            tctx.configure(t)
+            with pytest.raises(SystemExit) as exc_info:
+                logging.info("Should not log this, but raise instead")
 
-        assert exc_info.value.args[0] == 1
-
-    t.uninstall()
+            assert exc_info.value.args[0] == exit_codes.CANNOT_PRINT
+    finally:
+        t.uninstall()

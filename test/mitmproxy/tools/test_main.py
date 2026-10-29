@@ -1,6 +1,7 @@
 import pytest
 
 from mitmproxy.tools import main
+from mitmproxy.utils import exit_codes
 
 shutdown_script = "mitmproxy/data/addonscripts/shutdown.py"
 
@@ -48,8 +49,27 @@ def test_options_includes_addon_options(tdata, capsys):
 
 def test_options_without_scripts(capsys):
     """--options without any scripts should still work and list built-in options."""
-    with pytest.raises(SystemExit):
+    with pytest.raises(SystemExit) as exc_info:
         main.mitmdump(["--options"])
+    assert exc_info.value.code == exit_codes.SUCCESS
     output = capsys.readouterr().out
     assert "listen_port" in output
     assert "custom_addon_option" not in output
+
+
+def test_invalid_args(capsys):
+    with pytest.raises(SystemExit) as exc_info:
+        main.mitmdump(["--nonexistent-flag-xyz"])
+    assert exc_info.value.code == exit_codes.INVALID_ARGS
+
+
+def test_invalid_options(capsys):
+    with pytest.raises(SystemExit) as exc_info:
+        main.mitmdump(["--set", "listen_port=not_a_number"])
+    assert exc_info.value.code == exit_codes.INVALID_OPTIONS
+
+
+def test_version_exit_code(capsys):
+    with pytest.raises(SystemExit) as exc_info:
+        main.mitmdump(["--version"])
+    assert exc_info.value.code == exit_codes.SUCCESS

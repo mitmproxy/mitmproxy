@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- Introduce specific process exit codes for different error conditions ([#5696](https://github.com/mitmproxy/mitmproxy/issues/5696)).
 - Fix filter expressions where a filter without an argument is followed by a closing bracket,
   e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
   ([#8537](https://github.com/mitmproxy/mitmproxy/pull/8537), @qodelicious)

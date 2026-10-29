@@ -1,5 +1,9 @@
 from unittest.mock import Mock
 
+import pytest
+
+from mitmproxy.utils import exit_codes
+
 
 def test_spawn_editor(monkeypatch, console):
     text_data = "text"
@@ -28,3 +32,11 @@ def test_get_hex_editor(monkeypatch, console):
     monkeypatch.setattr("shutil.which", lambda x: x == test_editor)
     editor = console.get_hex_editor()
     assert editor == test_editor
+
+
+async def test_not_a_tty(monkeypatch, console, capsys):
+    monkeypatch.setattr("sys.stdout.isatty", lambda: False)
+    with pytest.raises(SystemExit) as exc_info:
+        await console.running()
+    assert exc_info.value.code == exit_codes.NO_TTY
+    assert "console interface requires a tty" in capsys.readouterr().err
