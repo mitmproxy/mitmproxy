@@ -6,7 +6,10 @@ import pytest
 
 from mitmproxy.addons.clientplayback import ClientPlayback
 from mitmproxy.addons.clientplayback import ReplayHandler
+from mitmproxy.addons.keepserving import KeepServing
 from mitmproxy.addons.proxyserver import Proxyserver
+from mitmproxy.addons.readfile import ReadFile
+from mitmproxy.addons.serverplayback import ServerPlayback
 from mitmproxy.addons.tlsconfig import TlsConfig
 from mitmproxy.connection import Address
 from mitmproxy.exceptions import CommandError
@@ -232,3 +235,67 @@ def test_configure(tdata):
         tctx.configure(cp, client_replay_concurrency=-1)
         with pytest.raises(OptionsError):
             tctx.configure(cp, client_replay_concurrency=-2)
+
+
+@pytest.mark.parametrize("flow_count", [1, 3])
+async def test_count_includes_concurrent_replays(monkeypatch, flow_count):
+    started = asyncio.Event()
+    finish = asyncio.Event()
+
+    async def replay(_):
+        started.set()
+        await finish.wait()
+
+    monkeypatch.setattr(ReplayHandler, "replay", replay)
+    cp = ClientPlayback()
+    with taddons.context(cp) as tctx:
+        tctx.configure(cp, client_replay_concurrency=-1)
+        cp.running()
+        try:
+            cp.start_replay([tflow.tflow(live=False) for _ in range(flow_count)])
+            await started.wait()
+            await cp.queue.join()
+            assert len(cp.replay_tasks) == flow_count
+            assert cp.count() == flow_count
+        finally:
+            finish.set()
+            await asyncio.gather(*cp.replay_tasks)
+            await cp.done()
+
+
+@pytest.mark.parametrize("concurrency", [-1, 1])
+async def test_count_while_waiting_for_response(concurrency):
+    received = asyncio.Event()
+    send_response = asyncio.Event()
+
+    async def handler(reader, writer):
+        await reader.readuntil(b"\r\n\r\n")
+        received.set()
+        await send_response.wait()
+        writer.write(b"HTTP/1.1 204 No Content\r\n\r\n")
+        await writer.drain()
+        await reader.read()
+
+    cp = ClientPlayback()
+    ps = Proxyserver()
+    ks = KeepServing()
+    with taddons.context(cp, ps, ks, ReadFile(), ServerPlayback()) as tctx:
+        tctx.configure(cp, client_replay_concurrency=concurrency)
+        async with tcp_server(handler) as addr:
+            cp.running()
+            f = tflow.tflow(live=False)
+            f.request.host, f.request.port = addr
+            f.request.content = b""
+            try:
+                cp.start_replay([f])
+                await asyncio.wait_for(received.wait(), 5)
+                assert cp.count() == 1
+                assert tctx.master.commands.call("replay.client.count") == 1
+                assert ks.keepgoing()
+            finally:
+                send_response.set()
+                await asyncio.wait_for(cp.queue.join(), 5)
+                await asyncio.gather(*cp.replay_tasks)
+                await cp.done()
+            assert cp.count() == 0
+            assert f.response.status_code == 204

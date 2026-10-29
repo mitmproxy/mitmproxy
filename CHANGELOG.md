@@ -6,6 +6,8 @@
 -->
 
 ## Unreleased: mitmproxy next
+- Keep mitmdump running until concurrent client replays finish.
+  ([#8525](https://github.com/mitmproxy/mitmproxy/pull/8525), @hakarrr)
 
 - Fix filter expressions where a filter without an argument is followed by a closing bracket,
   e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
