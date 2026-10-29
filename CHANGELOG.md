@@ -10,6 +10,8 @@
 - Fix filter expressions where a filter without an argument is followed by a closing bracket,
   e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
   ([#8537](https://github.com/mitmproxy/mitmproxy/pull/8537), @qodelicious)
+- Accept leading zeros in Content-Length headers when `validate_inbound_headers` is disabled.
+  ([#8177](https://github.com/mitmproxy/mitmproxy/pull/8177), @emanuele-em)
 
 ## 25 October 2026: mitmproxy 12.3.1
 

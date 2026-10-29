@@ -14,6 +14,8 @@ _valid_header_name = re.compile(rb"^[!#$%&'*+\-.^_`|~0-9a-zA-Z]+$")
 
 _valid_content_length = re.compile(rb"^(?:0|[1-9][0-9]*)$")
 _valid_content_length_str = re.compile(r"^(?:0|[1-9][0-9]*)$")
+_valid_content_length_lax = re.compile(rb"^[0-9]+$")
+_valid_content_length_lax_str = re.compile(r"^[0-9]+$")
 
 # https://datatracker.ietf.org/doc/html/rfc9112#section-6.1:
 # > A sender MUST NOT apply the chunked transfer coding more than once to a message body (i.e., chunking an already
@@ -36,12 +38,23 @@ TransferEncoding = typing.Literal[
 _HTTP_1_1_TRANSFER_ENCODINGS = frozenset(typing.get_args(TransferEncoding))
 
 
-def parse_content_length(value: str | bytes) -> int:
-    """Parse a content-length header value, or raise a ValueError if it is invalid."""
+def parse_content_length(
+    value: str | bytes, *, insecure_allow_malformed: bool = False
+) -> int:
+    """Parse a content-length header value, or raise a ValueError if it is invalid.
+
+    If insecure_allow_malformed is True, leading zeros are accepted (e.g. "0012" -> 12).
+    """
     if isinstance(value, str):
-        valid = bool(_valid_content_length_str.match(value))
+        if insecure_allow_malformed:
+            valid = bool(_valid_content_length_lax_str.match(value))
+        else:
+            valid = bool(_valid_content_length_str.match(value))
     else:
-        valid = bool(_valid_content_length.match(value))
+        if insecure_allow_malformed:
+            valid = bool(_valid_content_length_lax.match(value))
+        else:
+            valid = bool(_valid_content_length.match(value))
     if not valid:
         raise ValueError(f"invalid content-length header: {value!r}")
     return int(value)

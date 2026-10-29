@@ -45,7 +45,10 @@ def connection_close(http_version, headers):
 
 
 def expected_http_body_size(
-    request: Request, response: Response | None = None
+    request: Request,
+    response: Response | None = None,
+    *,
+    insecure_allow_malformed: bool = False,
 ) -> int | None:
     """
     Returns:
@@ -145,7 +148,9 @@ def expected_http_body_size(
     #        received, the recipient MUST consider the message to be
     #        incomplete and close the connection.
     if cl := headers.get("content-length"):
-        return validate.parse_content_length(cl)
+        return validate.parse_content_length(
+            cl, insecure_allow_malformed=insecure_allow_malformed
+        )
     #    6.  If this is a request message and none of the above are true, then
     #        the message body length is zero (no message body is present).
     if not response:
