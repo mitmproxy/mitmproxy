@@ -423,6 +423,37 @@ class TestRequestUtils:
         assert "foo" not in request.headers["Accept-Encoding"]
         assert "gzip" in request.headers["Accept-Encoding"]
 
+    @pytest.mark.parametrize(
+        "header, expected",
+        [
+            ("gzip;q=0, br;q=0.5, unknown", "gzip;q=0, br;q=0.5"),
+            ("GZIP, Br, unknown", "GZIP, Br"),
+            ("xgzip, brotli, notzstd", ""),
+            ("gzip, deflate;q=0.8, identity;q=0", "gzip, deflate;q=0.8, identity;q=0"),
+            (" br ; q=0.5 , gzip ", "br ; q=0.5, gzip"),
+            ("*;q=0, gzip", "*;q=0, gzip"),
+            ("*;q=0.000, gzip;q=1", "*;q=0.000, gzip;q=1"),
+            ("*;q=0.5, gzip", "gzip"),
+        ],
+    )
+    def test_constrain_encoding_preserves_tokens(self, header, expected):
+        request = treq()
+        request.headers["Accept-Encoding"] = header
+        request.constrain_encoding()
+        assert request.headers["Accept-Encoding"] == expected
+
+    def test_constrain_encoding_repeated_headers(self):
+        request = treq()
+        request.headers.set_all("Accept-Encoding", ["gzip;q=0", "unknown, br;q=0.5"])
+        request.constrain_encoding()
+        assert request.headers["Accept-Encoding"] == "gzip;q=0, br;q=0.5"
+
+    def test_constrain_encoding_empty_header(self):
+        request = treq()
+        request.headers["Accept-Encoding"] = ""
+        request.constrain_encoding()
+        assert request.headers["Accept-Encoding"] == ""
+
     def test_get_urlencoded_form(self):
         request = treq(content=b"foobar=baz")
         assert not request.urlencoded_form

@@ -6,6 +6,8 @@
 -->
 
 ## Unreleased: mitmproxy next
+- Preserve explicit encoding weights and match complete coding names in `Request.constrain_encoding()`.
+  ([#8522](https://github.com/mitmproxy/mitmproxy/pull/8522), @hakarrr)
 
 - Fix filter expressions where a filter without an argument is followed by a closing bracket,
   e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
