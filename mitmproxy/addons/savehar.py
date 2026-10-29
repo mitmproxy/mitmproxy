@@ -194,7 +194,7 @@ class SaveHar:
                 "cookies": self.format_response_cookies(flow.response),
                 "headers": self.format_multidict(flow.response.headers),
                 "content": {
-                    "size": response_body_size,
+                    "size": response_body_decoded_size,
                     "compression": response_body_compression,
                     "mimeType": flow.response.headers.get("Content-Type", ""),
                 },

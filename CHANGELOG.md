@@ -6,6 +6,8 @@
 -->
 
 ## Unreleased: mitmproxy next
+- Report decoded response content sizes in HAR exports while retaining encoded body sizes.
+  ([#8534](https://github.com/mitmproxy/mitmproxy/pull/8534), @hakarrr)
 
 - Fix filter expressions where a filter without an argument is followed by a closing bracket,
   e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
