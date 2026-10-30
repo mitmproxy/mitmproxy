@@ -283,6 +283,24 @@ class TestRequestUtils:
         request = treq(method=b"OPTIONS", path=b"*")
         assert request.url == "http://address:22"
 
+    def test_url_ipv6(self):
+        request = treq()
+        request.url = "https://[2001:db8::1]:8443/foo"
+        assert request.host == "2001:db8::1"
+        assert request.port == 8443
+        assert request.url == "https://[2001:db8::1]:8443/foo"
+        assert request.pretty_url == "https://[2001:db8::1]:8443/foo"
+
+    def test_host_header_ipv6(self):
+        request = treq()
+        request.headers["host"] = "address:22"
+        request.host = "::1"
+        assert request.headers["host"] == "[::1]:22"
+        request.port = 8080
+        assert request.headers["host"] == "[::1]:8080"
+        request.port = 80
+        assert request.headers["host"] == "[::1]"
+
     def test_url_authority(self):
         request = treq(method=b"CONNECT")
         assert request.url == "address:22"

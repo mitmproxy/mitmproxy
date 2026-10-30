@@ -171,6 +171,25 @@ def test_reverse_proxy(tctx, keep_host_header):
     assert server().address == ("localhost", 8000)
 
 
+def test_reverse_proxy_ipv6(tctx):
+    """Test that the host header of an IPv6 backend is bracketed."""
+    server = Placeholder(Server)
+    tctx.client.proxy_mode = ProxyMode.parse("reverse:http://[::1]:8000")
+    tctx.options.connection_strategy = "lazy"
+    assert (
+        Playbook(modes.ReverseProxy(tctx), hooks=False)
+        >> DataReceived(tctx.client, b"GET /foo HTTP/1.1\r\nHost: example.com\r\n\r\n")
+        << NextLayerHook(Placeholder(NextLayer))
+        >> reply_next_layer(lambda ctx: http.HttpLayer(ctx, HTTPMode.transparent))
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(server, b"GET /foo HTTP/1.1\r\nHost: [::1]:8000\r\n\r\n")
+        >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+        << SendData(tctx.client, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+    )
+    assert server().address == ("::1", 8000)
+
+
 def test_reverse_dns(tctx):
     tctx.client.transport_protocol = "udp"
     tctx.server.transport_protocol = "udp"

@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Wrap IPv6 hosts in square brackets when building `Host` headers and URLs. This fixes the
+  `Host` header that reverse proxy mode sent to IPv6 backends, and `request.url` for IPv6 targets.
+  ([#8484](https://github.com/mitmproxy/mitmproxy/pull/8484), @RitiGrover)
 - Fix filter expressions where a filter without an argument is followed by a closing bracket,
   e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
   ([#8537](https://github.com/mitmproxy/mitmproxy/pull/8537), @qodelicious)
