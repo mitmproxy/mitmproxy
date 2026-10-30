@@ -7,7 +7,42 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix filter expressions where a filter without an argument is followed by a closing bracket,
+  e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
+  ([#8537](https://github.com/mitmproxy/mitmproxy/pull/8537), @qodelicious)
 - Fix crashes when resetting retired QUIC streams.
+
+## 25 October 2026: mitmproxy 12.3.1
+
+- **Security:** Require Brotli 1.2.1 to include the upstream decoder fix for
+  [CVE-2026-111497](https://github.com/google/brotli/releases/tag/v1.2.1).
+  ([#8514](https://github.com/mitmproxy/mitmproxy/pull/8514), @anthonylei)
+- Block OCSP and CRL requests to eMudhra and Sectigo revocation hosts when
+  `--emudhra` or `--emudhra-old` is enabled.
+  ([#8516](https://github.com/mitmproxy/mitmproxy/pull/8516), @LiHuan02)
+- mitmproxy now supports Python 3.15. Binary releases ship with 3.15 by default.
+  ([#8524](https://github.com/mitmproxy/mitmproxy/pull/8524), @mhils)
+- Preserve caller-provided value lists when replacing query parameters or cookies with `set_all()`.
+  ([#8521](https://github.com/mitmproxy/mitmproxy/pull/8521), @hakarrr)
+- Refresh cookie expiration dates for empty-valued cookies during server replay.
+  ([#8520](https://github.com/mitmproxy/mitmproxy/pull/8520), @hakarrr)
+- Fix two error messages that were built with `%s` placeholders and never formatted
+  (`BiDi` attribute lookup and unsupported option types in `OptManager.make_parser`).
+  ([#8509](https://github.com/mitmproxy/mitmproxy/pull/8509), @Pharex38)
+
+## 22 October 2026: mitmproxy 12.3.0
+
+- Add `--emudhra` and `--emudhra-old` options to sign TLS certificates with a compromised eMudhra intermediate CA key.
+  ([#8500](https://github.com/mitmproxy/mitmproxy/pull/8500), [#8503](https://github.com/mitmproxy/mitmproxy/pull/8503), @mhils)
+- **Security:** Remove eMudhra CAs from trust list in precompiled binaries.
+  ([#8499](https://github.com/mitmproxy/mitmproxy/pull/8499), @mhils)
+- Major improvements to the Web UI. (@sleeyax, @lups2000)
+
+### Other Changes
+
+- Fix the WBXML contentview raising a `KeyError` on tags that are missing from the code page,
+  instead of showing them as `UNKNOWN_TAG_XX`.
+  ([#8495](https://github.com/mitmproxy/mitmproxy/pull/8495), @kayaal34)
 - Fix `Set-Cookie` attribute parsing: prevent subsequent attributes (such as `Secure` or `HttpOnly`) from being swallowed into `Expires` when `Expires` contains non-date or short values (e.g. `Expires=0`), and correctly parse RFC 850 dates with full weekday names.
   ([#8489](https://github.com/mitmproxy/mitmproxy/pull/8489), @7-Bala)
 - Fix typos in the `save_stream_file` option help, docstrings and examples.
