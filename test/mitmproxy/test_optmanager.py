@@ -1,6 +1,7 @@
 import argparse
 import copy
 import io
+import logging
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Optional
@@ -477,6 +478,45 @@ def test_set():
     opts.process_deferred()
     assert "deferredsequenceoption" not in opts.deferred
     assert opts.deferredsequenceoption == ["a", "b"]
+
+
+def test_process_deferred_logs_malformed_values(caplog):
+    """A malformed deferred value is logged and dropped, not silently lost."""
+    opts = TO()
+    opts.set("shout=wobble", defer=True)
+    assert "shout" in opts.deferred
+    opts.add_option("shout", bool, False, "help")
+
+    with caplog.at_level(logging.ERROR):
+        opts.process_deferred()
+
+    assert "shout" not in opts.deferred
+    assert opts.shout is False  # default unchanged
+    assert any(
+        "Failed to apply deferred option shout" in record.message
+        for record in caplog.records
+    )
+
+
+def test_rollback_logs_handler_errors(caplog):
+    """An OptionsError raised while applying options is logged on rollback."""
+    opts = TO()
+
+    def boom(updated):
+        raise exceptions.OptionsError("subscriber exploded")
+
+    opts.changed.connect(boom)
+
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(exceptions.OptionsError):
+            opts.update(one=1)
+
+    assert any(
+        "Failed to update options: subscriber exploded" in record.message
+        for record in caplog.records
+    )
+    assert opts.one is None  # rolled back to default
+    opts.changed.disconnect(boom)
 
 
 def test_load_paths(tdata):
