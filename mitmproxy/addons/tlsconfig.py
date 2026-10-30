@@ -584,7 +584,7 @@ class TlsConfig:
                     raise exceptions.OptionsError(
                         f"Invalid ECDH curve: {ecdh_curve!r}. Valid curves are: {', '.join(net_tls.EC_CURVES)}"
                     )
-                
+
         if "tls13_ciphers_client" in updated or "tls13_ciphers_server" in updated:
             for tls13_ciphers in [
                 "tls13_ciphers_client",
@@ -594,12 +594,13 @@ class TlsConfig:
                 if value:
                     for suite in value.split(":"):
                         try:
-                            SSL.Context(SSL.TLS_METHOD).set_tls13_ciphersuites(suite.encode())
+                            SSL.Context(SSL.TLS_METHOD).set_tls13_ciphersuites(
+                                suite.encode()
+                            )
                         except SSL.Error as e:
                             raise exceptions.OptionsError(
                                 f"Invalid TLS 1.3 ciphersuite for {tls13_ciphers}: {suite!r}"
                             ) from e
-
 
         if "tls_version_client_min" in updated:
             self._warn_unsupported_version("tls_version_client_min", True)

@@ -110,9 +110,9 @@ class TestTlsConfig:
                 ],
             )
             assert ta.certstore.certs
-            
+
     def test_configure_tls13_ciphers(self):
-        ta=tlsconfig.TlsConfig()
+        ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
             tctx.configure(
                 ta,
@@ -124,13 +124,15 @@ class TestTlsConfig:
                 exceptions.OptionsError,
                 match="Invalid TLS 1.3 ciphersuite for tls13_ciphers_client: 'TLS_FOO'",
             ):
-                tctx.configure(ta, tls13_ciphers_client='TLS_FOO')
+                tctx.configure(ta, tls13_ciphers_client="TLS_FOO")
 
             with pytest.raises(
                 exceptions.OptionsError,
                 match="Invalid TLS 1.3 ciphersuite for tls13_ciphers_server: 'TLS_FOO'",
             ):
-                tctx.configure(ta, tls13_ciphers_server="TLS_AES_128_GCM_SHA256:TLS_FOO")
+                tctx.configure(
+                    ta, tls13_ciphers_server="TLS_AES_128_GCM_SHA256:TLS_FOO"
+                )
 
     def test_configure_tls_version(self, caplog):
         caplog.set_level(logging.INFO)
@@ -318,7 +320,7 @@ class TestTlsConfig:
 
             tssl_client = test_tls.SSLTest()
             assert self.do_handshake(tssl_client, tssl_server)
-            assert tssl_server.get_cipher_name() == 'TLS_CHACHA20_POLY1305_SHA256'
+            assert tssl_server.get_cipher_name() == "TLS_CHACHA20_POLY1305_SHA256"
 
     def test_quic_start_client(self, tdata):
         ta = tlsconfig.TlsConfig()
@@ -547,7 +549,7 @@ class TestTlsConfig:
                 ssl_insecure=True,
                 http2=False,
                 tls13_ciphers_client="TLS_AES_128_GCM_SHA256",
-                tls13_ciphers_server="TLS_CHACHA20_POLY1305_SHA256"
+                tls13_ciphers_server="TLS_CHACHA20_POLY1305_SHA256",
             )
             tls_start = tls.TlsData(ctx.server, context=ctx)
             ta.tls_start_server(tls_start)
