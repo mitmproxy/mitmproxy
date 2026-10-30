@@ -296,7 +296,7 @@ class TestTlsConfig:
 
             tssl_client = test_tls.SSLTest()
             assert self.do_handshake(tssl_client, tssl_server)
-            assert tssl_server.get_cipher_name() == 'TLS_CHACHA20_POLY1305_SHA256'
+            assert tssl_server.get_cipher_name() == "TLS_CHACHA20_POLY1305_SHA256"
 
     def test_quic_start_client(self, tdata):
         ta = tlsconfig.TlsConfig()
@@ -525,7 +525,7 @@ class TestTlsConfig:
                 ssl_insecure=True,
                 http2=False,
                 tls13_ciphers_client="TLS_AES_128_GCM_256SHA",
-                tls13_ciphers_server="TLS_CHACHA20_POLY1305_SHA256"
+                tls13_ciphers_server="TLS_CHACHA20_POLY1305_SHA256",
             )
             tls_start = tls.TlsData(ctx.server, context=ctx)
             ta.tls_start_server(tls_start)
