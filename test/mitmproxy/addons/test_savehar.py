@@ -239,6 +239,19 @@ class TestHardumpOption:
             out = json.loads(zlib.decompress((tmp_path / "out.zhar").read_bytes()))
             assert len(out["log"]["entries"]) == 1
 
+    def test_expanduser(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("HOME", str(tmp_path))
+        monkeypatch.setenv("USERPROFILE", str(tmp_path))
+        s = SaveHar()
+        with taddons.context(s, Save()) as tctx:
+            tctx.configure(s, hardump="~/out.har")
+
+            s.response(tflow.tflow())
+            s.done()
+
+            out = json.loads((tmp_path / "out.har").read_bytes())
+            assert len(out["log"]["entries"]) == 1
+
 
 def test_content_raises():
     flow = tflow.tflow(
