@@ -1,5 +1,6 @@
 import asyncio
 import collections
+import sys
 import textwrap
 from dataclasses import dataclass
 from typing import Callable
@@ -71,6 +72,26 @@ async def test_open_connection(result, monkeypatch):
     assert server_connect_error.called == (result != "success")
 
     assert server_disconnected.called == (result == "success")
+
+
+async def test_open_connection_happy_eyeballs(monkeypatch):
+    # IPv6 and IPv4 addresses are tried in parallel (RFC 8305), so a broken
+    # address family does not stall the connection until it times out.
+    open_connection = mock.AsyncMock(return_value=(mock.MagicMock(), mock.MagicMock()))
+    monkeypatch.setattr(asyncio, "open_connection", open_connection)
+    monkeypatch.setattr(MockConnectionHandler, "handle_connection", mock.AsyncMock())
+
+    handler = MockConnectionHandler()
+    await handler.open_connection(
+        commands.OpenConnection(connection=Server(address=("server", 1234)))
+    )
+
+    delay = open_connection.call_args.kwargs["happy_eyeballs_delay"]
+    if sys.version_info >= (3, 13):
+        assert delay == 0.25
+    else:
+        # https://github.com/python/cpython/issues/124309
+        assert delay is None
 
 
 async def test_no_reentrancy(capsys):

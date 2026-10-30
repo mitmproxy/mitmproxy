@@ -11,6 +11,7 @@ import abc
 import asyncio
 import collections
 import logging
+import sys
 import time
 from collections.abc import Awaitable
 from collections.abc import Callable
@@ -45,6 +46,11 @@ from mitmproxy.utils.data import pkg_data
 logger = logging.getLogger(__name__)
 
 UDP_TIMEOUT = 20
+
+# Happy Eyeballs (RFC 8305) for upstream connections. Older Python 3.12 releases can hang in
+# asyncio's staggered_race when eager tasks are used (https://github.com/python/cpython/issues/124309),
+# so we only enable it on Python 3.13+ (None is asyncio's default: no Happy Eyeballs).
+HAPPY_EYEBALLS_DELAY: float | None = 0.25 if sys.version_info >= (3, 13) else None
 
 
 class TimeoutWatchdog:
@@ -212,6 +218,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     reader, writer = await asyncio.open_connection(
                         *command.connection.address,
                         local_addr=command.connection.sockname,
+                        happy_eyeballs_delay=HAPPY_EYEBALLS_DELAY,
                     )
                 elif command.connection.transport_protocol == "udp":
                     reader = writer = await mitmproxy_rs.udp.open_udp_connection(
