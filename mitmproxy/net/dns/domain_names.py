@@ -109,35 +109,67 @@ def pack(name: str) -> bytes:
     return bytes(buffer)
 
 
+# The fields of RDATA in the record types whose domain names may be compressed
+# (RFC 3597, Section 4): "name" is a domain name, "string" a character-string and
+# a number that many octets. Any further data (a signature or a type bitmap)
+# follows the listed fields.
+_RECORD_DATA_FIELDS: dict[int, tuple[str | int, ...]] = {
+    types.CNAME: ("name",),
+    types.MB: ("name",),
+    types.MD: ("name",),
+    types.MF: ("name",),
+    types.MG: ("name",),
+    types.MR: ("name",),
+    types.NS: ("name",),
+    types.PTR: ("name",),
+    types.MINFO: ("name", "name"),
+    types.RP: ("name", "name"),
+    types.MX: (2, "name"),
+    types.AFSDB: (2, "name"),
+    types.RT: (2, "name"),
+    types.PX: (2, "name", "name"),
+    types.SOA: ("name", "name", 20),
+    types.SRV: (6, "name"),
+    types.NAPTR: (4, "string", "string", "string", "name"),
+    types.SIG: (18, "name"),
+    types.NXT: ("name",),
+}
+
+
 def record_data_can_have_compression(record_type: int) -> bool:
-    if record_type in (
-        types.CNAME,
-        types.HINFO,
-        types.MB,
-        types.MD,
-        types.MF,
-        types.MG,
-        types.MINFO,
-        types.MR,
-        types.MX,
-        types.NS,
-        types.PTR,
-        types.SOA,
-        types.TXT,
-        types.RP,
-        types.AFSDB,
-        types.RT,
-        types.SIG,
-        types.PX,
-        types.NXT,
-        types.NAPTR,
-        types.SRV,
-    ):
-        return True
-    return False
+    return record_type in _RECORD_DATA_FIELDS
 
 
 def decompress_from_record_data(
+    buffer: bytes, offset: int, end_data: int, cached_names: Cache, record_type: int
+) -> bytes:
+    # only the domain names are decompressed: other fields can contain bytes with a
+    # leading 0b11 as well (a port of 49164 is 0xc00c), which are not compression pointers.
+    data = bytearray()
+    pos = offset
+    try:
+        for field in _RECORD_DATA_FIELDS[record_type]:
+            if field == "name":
+                name, length = unpack_from_with_compression(buffer, pos, cached_names)
+                data.extend(pack(name))
+            else:
+                if field == "string":
+                    (size,) = _LABEL_SIZE.unpack_from(buffer, pos)
+                    length = _LABEL_SIZE.size + size
+                else:
+                    length = int(field)
+                data.extend(buffer[pos : pos + length])
+            pos += length
+            if pos > end_data:
+                raise struct.error("record data ends within a field")
+    except (struct.error, ValueError):
+        # the data does not have the fields of its type
+        return _decompress_pointers_anywhere(buffer, offset, end_data, cached_names)
+    data.extend(buffer[pos:end_data])
+    return bytes(data)
+
+
+def _decompress_pointers_anywhere(
     buffer: bytes, offset: int, end_data: int, cached_names: Cache
 ) -> bytes:
     # we decompress compression pointers in RDATA by iterating through each byte and checking
