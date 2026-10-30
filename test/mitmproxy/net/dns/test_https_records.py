@@ -79,6 +79,12 @@ class TestHTTPSRecords:
         record = https_records.HTTPSRecord(1, "", {})
         assert https_records.pack(record) == b"\x00\x01\x00"
 
+    def test_priority_is_unsigned(self):
+        # SvcPriority is a number from 0 to 65535 (RFC 9460, Section 2.1)
+        record = https_records.unpack(b"\x9c\x40\x00")
+        assert record.priority == 40000
+        assert https_records.pack(record) == b"\x9c\x40\x00"
+
     @given(st.binary())
     def test_fuzz_unpack(self, data: bytes):
         try:
