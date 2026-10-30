@@ -14,6 +14,7 @@ from OpenSSL import SSL
 
 from mitmproxy import version
 from mitmproxy.utils import asyncio_utils
+from mitmproxy.utils import exit_codes
 
 
 def dump_system_info():
@@ -108,7 +109,7 @@ def dump_info(signal=None, frame=None, file=sys.stdout):  # pragma: no cover
         print("****************************************************")
 
     if os.getenv("MITMPROXY_DEBUG_EXIT"):  # pragma: no cover
-        sys.exit(1)
+        sys.exit(exit_codes.GENERIC_ERROR)
 
 
 def dump_stacks(signal=None, frame=None, file=sys.stdout):
@@ -122,7 +123,7 @@ def dump_stacks(signal=None, frame=None, file=sys.stdout):
                 code.append("  %s" % (line.strip()))
     print("\n".join(code), file=file)
     if os.getenv("MITMPROXY_DEBUG_EXIT"):  # pragma: no cover
-        sys.exit(1)
+        sys.exit(exit_codes.GENERIC_ERROR)
 
 
 def register_info_dumpers():
