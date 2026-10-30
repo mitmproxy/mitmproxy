@@ -2,12 +2,18 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 import { createSlice } from "@reduxjs/toolkit";
 
 interface UiFlowState {
+    // Active tab for the single-column (non-HTTP) flow view.
     tab: string;
+    // Active tabs for the split HTTP request/response panels.
+    tabRequest: string;
+    tabResponse: string;
     contentViewFor: { [messageId: string]: string };
 }
 
 export const defaultState: UiFlowState = {
     tab: "request",
+    tabRequest: "request",
+    tabResponse: "response",
     contentViewFor: {},
 };
 
@@ -17,6 +23,12 @@ const flowsSlice = createSlice({
     reducers: {
         selectTab(state, action: PayloadAction<string>) {
             state.tab = action.payload;
+        },
+        selectRequestTab(state, action: PayloadAction<string>) {
+            state.tabRequest = action.payload;
+        },
+        selectResponseTab(state, action: PayloadAction<string>) {
+            state.tabResponse = action.payload;
         },
         setContentViewFor(
             state,
@@ -29,5 +41,10 @@ const flowsSlice = createSlice({
 });
 
 const { actions, reducer } = flowsSlice;
-export const { selectTab, setContentViewFor } = actions;
+export const {
+    selectTab,
+    selectRequestTab,
+    selectResponseTab,
+    setContentViewFor,
+} = actions;
 export default reducer;

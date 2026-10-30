@@ -1,9 +1,33 @@
-import { selectTab } from "./flow";
+import { selectRequestTab, selectTab } from "./flow";
 import * as flowsActions from "../flows";
 import * as modalActions from "./modal";
-import { tabsForFlow } from "../../components/FlowView";
+import { splitTabsForFlow, tabsForFlow } from "../../components/FlowView";
 import { runCommand } from "../../utils";
 import type { AppDispatch, RootState } from "../store";
+import type { Flow } from "../../flow";
+
+function relativeTab<T extends string>(
+    tabs: T[],
+    current: string,
+    step: number,
+): T {
+    const index = Math.max(
+        0,
+        tabs.findIndex((tab) => tab === current),
+    );
+    return tabs[(index + step + tabs.length) % tabs.length];
+}
+
+// The split view's response panel is left alone: it has a second tab only for WebSocket flows.
+function selectRelativeTab(flow: Flow, state: RootState, step: number) {
+    if (flow.type === "http" && state.options.web_split_flowview) {
+        const tabs = splitTabsForFlow(flow).request;
+        return selectRequestTab(
+            relativeTab(tabs, state.ui.flow.tabRequest, step),
+        );
+    }
+    return selectTab(relativeTab(tabsForFlow(flow), state.ui.flow.tab, step));
+}
 
 export function onKeyDown(e: KeyboardEvent) {
     //console.debug("onKeyDown", e)
@@ -55,31 +79,21 @@ export function onKeyDown(e: KeyboardEvent) {
 
             case "ArrowLeft": {
                 if (!flow) break;
-                const tabs = tabsForFlow(flow);
-                const currentTab = getState().ui.flow.tab;
-                const currentTabIndex = tabs.findIndex(
-                    (tab) => tab === currentTab,
-                );
-                const nextTab =
-                    tabs[
-                        (Math.max(0, currentTabIndex) - 1 + tabs.length) %
-                            tabs.length
-                    ];
-                dispatch(selectTab(nextTab));
+                dispatch(selectRelativeTab(flow, getState(), -1));
                 break;
             }
 
-            case "Tab":
+            case "Tab": {
+                if (!flow) break;
+                dispatch(
+                    selectRelativeTab(flow, getState(), e.shiftKey ? -1 : +1),
+                );
+                break;
+            }
+
             case "ArrowRight": {
                 if (!flow) break;
-                const tabs = tabsForFlow(flow);
-                const currentTab = getState().ui.flow.tab;
-                const currentTabIndex = tabs.findIndex(
-                    (tab) => tab === currentTab,
-                );
-                const nextTab =
-                    tabs[(Math.max(0, currentTabIndex) + 1) % tabs.length];
-                dispatch(selectTab(nextTab));
+                dispatch(selectRelativeTab(flow, getState(), +1));
                 break;
             }
 
