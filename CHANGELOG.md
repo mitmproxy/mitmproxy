@@ -41,7 +41,9 @@
 - Major improvements to the Web UI. (@sleeyax, @lups2000)
 
 ### Other Changes
-
+- Add `tls13_ciphers_client` and `tls13_ciphers_server` options to configure
+  TLS 1.3 ciphersuites. The existing `ciphers_client`/`ciphers_server` options
+  only affect TLS 1.2 and below.
 - Fix the WBXML contentview raising a `KeyError` on tags that are missing from the code page,
   instead of showing them as `UNKNOWN_TAG_XX`.
   ([#8495](https://github.com/mitmproxy/mitmproxy/pull/8495), @kayaal34)
@@ -91,10 +93,6 @@
 - mitmweb: Add a dark theme, selectable via the new `web_theme` option (`system`, `dark`, or `light`).
   `system` follows the operating system's color-scheme preference.
   ([#8317](https://github.com/mitmproxy/mitmproxy/pull/8317), @sleeyax)
-- mitmweb: Make flow-table columns resizable by dragging their header edges, or fit a column to its contents by double-clicking one.
-  Widths persist across reloads.
-  The Appearance section of the Options menu picks which columns the flow table shows and restores their default widths.
-  ([#8358](https://github.com/mitmproxy/mitmproxy/pull/8358), @sleeyax)
 - mitmweb: Show colored status-code badges and method badges in the flow table, and add hover
   tooltips to the TLS, replay, intercept, and error indicators.
   ([#8335](https://github.com/mitmproxy/mitmproxy/pull/8335), @sleeyax)
@@ -120,8 +118,6 @@
   ([#8333](https://github.com/mitmproxy/mitmproxy/pull/8333), @grusski)
 - Use stdlib (PEP-784) for Zstandard compression on Python 3.14+
   ([#8397](https://github.com/mitmproxy/mitmproxy/pull/8397), @Rogdham)
-- mitmweb: Fix the flow details splitter and make dragging resize the panels live.
-  ([#8492](https://github.com/mitmproxy/mitmproxy/pull/8492), @lups2000)
 
 ## 12 May 2026: mitmproxy 12.2.3
 
