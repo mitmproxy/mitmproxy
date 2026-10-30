@@ -275,6 +275,9 @@ class TestTlsConfig:
             assert tssl_client.obj.getpeercert()["subjectAltName"] == (
                 ("DNS", "example.mitmproxy.org"),
             )
+            assert ctx.client.mitmcert == certs.Cert(
+                x509.load_der_x509_certificate(tssl_client.obj.getpeercert(True))
+            )
 
     def test_quic_start_client(self, tdata):
         ta = tlsconfig.TlsConfig()
@@ -307,6 +310,9 @@ class TestTlsConfig:
             assert san.value.get_values_for_type(x509.DNSName) == [
                 "example.mitmproxy.org"
             ]
+            assert ctx.client.mitmcert == certs.Cert(
+                tssl_client.quic.tls._peer_certificate
+            )
 
     @pytest.mark.parametrize(
         ["opts", "trusted_root"],

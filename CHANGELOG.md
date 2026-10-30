@@ -10,6 +10,8 @@
 - Fix filter expressions where a filter without an argument is followed by a closing bracket,
   e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
   ([#8537](https://github.com/mitmproxy/mitmproxy/pull/8537), @qodelicious)
+- Fix `Client.mitmcert` always being `None`. It now holds the certificate mitmproxy presented to the client.
+  ([#8539](https://github.com/mitmproxy/mitmproxy/pull/8539), @junkerderprovinz)
 
 ## 25 October 2026: mitmproxy 12.3.1
 
