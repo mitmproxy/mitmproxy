@@ -8,11 +8,14 @@ from typing import TypeVar
 from unittest.mock import MagicMock
 
 import pytest
+from aioquic import tls as aioquic_tls
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.quic import events as quic_events
 from aioquic.quic.configuration import QuicConfiguration
 from aioquic.quic.connection import pull_quic_header
 from aioquic.quic.connection import QuicConnection
+from aioquic.quic.packet import QuicFrameType
+from aioquic.quic.packet_builder import QuicDeliveryState
 
 from mitmproxy import connection
 from mitmproxy.proxy import commands
@@ -327,12 +330,65 @@ class TestQuicLayer:
         assert playbook >> events.DataReceived(tctx.client, b"")
         assert b"packet" == conn._streams[42].sender._buffer
 
-    def test_stream_reset(self, tctx: context.Context):
-        playbook, conn = make_mock_quic(tctx, quic_events.StreamReset(123, 42))
-        assert 42 not in conn._streams
+    @pytest.mark.parametrize("stream_id", [0, 1, 42])
+    def test_stream_reset(self, tctx: context.Context, stream_id):
+        playbook, conn = make_mock_quic(tctx, quic_events.StreamReset(123, stream_id))
+        conn._is_client = not (stream_id & 1)
+        assert stream_id not in conn._streams
         assert playbook >> events.DataReceived(tctx.client, b"")
-        assert conn._streams[42].sender.reset_pending
-        assert conn._streams[42].sender._reset_error_code == 123
+        assert conn._streams[stream_id].sender.reset_pending
+        assert conn._streams[stream_id].sender._reset_error_code == 123
+
+        conn.event = quic_events.StreamReset(456, stream_id)
+        assert playbook >> events.DataReceived(tctx.client, b"")
+        assert conn._streams[stream_id].sender._reset_error_code == 123
+
+    @pytest.mark.parametrize("stream_id", [1, 3])
+    def test_stream_reset_invalid(self, tctx, stream_id):
+        playbook, conn = make_mock_quic(tctx)
+        assert playbook
+        with pytest.raises(ValueError, match="Cannot send data on .*peer-initiated"):
+            list(
+                playbook.layer._handle_command(
+                    ResetQuicStream(tctx.client, stream_id, 123)
+                )
+            )
+
+    @pytest.mark.parametrize("is_client", [True, False])
+    @pytest.mark.parametrize("peer_initiated", [True, False])
+    def test_stream_reset_retired(self, tctx, is_client, peer_initiated):
+        stream_id = int(is_client == peer_initiated)
+        playbook, conn = make_mock_quic(tctx)
+        conn.connect(("localhost", 443), now=0)
+        conn._is_client = is_client
+        if peer_initiated:
+            stream = conn._get_or_create_stream(QuicFrameType.STREAM_BASE, stream_id)
+        else:
+            stream = conn._get_or_create_stream_for_send(stream_id)
+        stream.receiver.handle_reset(final_size=0)
+        stream.sender.reset(123)
+        stream.sender.get_reset_frame()
+        stream.sender.on_reset_delivery(QuicDeliveryState.ACKED)
+        assert stream.is_finished
+
+        # Let aioquic discard the finished stream when writing application data.
+        conn._cryptos[aioquic_tls.Epoch.ZERO_RTT].send.setup(
+            cipher_suite=aioquic_tls.CipherSuite.AES_128_GCM_SHA256,
+            secret=bytes(32),
+            version=conn._version,
+        )
+        builder = MagicMock()
+        conn._write_application(builder, conn._network_paths[0], now=0)
+        assert stream_id in conn._streams_finished
+        assert stream_id not in conn._streams
+        builder.reset_mock()
+
+        for error_code in (456, 789):
+            conn.event = quic_events.StreamReset(error_code, stream_id)
+            assert playbook >> events.DataReceived(tctx.client, b"")
+            assert stream_id not in conn._streams
+        conn._write_application(builder, conn._network_paths[0], now=0)
+        builder.start_frame.assert_not_called()
 
     def test_stream_stop(self, tctx: context.Context):
         playbook, conn = make_mock_quic(tctx, quic_events.StopSendingReceived(123, 24))

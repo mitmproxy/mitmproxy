@@ -10,6 +10,8 @@
 - Fix filter expressions where a filter without an argument is followed by a closing bracket,
   e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
   ([#8537](https://github.com/mitmproxy/mitmproxy/pull/8537), @qodelicious)
+- Fix crashes when resetting retired QUIC streams.
+  ([#8496](https://github.com/mitmproxy/mitmproxy/pull/8496), @mvanhorn)
 
 ## 25 October 2026: mitmproxy 12.3.1
 
