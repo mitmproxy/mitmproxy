@@ -129,7 +129,7 @@ def test_cmd():
 def test_cutspec():
     with taddons.context() as tctx:
         b = mitmproxy.types._CutSpecType()
-        b.parse(tctx.master.commands, mitmproxy.types.CutSpec, "foo,bar") == [
+        assert b.parse(tctx.master.commands, mitmproxy.types.CutSpec, "foo,bar") == [
             "foo",
             "bar",
         ]

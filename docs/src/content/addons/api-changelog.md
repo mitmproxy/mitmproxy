@@ -72,7 +72,7 @@ As the passed objects are different now, we've also taken this opportunity to in
 #### Logging
 
 The `log` event has been renamed to `add_log`. This fixes a consistent source of errors where users imported 
-modules with the name "log", which were then inadvertedly picked up.
+modules with the name "log", which were then inadvertently picked up.
 
 #### Contentviews
 

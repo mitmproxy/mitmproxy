@@ -26,9 +26,9 @@ jobs:
     name: ${{ matrix.env }}
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
-      - uses: mhils/workflows/setup-uv@acc73c7af100db9fb3f1ad3c0178d382048e943f
-      - uses: mhils/workflows/uv-sync@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/checkout@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
+      - uses: mhils/workflows/setup-uv@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
+      - uses: mhils/workflows/uv-sync@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
         with:
           args: --only-group tox
 
@@ -40,10 +40,12 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            py: "3.14"
+            py: "3.15"
           - os: windows-latest
-            py: "3.14"
+            py: "3.15"
           - os: macos-latest
+            py: "3.15"
+          - os: ubuntu-latest
             py: "3.14"
           - os: ubuntu-latest
             py: "3.13"
@@ -51,14 +53,14 @@ jobs:
             py: "3.12"
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
-      - uses: mhils/workflows/setup-uv@acc73c7af100db9fb3f1ad3c0178d382048e943f
-      - uses: mhils/workflows/uv-sync@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/checkout@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
+      - uses: mhils/workflows/setup-uv@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
+      - uses: mhils/workflows/uv-sync@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
         with:
           args: --only-group tox
 
       - run: tox -e py${{ matrix.py }}
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
@@ -76,10 +78,10 @@ jobs:
             platform: windows
           - image: ubuntu-latest
             platform: linux-x86_64
-            container: debian@sha256:aeec37aebc55ca5cc6fcfb8d5f6ae2fd43d5017ad849e6e2fdb5325d61e144db  # Old Debian 11 so we get oldest glibc possible.
+            container: debian@sha256:f37a335e82bca302e955fa39f9dfe28f1be618f016f8a2b56318e5a5111afc26  # Old Debian 12 so we get oldest glibc possible.
           - image: ubuntu-24.04-arm
             platform: linux-arm64
-            container: debian@sha256:aeec37aebc55ca5cc6fcfb8d5f6ae2fd43d5017ad849e6e2fdb5325d61e144db  # Old Debian 11 so we get oldest glibc possible.
+            container: debian@sha256:f37a335e82bca302e955fa39f9dfe28f1be618f016f8a2b56318e5a5111afc26  # Old Debian 12 so we get oldest glibc possible.
     runs-on: ${{ matrix.image }}
     container:
       image: ${{ matrix.container }}
@@ -88,9 +90,9 @@ jobs:
         run: |
           apt-get update
           apt-get install --no-install-recommends -y git ca-certificates binutils build-essential
-      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
-      - uses: mhils/workflows/setup-uv@acc73c7af100db9fb3f1ad3c0178d382048e943f
-      - uses: mhils/workflows/uv-sync@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/checkout@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
+      - uses: mhils/workflows/setup-uv@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
+      - uses: mhils/workflows/uv-sync@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
       - run: uv pip install .  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
 
       - if: runner.os == 'macOS' && github.repository == 'mitmproxy/mitmproxy'
@@ -125,7 +127,7 @@ jobs:
           path: release/dist
 
   build-wheel:
-    uses: mhils/workflows/.github/workflows/python-build.yml@acc73c7af100db9fb3f1ad3c0178d382048e943f
+    uses: mhils/workflows/.github/workflows/python-build.yml@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
     with:
       artifact: binaries.wheel
 
@@ -137,9 +139,9 @@ jobs:
         startsWith(github.ref, 'refs/tags/')
       )
     steps:
-      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
-      - uses: mhils/workflows/setup-uv@acc73c7af100db9fb3f1ad3c0178d382048e943f
-      - uses: mhils/workflows/uv-sync@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/checkout@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
+      - uses: mhils/workflows/setup-uv@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
+      - uses: mhils/workflows/uv-sync@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
       - run: uv pip install .  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
       - run: python -u release/build.py installbuilder-installer msix-installer
         env:
@@ -153,7 +155,7 @@ jobs:
   test-web-ui:
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/checkout@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .github/node-version.txt
@@ -170,7 +172,7 @@ jobs:
         run: npm ci
       - working-directory: ./web
         run: npm test
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./web/coverage/coverage-final.json
@@ -179,7 +181,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-wheel
     steps:
-      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/checkout@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: binaries.wheel
@@ -192,9 +194,9 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
-      - uses: mhils/workflows/setup-uv@acc73c7af100db9fb3f1ad3c0178d382048e943f
-      - uses: mhils/workflows/uv-sync@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/checkout@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
+      - uses: mhils/workflows/setup-uv@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
+      - uses: mhils/workflows/uv-sync@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
       - run: |
           wget -q https://github.com/gohugoio/hugo/releases/download/v0.139.3/hugo_extended_0.139.3_linux-amd64.deb
           echo "3e58800d1fee57269208d07d104ae1a6ab886615344099f2dca0c6ad5279bc11 hugo_extended_0.139.3_linux-amd64.deb" | sha256sum -c
@@ -226,7 +228,7 @@ jobs:
     - build-wheel
     - build-windows-installer
     - docs
-    uses: mhils/workflows/.github/workflows/alls-green.yml@acc73c7af100db9fb3f1ad3c0178d382048e943f
+    uses: mhils/workflows/.github/workflows/alls-green.yml@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
     with:
       jobs: ${{ toJSON(needs) }}
       allowed-skips: build-windows-installer
@@ -246,13 +248,13 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/checkout@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: binaries.wheel
           path: release/docker
-      - uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
-      - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v1.6.0
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v1.6.0
         with:
           cache-binary: false
 
@@ -286,7 +288,7 @@ jobs:
 
       - name: Build and push
         id: push
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: release/docker
           platforms: linux/amd64,linux/arm64
@@ -326,9 +328,9 @@ jobs:
       R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
       R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
     steps:
-      - uses: mhils/workflows/checkout@acc73c7af100db9fb3f1ad3c0178d382048e943f
-      - uses: mhils/workflows/setup-uv@acc73c7af100db9fb3f1ad3c0178d382048e943f
-      - uses: mhils/workflows/uv-sync@acc73c7af100db9fb3f1ad3c0178d382048e943f
+      - uses: mhils/workflows/checkout@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
+      - uses: mhils/workflows/setup-uv@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
+      - uses: mhils/workflows/uv-sync@589b2878317d2d57c315c5825f9a1cfe9c76a7c3
         with:
           args: --only-group deploy
 

@@ -75,6 +75,9 @@
     // Flow table header cell the flows are sorted by, one shade off the header row
     --mitmweb-th-sorted-bg: #fafafa;
 
+    // Flow table column resize handle under the cursor
+    --mitmweb-col-resize-hover: rgba(0, 0, 0, 15%);
+
     // Flow table row states (base rows reuse --mitmweb-bg / --mitmweb-bg-alt; -alt is the even-row shade)
     --mitmweb-row-highlight: hsl(48, 100%, 80%);
     --mitmweb-row-highlight-alt: hsl(48, 100%, 75%);
@@ -163,6 +166,9 @@
 
     // Flow table header cell the flows are sorted by, one shade off the header row
     --mitmweb-th-sorted-bg: #2d2d2d;
+
+    // Flow table column resize handle under the cursor
+    --mitmweb-col-resize-hover: rgba(255, 255, 255, 25%);
 
     // Flow table row states (base rows reuse --mitmweb-bg / --mitmweb-bg-alt; -alt is the even-row shade)
     --mitmweb-row-highlight: hsl(48, 60%, 26%);
@@ -464,38 +470,6 @@ textarea {
     font-size: 12px;
     line-height: 1.5;
     border-radius: 3px;
-}
-
-.label {
-    display: inline;
-    padding: 0.2em 0.6em 0.3em;
-    font-size: 75%;
-    font-weight: 700;
-    line-height: 1;
-    color: #fff;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: baseline;
-    border-radius: 0.25em;
-}
-
-.label-default {
-    color: var(--mitmweb-neutral-soft-fg);
-    background-color: var(--mitmweb-neutral-soft-bg);
-}
-
-.label-primary {
-    background-color: var(--mitmweb-accent);
-}
-
-.label-success {
-    color: var(--mitmweb-success-soft-fg);
-    background-color: var(--mitmweb-success-soft-bg);
-}
-
-.label-danger {
-    color: var(--mitmweb-danger-soft-fg);
-    background-color: var(--mitmweb-danger-soft-bg);
 }
 
 .alert {

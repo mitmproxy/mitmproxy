@@ -262,7 +262,7 @@ class View(collections.abc.Sequence):
     @command.command("view.focus.go")
     def go(self, offset: int) -> None:
         """
-        Go to a specified offset. Positive offests are from the beginning of
+        Go to a specified offset. Positive offsets are from the beginning of
         the view, negative from the end of the view, so that 0 is the first
         flow, -1 is the last flow.
         """

@@ -45,6 +45,8 @@ class Browser:
             self.launch_chrome()
         elif browser == "firefox":
             self.launch_firefox()
+        elif browser == "edge":
+            self.launch_edge()
         else:
             logging.log(ALERT, "Invalid browser name.")
 
@@ -70,6 +72,51 @@ class Browser:
             "org.chromium.Chromium",
             "com.github.Eloston.UngoogledChromium",
             "com.google.ChromeDev",
+        )
+
+        if not cmd:
+            logging.log(
+                ALERT, "Your platform is not supported yet - please submit a patch."
+            )
+            return
+
+        tdir = tempfile.TemporaryDirectory()
+        self.tdir.append(tdir)
+        self.browser.append(
+            subprocess.Popen(
+                [
+                    *cmd,
+                    "--user-data-dir=%s" % str(tdir.name),
+                    "--proxy-server={}:{}".format(
+                        ctx.options.listen_host or "127.0.0.1",
+                        ctx.options.listen_port or "8080",
+                    ),
+                    "--disable-fre",
+                    "--no-default-browser-check",
+                    "--no-first-run",
+                    "--disable-extensions",
+                    "about:blank",
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        )
+
+    def launch_edge(self) -> None:
+        """
+        Start an isolated instance of Edge that points to the currently
+        running proxy.
+        """
+        cmd = find_executable_cmd(
+            "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+            r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+            r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+            "microsoft-edge",
+            "microsoft-edge-stable",
+            "microsoft-edge-dev",
+            "microsoft-edge-beta",
+        ) or find_flatpak_cmd(
+            "com.microsoft.Edge",
         )
 
         if not cmd:

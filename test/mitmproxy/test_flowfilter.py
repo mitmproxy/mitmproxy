@@ -386,6 +386,14 @@ class TestMatchingHTTPFlow:
         assert self.q("!~c 201 !~c 202", s)
         assert not self.q("!~c 201 !~c 200", s)
 
+    def test_unary_before_closing_bracket(self):
+        s = self.resp()
+        assert self.q("(~s)", s)
+        assert not self.q("!(~s)", s)
+        assert self.q("~c 200 & !(~q)", s)
+        assert not self.q("(~h head & ~q)", s)
+        assert self.q("(~h nohead | ~s)", s)
+
     def test_replay(self):
         f = tflow.tflow()
         assert not self.q("~replay", f)
