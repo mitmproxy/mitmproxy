@@ -132,6 +132,14 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert resp.code == 200
         assert get_json(resp) == {"valid": True, "description": ""}
 
+    def test_filter_validation_whitespace(self):
+        resp = self.fetch("/filter/validate?expression=%20%20%20")
+        assert resp.code == 200
+        assert get_json(resp) == {
+            "valid": False,
+            "error": "Invalid filter expression: '   '",
+        }
+
     def test_filter_validation_bad_request(self):
         resp = self.fetch("/filter/validate")
         assert resp.code == 400

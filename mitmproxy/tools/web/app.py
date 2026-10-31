@@ -376,7 +376,9 @@ class FilterHelp(RequestHandler):
 class FilterDescription(RequestHandler):
     def get(self) -> None:
         try:
-            expression = self.get_query_argument("expression")
+            # strip=False: validate the exact expression the client applies,
+            # so whitespace-only input is rejected here too, not treated as empty.
+            expression = self.get_query_argument("expression", strip=False)
         except tornado.web.MissingArgumentError:
             raise APIError(400, "Missing filter expression.")
 
