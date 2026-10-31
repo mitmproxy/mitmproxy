@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix `cert_passphrase` from a confdir's `config.yaml` being ignored when the confdir is set
+  with `--set confdir=...`. The encrypted CA in that directory was loaded before the passphrase,
+  and mitmproxy exited at startup.
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)

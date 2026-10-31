@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import copy
 import logging
 import os
 import signal
@@ -37,6 +38,33 @@ def process_options(parser, opts, args):
         key: val for key, val in vars(args).items() if key in opts and val is not None
     }
     opts.update(**adict)
+
+
+def apply_startup_options(opts: options.Options, setoptions: Sequence[str]) -> None:
+    """
+    Apply the --set options and the config file in the resulting confdir.
+
+    Both are worked out on a copy of the options first and then applied in a
+    single update, so that addons only see the final values. Otherwise an addon
+    reacting to --set confdir=... runs before options from that directory's
+    config file (such as cert_passphrase) are in place. Precedence is
+    unchanged: the config file overrides --set.
+    """
+    staged = copy.deepcopy(opts)
+    staged.set(*setoptions, defer=True)
+    optmanager.load_paths(
+        staged,
+        os.path.join(staged.confdir, "config.yaml"),
+        os.path.join(staged.confdir, "config.yml"),
+    )
+    opts.deferred.update(staged.deferred)
+    opts.update(
+        **{
+            k: getattr(staged, k)
+            for k in staged.keys()
+            if getattr(staged, k) != getattr(opts, k)
+        }
+    )
 
 
 T = TypeVar("T", bound=master.Master)
@@ -82,12 +110,7 @@ def run(
             sys.exit(1)
 
         try:
-            opts.set(*args.setoptions, defer=True)
-            optmanager.load_paths(
-                opts,
-                os.path.join(opts.confdir, "config.yaml"),
-                os.path.join(opts.confdir, "config.yml"),
-            )
+            apply_startup_options(opts, args.setoptions)
             process_options(parser, opts, args)
 
             if args.options:
