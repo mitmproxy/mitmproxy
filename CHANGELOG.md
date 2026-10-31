@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Automatically discover and load addons installed via the `mitmproxy.addons` entry point group.
+  ([#7755](https://github.com/mitmproxy/mitmproxy/issues/7755))
+
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)
