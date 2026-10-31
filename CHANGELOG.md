@@ -13,6 +13,9 @@
 - Fix filter expressions where a filter without an argument is followed by a closing bracket,
   e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
   ([#8537](https://github.com/mitmproxy/mitmproxy/pull/8537), @qodelicious)
+- Send plaintext HTTP requests in absolute-form instead of tunneling them with CONNECT
+  when an addon routes them through an upstream proxy in regular mode.
+  ([#8542](https://github.com/mitmproxy/mitmproxy/pull/8542), @nk-batman21)
 
 ## 25 October 2026: mitmproxy 12.3.1
 
