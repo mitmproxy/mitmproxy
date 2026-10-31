@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Automatically discover and load addons installed via the `mitmproxy.addons` entry point group.
+  ([#7755](https://github.com/mitmproxy/mitmproxy/issues/7755))
 - Speed up addon event dispatch by skipping addons that don't implement the event.
   This saves work on every flow and makes plain HTTP proxying noticeably faster.
   ([#8577](https://github.com/mitmproxy/mitmproxy/pull/8577), @b84330808)
