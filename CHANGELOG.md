@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Remove dead compatibility branches for Python versions below the supported
+  minimum of 3.12, including `typing_extensions` import fallbacks and a
+  duplicated branch in `Cert.has_expired`.
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)
