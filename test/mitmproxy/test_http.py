@@ -1110,6 +1110,23 @@ class TestMessageContentEncoding:
 
 
 class TestMessageText:
+    @pytest.mark.parametrize(
+        "content_type",
+        [
+            "text/plain; Charset=UTF-8",
+            "text/plain; CHARSET=UTF-8",
+            "Application/Json",
+            "TEXT/HTML",
+            "APPLICATION/XML",
+            "TEXT/CSS",
+            "Application/JavaScript",
+        ],
+    )
+    def test_content_type_case_insensitive(self, content_type):
+        r = tresp(content=b"\xc3\xbc")
+        r.headers["content-type"] = content_type
+        assert r.text == "ü"
+
     def test_simple(self):
         r = tresp(content=b"\xfc")
         assert r.raw_content == b"\xfc"

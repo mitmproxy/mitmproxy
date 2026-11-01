@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- Handle Content-Type media types and parameter names case-insensitively when decoding HTTP message text.
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)

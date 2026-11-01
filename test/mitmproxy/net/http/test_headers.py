@@ -15,6 +15,12 @@ def test_parse_content_type():
     v = p("text/html; charset=UTF-8")
     assert v == ("text", "html", {"charset": "UTF-8"})
 
+    assert p("Text/HTML; Charset=UTF-8; Boundary=AaB03x") == (
+        "text",
+        "html",
+        {"charset": "UTF-8", "boundary": "AaB03x"},
+    )
+
 
 def test_assemble_content_type():
     p = assemble_content_type
