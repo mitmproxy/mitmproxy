@@ -1185,15 +1185,15 @@ dev = [
     { name = "pytest-xdist", specifier = "==3.8.0" },
     { name = "requests", specifier = "==2.34.2" },
     { name = "ruff", specifier = "==0.16.9" },
-    { name = "tox", specifier = "==4.55.1" },
-    { name = "tox-uv", specifier = "==1.35.2" },
+    { name = "tox", specifier = "==4.67.1" },
+    { name = "tox-uv", specifier = "==1.37.0" },
     { name = "types-requests", specifier = "==2.33.0.20260408" },
     { name = "wheel", specifier = "==0.48.0" },
 ]
 ruff = [{ name = "ruff", specifier = "==0.16.9" }]
 tox = [
-    { name = "tox", specifier = "==4.55.1" },
-    { name = "tox-uv", specifier = "==1.35.2" },
+    { name = "tox", specifier = "==4.67.1" },
+    { name = "tox-uv", specifier = "==1.37.0" },
 ]
 
 [[package]]
@@ -1643,15 +1643,14 @@ wheels = [
 
 [[package]]
 name = "python-discovery"
-version = "1.3.0"
+version = "1.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "filelock" },
-    { name = "platformdirs" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ae/e0/cc5a8653e9a24f6cf84768f05064aa8ed5a83dcefd5e2a043db14a1c5f44/python_discovery-1.3.0.tar.gz", hash = "sha256:d098f1e86be5d45fe4d14bf1029294aabbd332f4321179dec85e76cddce834b0", size = 63925, upload-time = "2026-05-05T14:38:39.769Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/86/15/0405206e0cfe0c14b91ac038d31f30d1dd78139b3b2a285e6be41bf6e5af/python_discovery-1.9.0.tar.gz", hash = "sha256:88beb57e51b919c30f303b053ec41359298ca349192035b0a802c76347ae96d7", size = 125151, upload-time = "2026-10-30T23:24:24.91Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/30/d4/24d543ab8b8158b7f5a97113c831205f5c900c92c8762b1e7f44b7ea0405/python_discovery-1.3.0-py3-none-any.whl", hash = "sha256:441d9ced3dfce36e113beb35ca302c71c7ef06f3c0f9c227a0b9bb3bd49b9e9f", size = 33124, upload-time = "2026-05-05T14:38:38.539Z" },
+    { url = "https://files.pythonhosted.org/packages/cb/3c/da1cae963a076132dbc4d3c1f0292dd2f373b9d3e072d42f4620801159c1/python_discovery-1.9.0-py3-none-any.whl", hash = "sha256:fb65edfff3541b7ceb3a39be334a0f69f4cb5148287a053e1874748742fda93b", size = 39841, upload-time = "2026-10-30T23:24:23.452Z" },
 ]
 
 [[package]]
@@ -1901,7 +1900,7 @@ wheels = [
 
 [[package]]
 name = "tox"
-version = "4.55.1"
+version = "4.67.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cachetools" },
@@ -1913,36 +1912,37 @@ dependencies = [
     { name = "pyproject-api" },
     { name = "python-discovery" },
     { name = "tomli-w" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
     { name = "virtualenv" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/79/5b/4f09156a3f7bf3c4fa23212717f097c59126d81e2c557e6fd872a62db38a/tox-4.55.1.tar.gz", hash = "sha256:0678fbf26dd5b559b1ef128fa4388325920219322ebc8cc5f3497627c00f4472", size = 280676, upload-time = "2026-06-03T20:01:03.487Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/63/6e/677274ae411fa13f5c2ea5c633a6abfa0886e949bd2ef53c7e564a0b0b2e/tox-4.67.1.tar.gz", hash = "sha256:a68602f64421b199016127364ee47347b958391d19c2b2e53fe95673a8fe98e9", size = 347211, upload-time = "2026-10-18T07:34:04.348Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bb/fd/394f00f3d3e23d87eb7b20276d88fe835e48780d3eb30e6f362428bb80c8/tox-4.55.1-py3-none-any.whl", hash = "sha256:e2084be6dfdef96ba1bed4948e6a1f73613d6952e1477be5dca45653d4c053c8", size = 215360, upload-time = "2026-06-03T20:01:01.967Z" },
+    { url = "https://files.pythonhosted.org/packages/0c/ac/cfba9de0f43b58d199f47c441efd1b670b55c480f3ec18bc1345f752c3d8/tox-4.67.1-py3-none-any.whl", hash = "sha256:23d614cb703e1f7bd39e00c046d4c261b63fb9986e185134c6be2f93531d9726", size = 238078, upload-time = "2026-10-18T07:34:02.728Z" },
 ]
 
 [[package]]
 name = "tox-uv"
-version = "1.35.2"
+version = "1.37.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "tox-uv-bare" },
     { name = "uv" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ca/dc/6e9994c799bdbb309f829dd6b8d98764dd0757302f3433c380438a3a127b/tox_uv-1.35.2-py3-none-any.whl", hash = "sha256:2d99b0e3c782ba49e7cbe521c8d344758595961b17a3633738d67096641c1bde", size = 6565, upload-time = "2026-05-05T01:34:16.07Z" },
+    { url = "https://files.pythonhosted.org/packages/2a/65/7cf72148bff33fd0a572e620c7b1573d6a5e4812e9207878d4e29e4a938a/tox_uv-1.37.0-py3-none-any.whl", hash = "sha256:f2e7de8f12d7ffd850d2a3dcebf278cf72a8952a9abe75d84cfb54a76ee17ae4", size = 6564, upload-time = "2026-10-11T00:33:49.804Z" },
 ]
 
 [[package]]
 name = "tox-uv-bare"
-version = "1.35.2"
+version = "1.37.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "packaging" },
     { name = "tox" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0a/cb/168dc1ccf24e4065a9a0a33df55709ed2b5eb73bd2b13ddd53187e5dffb8/tox_uv_bare-1.35.2.tar.gz", hash = "sha256:49e28a804c97f23ea17e25859960c0fa78f35bccb7e14344cfd840e89a9aade9", size = 32333, upload-time = "2026-05-05T01:34:18.916Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/31/27/203b4dbe73cc6dadc2480e319631310981540dabe95893de983106d7b103/tox_uv_bare-1.37.0.tar.gz", hash = "sha256:97418f2febec7da57d010ca6ffed8c7d56be9d425f381b74c7fe8d0213fccad9", size = 32961, upload-time = "2026-10-11T00:33:52.786Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5f/53/4a33dc81da39db7b31e5622333df361e8fe055b7ec636bd5fea762c9182d/tox_uv_bare-1.35.2-py3-none-any.whl", hash = "sha256:c0d590a41d1054a1ad0874e9e5943ff52402786e3d4599d8f8d37a65b566ef53", size = 22307, upload-time = "2026-05-05T01:34:17.681Z" },
+    { url = "https://files.pythonhosted.org/packages/52/4c/9596668bb448b868c684a3df9190103e9bc2f7de13e646628ac914f928be/tox_uv_bare-1.37.0-py3-none-any.whl", hash = "sha256:a596c0726690e2182cc85dfbc2f39e6fddacb8f7ea08bf8bace122a17397cd13", size = 22322, upload-time = "2026-10-11T00:33:51.338Z" },
 ]
 
 [[package]]
