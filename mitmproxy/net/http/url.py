@@ -17,6 +17,24 @@ from mitmproxy.utils.strutils import always_str
 
 _authority_re = re.compile(r"^(?P<host>[^:]+|\[.+\])(?::(?P<port>\d+))?$")
 
+# Matches an existing percent escape, e.g. "%2F". The capture group makes re.split keep it.
+_percent_escape_re = re.compile(r"(%[0-9A-Fa-f]{2})")
+
+
+def _quote_keep_escapes(s: str, safe: str = "/") -> str:
+    """Percent-encode `s` without double-encoding the percent escapes it already contains.
+
+    ``urllib.parse.quote()`` escapes every ``%``, so quoting a path that mixes escapes with
+    non-ASCII text (``/a%2Fb/hä``) would produce ``/a%252Fb/h%C3%A4`` and request a different
+    resource. Existing ``%HH`` sequences are left as they are and everything else is quoted.
+    """
+    parts = _percent_escape_re.split(s)
+    # With a capturing group, the escapes are the odd-indexed parts.
+    return "".join(
+        part if i % 2 else urllib.parse.quote(part, safe=safe)
+        for i, part in enumerate(parts)
+    )
+
 
 def parse(url: str | bytes) -> tuple[bytes, bytes, int, bytes]:
     """
@@ -46,9 +64,13 @@ def parse(url: str | bytes) -> tuple[bytes, bytes, int, bytes]:
     if isinstance(url, bytes):
         url = url.decode()
         if not ascii_check(url):
+            # urllib.parse.urlsplit returns (scheme, netloc, path, query, fragment),
+            # so percent-encode non-ASCII characters in the path and the query.
+            # Query delimiters must be preserved to keep the query intact.
             url = urllib.parse.urlsplit(url)  # type: ignore
             url = list(url)  # type: ignore
-            url[3] = urllib.parse.quote(url[3])  # type: ignore
+            url[2] = _quote_keep_escapes(url[2])  # type: ignore
+            url[3] = _quote_keep_escapes(url[3], safe="/?@:!$&'()*+,;=")  # type: ignore
             url = urllib.parse.urlunsplit(url)  # type: ignore
 
     parsed: urllib.parse.ParseResult = urllib.parse.urlparse(url)

@@ -59,8 +59,38 @@ def test_ascii_check():
     assert port == 443
     assert (
         full_path
-        == b"/?flag%3DselectCourse%26lc_id%3D42825%26lc_name%3D%E8%8C%85%E8%8E%BD%E8%8E"
-        b"%BD%E7%8C%AB%E6%B0%93%E7%8C%AB%E6%B0%93"
+        == b"/?flag=selectCourse&lc_id=42825&lc_name=%E8%8C%85%E8%8E%BD%E8%8E%BD%E7%8C"
+        b"%AB%E6%B0%93%E7%8C%AB%E6%B0%93"
+    )
+
+
+def test_parse_non_ascii():
+    # Non-ASCII characters in the path are percent-encoded, the URL is accepted.
+    assert url.parse(b"http://foo.com/h\xc3\xa4llo") == (
+        b"http",
+        b"foo.com",
+        80,
+        b"/h%C3%A4llo",
+    )
+    # Query delimiters are preserved, non-ASCII characters are percent-encoded.
+    assert url.parse(b"http://foo.com/bar?q=h\xc3\xa4llo&x=1") == (
+        b"http",
+        b"foo.com",
+        80,
+        b"/bar?q=h%C3%A4llo&x=1",
+    )
+    # Existing percent escapes are preserved instead of being double-encoded.
+    assert url.parse(b"http://foo.com/a%2Fb/h\xc3\xa4llo") == (
+        b"http",
+        b"foo.com",
+        80,
+        b"/a%2Fb/h%C3%A4llo",
+    )
+    assert url.parse(b"http://foo.com/bar?q=%2Fh\xc3\xa4llo&x=%E8%8C%85") == (
+        b"http",
+        b"foo.com",
+        80,
+        b"/bar?q=%2Fh%C3%A4llo&x=%E8%8C%85",
     )
 
 
