@@ -85,6 +85,27 @@ def _get_name(itm: Any) -> str:
     return itm.__class__.__name__.lower()
 
 
+RESERVED_ADDON_NAMES: frozenset[str] = frozenset(
+    {_get_name(cls) for cls in BUILTIN_ADDON_CLASSES}
+    | {
+        "consoleaddon",
+        "dumper",
+        "errorcheck",
+        "eventstore",
+        "intercept",
+        "keepserving",
+        "keymapconfig",
+        "readfile",
+        "readfilestdin",
+        "staticviewer",
+        "termlog",
+        "view",
+        "webaddon",
+        "webauth",
+    }
+)
+
+
 def _traverse(chain: Any):
     for a in chain:
         yield a
@@ -92,32 +113,40 @@ def _traverse(chain: Any):
             yield from _traverse(a.addons)
 
 
+def _make_safe_load(orig_fn: Any, name: str, ep_name: str) -> Any:
+    @functools.wraps(orig_fn)
+    def safe_load(loader: Any, *args: Any, **kwargs: Any) -> Any:
+        try:
+            return orig_fn(loader, *args, **kwargs)
+        except Exception:
+            logger.error(
+                f"Addon '{name}' from entry point '{ep_name}' raised an exception in load():",
+                exc_info=True,
+            )
+
+    return safe_load
+
+
 def _wrap_safe_load(addon: Any, ep_name: str) -> None:
     for a in _traverse([addon]):
         load_fn = getattr(a, "load", None)
         if callable(load_fn):
-            orig_load = load_fn
-
-            @functools.wraps(orig_load)
-            def safe_load(loader: Any, *args: Any, **kwargs: Any) -> Any:
-                try:
-                    return orig_load(loader, *args, **kwargs)
-                except Exception:
-                    logger.error(
-                        f"Addon '{_get_name(a)}' from entry point '{ep_name}' raised an exception in load():",
-                        exc_info=True,
-                    )
-
+            addon_name = _get_name(a)
+            safe_load = _make_safe_load(load_fn, addon_name, ep_name)
             with contextlib.suppress(AttributeError, TypeError):
                 a.load = safe_load
 
 
+def _is_truthy(val: str | None) -> bool:
+    if val is None:
+        return False
+    return val.strip().lower() not in ("", "0", "false", "no")
+
+
 def is_entrypoints_disabled() -> bool:
-    for var in ("MITMPROXY_NO_ENTRYPOINTS", "MITMPROXY_NO_PLUGINS"):
-        val = os.environ.get(var)
-        if val is not None:
-            return val.strip().lower() not in ("", "0", "false", "no")
-    return False
+    return _is_truthy(os.environ.get("MITMPROXY_NO_ENTRYPOINTS")) or _is_truthy(
+        os.environ.get("MITMPROXY_NO_PLUGINS")
+    )
 
 
 def entrypoint_addons(reserved_names: set[str] | None = None) -> list[Any]:
@@ -129,20 +158,25 @@ def entrypoint_addons(reserved_names: set[str] | None = None) -> list[Any]:
       Only trusted packages should be installed in the environment running mitmproxy.
     - Ordering Contract: Built-in addons load first in fixed order. Entry points load afterwards,
       sorted deterministically by entry point name (ep.name) in ascending order.
-    - Idempotency Contract: This function is a pure factory; each invocation yields fresh instances.
-    - Isolation Policy: Third-party entry points must never crash mitmproxy startup. Any entry point
-      that fails during discovery, instantiation, factory invocation, name resolution, duplicate/collision
-      checking, or load() hook execution is logged as an error and skipped atomically without leaving
-      partial registration state.
+    - Instantiation Contract: Entry points resolving to classes or zero-argument factories produce
+      fresh instances on each invocation. If an entry point resolves directly to a module or an
+      existing instance, that object is returned as-is.
+    - Isolation Policy: Discovery-time and pre-registration failures are isolated. Any entry point
+      that fails during metadata query, import, factory invocation, name resolution, or collision
+      checking against reserved built-in and tool addon names is logged as an error and skipped
+      atomically without partial manager state.
+    - Lifecycle Hooks: Successfully discovered addons participate in standard AddonManager registration.
+      For instances supporting attribute assignment, the load() hook is safely wrapped to log
+      unhandled exceptions rather than aborting construction.
     - Opt-Out Mechanism: Loading entry point addons can be disabled by setting either
       MITMPROXY_NO_ENTRYPOINTS=1 or MITMPROXY_NO_PLUGINS=1 in the environment.
     """
     if is_entrypoints_disabled():
         return []
 
-    if reserved_names is None:
-        reserved_names = {_get_name(cls) for cls in BUILTIN_ADDON_CLASSES}
-    known_names = set(reserved_names)
+    known_names = set(RESERVED_ADDON_NAMES)
+    if reserved_names:
+        known_names.update(reserved_names)
 
     addons: list[Any] = []
     try:
