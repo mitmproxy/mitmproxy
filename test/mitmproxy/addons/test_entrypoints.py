@@ -286,3 +286,206 @@ def test_default_addons_includes_entrypoints():
         loaded = addons.default_addons()
         names = [getattr(a, "name", None) for a in loaded]
         assert "plugin_addon" in names
+
+
+def test_entrypoint_addons_nested_safe_load_late_binding(caplog):
+    calls = []
+
+    class Child1:
+        def __init__(self):
+            self.name = "child_one"
+
+        def load(self, loader):
+            calls.append("child1")
+            raise RuntimeError("child1 load failure")
+
+    class Child2:
+        def __init__(self):
+            self.name = "child_two"
+
+        def load(self, loader):
+            calls.append("child2")
+
+    parent = DummyAddon("parent_with_children")
+    parent.addons = [Child1(), Child2()]
+
+    mock_ep = mock.MagicMock()
+    mock_ep.name = "nested_ep"
+    mock_ep.load.return_value = parent
+
+    with mock.patch("importlib.metadata.entry_points", return_value=[mock_ep]):
+        loaded = addons.entrypoint_addons()
+        assert len(loaded) == 1
+
+    with taddons.context() as tctx:
+        tctx.master.addons.add(*loaded)
+
+    # Both child loads were called individually (not the last child called twice)
+    assert calls == ["child1", "child2"]
+    # Error log references child_one, NOT child_two
+    assert (
+        "Addon 'child_one' from entry point 'nested_ep' raised an exception in load():"
+        in caplog.text
+    )
+    assert "child_two" not in caplog.text
+
+
+async def test_entrypoint_addons_tool_collision_dump_master(caplog):
+    from mitmproxy import options
+    from mitmproxy.tools.dump import DumpMaster
+
+    mock_ep = mock.MagicMock()
+    mock_ep.name = "dumper"
+    mock_ep.load.return_value = DummyAddon("dumper")
+
+    with mock.patch("importlib.metadata.entry_points", return_value=[mock_ep]):
+        loaded = addons.entrypoint_addons()
+        assert loaded == []
+        assert (
+            "Entry point 'dumper' conflicts with existing addon name(s): ['dumper']"
+            in caplog.text
+        )
+
+        opts = options.Options()
+        master = DumpMaster(opts, with_termlog=False, with_dumper=True)
+        try:
+            assert master.addons.get("dumper") is not None
+        finally:
+            await master.done()
+
+
+async def test_entrypoint_addons_tool_collision_web_master(caplog):
+    from mitmproxy import options
+    from mitmproxy.tools.web.master import WebMaster
+
+    mock_ep = mock.MagicMock()
+    mock_ep.name = "webaddon"
+    mock_ep.load.return_value = DummyAddon("webaddon")
+
+    with mock.patch("importlib.metadata.entry_points", return_value=[mock_ep]):
+        loaded = addons.entrypoint_addons()
+        assert loaded == []
+        assert (
+            "Entry point 'webaddon' conflicts with existing addon name(s): ['webaddon']"
+            in caplog.text
+        )
+
+        opts = options.Options()
+        master = WebMaster(opts, with_termlog=False)
+        try:
+            assert master.addons.get("webaddon") is not None
+        finally:
+            await master.done()
+
+
+@pytest.mark.parametrize(
+    "var1,val1,var2,val2,expected_disabled",
+    [
+        ("MITMPROXY_NO_ENTRYPOINTS", "0", "MITMPROXY_NO_PLUGINS", "1", True),
+        ("MITMPROXY_NO_ENTRYPOINTS", "1", "MITMPROXY_NO_PLUGINS", "0", True),
+        ("MITMPROXY_NO_ENTRYPOINTS", "0", "MITMPROXY_NO_PLUGINS", "false", False),
+        ("MITMPROXY_NO_ENTRYPOINTS", "no", "MITMPROXY_NO_PLUGINS", "no", False),
+    ],
+)
+def test_entrypoint_addons_opt_out_ored(
+    monkeypatch, var1, val1, var2, val2, expected_disabled
+):
+    mock_ep = mock.MagicMock()
+    mock_ep.name = "some_addon"
+    mock_ep.load.return_value = DummyAddon("some_addon")
+
+    monkeypatch.setenv(var1, val1)
+    monkeypatch.setenv(var2, val2)
+
+    with mock.patch("importlib.metadata.entry_points", return_value=[mock_ep]):
+        loaded = addons.entrypoint_addons()
+        if expected_disabled:
+            assert loaded == []
+        else:
+            assert len(loaded) == 1
+
+
+def test_entrypoint_addons_fresh_instances_vs_singleton():
+    class StateAddon:
+        def __init__(self):
+            self.name = "state_addon"
+
+    mock_ep_cls = mock.MagicMock()
+    mock_ep_cls.name = "cls_ep"
+    mock_ep_cls.load.return_value = StateAddon
+
+    singleton = DummyAddon("singleton_addon")
+    mock_ep_single = mock.MagicMock()
+    mock_ep_single.name = "single_ep"
+    mock_ep_single.load.return_value = singleton
+
+    with mock.patch(
+        "importlib.metadata.entry_points", return_value=[mock_ep_cls, mock_ep_single]
+    ):
+        run1 = addons.entrypoint_addons()
+        run2 = addons.entrypoint_addons()
+
+        # Classes produce fresh instances
+        assert run1[0] is not run2[0]
+        assert isinstance(run1[0], StateAddon)
+        assert isinstance(run2[0], StateAddon)
+
+        # Singletons return the same object
+        assert run1[1] is run2[1]
+        assert run1[1] is singleton
+
+
+def test_entrypoint_addons_unwrappable_hook_behavior():
+    class SlottedAddon:
+        __slots__ = ("name",)
+
+        def __init__(self):
+            self.name = "slotted"
+
+        def load(self, loader):
+            raise RuntimeError("unwrappable boom")
+
+    slotted = SlottedAddon()
+    mock_ep = mock.MagicMock()
+    mock_ep.name = "slotted_ep"
+    mock_ep.load.return_value = slotted
+
+    with mock.patch("importlib.metadata.entry_points", return_value=[mock_ep]):
+        loaded = addons.entrypoint_addons()
+        assert len(loaded) == 1
+        assert loaded[0] is slotted
+
+    # An unwrappable object whose load() raises propagates per standard Python semantics
+    with taddons.context() as tctx:
+        with pytest.raises(RuntimeError, match="unwrappable boom"):
+            tctx.master.addons.add(*loaded)
+
+
+def test_entrypoint_addons_registration_state_on_load_failure(caplog):
+    class FailingLoadAddon:
+        def __init__(self):
+            self.name = "failing_load"
+
+        def load(self, loader):
+            loader.add_option("custom_opt", bool, True, "Custom option")
+            raise RuntimeError("failure after option add")
+
+    addon = FailingLoadAddon()
+    mock_ep = mock.MagicMock()
+    mock_ep.name = "failing_load_ep"
+    mock_ep.load.return_value = addon
+
+    with mock.patch("importlib.metadata.entry_points", return_value=[mock_ep]):
+        loaded = addons.entrypoint_addons()
+        assert len(loaded) == 1
+
+    with taddons.context() as tctx:
+        tctx.master.addons.add(*loaded)
+        # Verify the manager-owned registration state:
+        # Error is logged without aborting startup
+        assert "failure after option add" in caplog.text
+        # Addon is retained in lookup and chain
+        assert tctx.master.addons.get("failing_load") is addon
+        assert addon in tctx.master.addons.chain
+        # Option was registered before the failure
+        assert "custom_opt" in tctx.options
