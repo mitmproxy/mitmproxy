@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix server replay overriding a response that a script or an earlier addon already set.
+  Previously, a recorded response or the `server_replay_extra` policy replaced it, and with
+  `kill` the client was disconnected while the flow still showed the script's response.
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)
