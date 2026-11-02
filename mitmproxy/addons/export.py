@@ -83,7 +83,7 @@ def curl_command(f: flow.Flow) -> str:
         else:
             args += ["-H", f"{k}: {v}"]
 
-    if request.method != "GET":
+    if request.method != "GET" or request.content:
         if not request.content:
             # curl will not calculate content-length if there is no content
             # some server/verb combinations require content-length headers
