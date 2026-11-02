@@ -16,6 +16,7 @@
 - Export request bodies in HAR files for all HTTP methods, not just POST, PUT, and PATCH.
   Previously, DELETE and extension-method requests with a body were exported without
   `postData`, so importing the HAR file produced a request with an empty body.
+  ([#8560](https://github.com/mitmproxy/mitmproxy/pull/8560), @liangzaihuanyv)
 
 ## 25 October 2026: mitmproxy 12.3.1
 
