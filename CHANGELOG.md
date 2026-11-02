@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix server replay matching so that semicolon path parameters in the final path segment are part of
+  the lookup key. Previously, `/record;revision=old` and `/record;revision=new` hashed identically and
+  could replay the wrong response.
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)

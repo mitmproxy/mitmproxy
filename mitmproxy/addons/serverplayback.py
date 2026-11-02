@@ -179,7 +179,7 @@ class ServerPlayback:
         Calculates a loose hash of the flow request.
         """
         r = flow.request
-        _, _, path, _, query, _ = urllib.parse.urlparse(r.url)
+        _, _, path, query, _ = urllib.parse.urlsplit(r.url)
         queriesArray = urllib.parse.parse_qsl(query, keep_blank_values=True)
 
         key: list[Any] = [str(r.scheme), str(r.method), str(path)]
