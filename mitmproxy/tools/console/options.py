@@ -186,7 +186,10 @@ class OptionsList(urwid.ListBox):
             elif key == "m_select":
                 foc, idx = self.get_focus()
                 if foc.opt.typespec is bool:
-                    self.master.options.toggler(foc.opt.name)()
+                    try:
+                        self.master.options.toggler(foc.opt.name)()
+                    except exceptions.OptionsError as e:
+                        signals.status_message.send(message=str(e))
                     # Bust the focus widget cache
                     self.set_focus(self.walker.index)
                 elif can_edit_inplace(foc.opt):
