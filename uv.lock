@@ -101,7 +101,7 @@ wheels = [
 
 [[package]]
 name = "awscli"
-version = "1.46.1"
+version = "1.46.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama" },
@@ -112,9 +112,9 @@ dependencies = [
     { name = "rsa" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b1/92/907a22013a0177919a98d7b57cf302e86ae162b0c05c0714f3b565cea814/awscli-1.46.1.tar.gz", hash = "sha256:9dab615cc46d16f1f9750e1c9bd37820a24d6964e9381f712b3a304c2b05d248", size = 16782333, upload-time = "2026-08-27T21:30:37.715Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a0/90/c289657c4d946f615063952a945e19d6acc50f493f42580ff77ebc423a35/awscli-1.46.2.tar.gz", hash = "sha256:43e77f324745e760918dc3c6ffb73eef49e35e9f52a5c39fe4a6de854f7e1121", size = 16779976, upload-time = "2026-10-21T19:35:52.005Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/86/9f/1b37f7e20a2ba4ca3dc99117d7d3ceaee7dfa1f09bc8aeb4eebe0a85bcbd/awscli-1.46.1-py3-none-any.whl", hash = "sha256:68701ad24347c63b5b145b7aa32391ce7e04f328057dd5aa0537a07c0d0b7cc3", size = 20232487, upload-time = "2026-08-27T21:30:32.54Z" },
+    { url = "https://files.pythonhosted.org/packages/f6/b0/c675759266a3aab7b2e8b6a90098d7e69d66f0db7ae97adf85957fd8dcd2/awscli-1.46.2-py3-none-any.whl", hash = "sha256:d818f5a3c8e772271db67ac002c9ba2bc4ec064e5aefbf1605e23bd2cf4346c5", size = 20231752, upload-time = "2026-10-21T19:35:47.155Z" },
 ]
 
 [[package]]
@@ -1166,7 +1166,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 deploy = [
-    { name = "awscli", specifier = "==1.46.1" },
+    { name = "awscli", specifier = "==1.46.2" },
     { name = "twine", specifier = "==7.0.0" },
 ]
 dev = [
