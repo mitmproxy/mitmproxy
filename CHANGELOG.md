@@ -10,6 +10,7 @@
 - Fix a crash in the console options editor when toggling a boolean option to a value
   that another option rejects, e.g. `add_upstream_certs_to_client_chain` while
   `upstream_cert` is disabled. The error is now shown in the status bar instead.
+  ([#8565](https://github.com/mitmproxy/mitmproxy/pull/8565), @kirtanbhatt10)
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)
