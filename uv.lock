@@ -1138,7 +1138,7 @@ tox = [
 requires-dist = [
     { name = "aioquic", specifier = "<=1.2.0,>=1.2.0" },
     { name = "argon2-cffi", specifier = ">=23.1.0,<=25.1.0" },
-    { name = "asgiref", specifier = ">=3.2.10,<=3.12.1" },
+    { name = "asgiref", specifier = ">=3.2.10,<=3.13.0" },
     { name = "backports-zstd", marker = "python_full_version < '3.14'", specifier = "<=1.7.0,>=1.7.0" },
     { name = "bcrypt", specifier = "<=5.0.0,>=5.0.0" },
     { name = "brotli", specifier = "<=1.2.1,>=1.2.1" },
