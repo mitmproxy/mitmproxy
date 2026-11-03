@@ -22,7 +22,8 @@
 ### Other Changes
 - Add `tls13_ciphers_client` and `tls13_ciphers_server` options to configure
   TLS 1.3 ciphersuites. The existing `ciphers_client`/`ciphers_server` options
-  only affect TLS 1.2 and below.
+  only affect TLS 1.2 and below. Invalid suite names are rejected when the
+  option is set.
 - Fix the WBXML contentview raising a `KeyError` on tags that are missing from the code page,
   instead of showing them as `UNKNOWN_TAG_XX`.
   ([#8495](https://github.com/mitmproxy/mitmproxy/pull/8495), @kayaal34)
