@@ -452,5 +452,53 @@ queries you can opt to ignore the system's hosts file using the
 [`dns_use_hosts_file`]({{< relref "/concepts/options" >}}#dns_use_hosts_file)
 option. Custom name servers for lookups can be specified using the
 [`dns_name_servers`]({{< relref "/concepts/options" >}}#dns_name_servers)
-option. By default port 53 will be used. To specify a different port, say 5353,
-use `--mode dns@5353`.
+option.
+
+### Answer a Query in an Add-on
+
+An add-on can inspect DNS queries with the `dns_request` hook and set
+`flow.response` to provide a custom answer. This example overrides A queries
+for `example.test` with the documentation-only address `192.0.2.10`; queries
+that do not match are left to mitmproxy's built-in resolver.
+
+Save this as `dns_addon.py`:
+
+```python
+from ipaddress import IPv4Address
+
+from mitmproxy import dns
+
+
+class StaticDNS:
+    def dns_request(self, flow: dns.DNSFlow) -> None:
+        question = flow.request.question
+        if (
+            question is None
+            or question.name != "example.test"
+            or question.type != dns.types.A
+            or question.class_ != dns.classes.IN
+        ):
+            return
+
+        flow.response = flow.request.succeed(
+            [dns.ResourceRecord.A(question.name, IPv4Address("192.0.2.10"))]
+        )
+
+
+addons = [StaticDNS()]
+```
+
+Run the DNS server on port 5353 with the add-on:
+
+```shell
+mitmdump --mode dns@5353 -s dns_addon.py
+```
+
+In another terminal, query the example:
+
+```shell
+dig @127.0.0.1 -p 5353 example.test A
+```
+
+By default, mitmproxy listens on port 53. To use a different port without an
+add-on, specify it with `--mode dns@5353`.
