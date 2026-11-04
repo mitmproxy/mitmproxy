@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+- **Security:** Require Tornado 6.6 to include fixes for
+  [CVE-2026-115927](https://github.com/advisories/GHSA-r4j5-9xpp-3985),
+  [CVE-2026-116577](https://github.com/advisories/GHSA-pcg2-g6cj-q92c), and
+  [CVE-2026-116578](https://github.com/advisories/GHSA-pw9p-v7r6-gx4p).
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)
