@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Add support for displaying NDJSON (newline-delimited JSON) in the JSON content view.
+  ([#5608](https://github.com/mitmproxy/mitmproxy/issues/5608))
+
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)
