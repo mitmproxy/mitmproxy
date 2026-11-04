@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix escaped byte strings losing backslashes when several backslashes come right before a
+  single quote, so that editing a value such as `it\\'s` in the console no longer changes it.
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)
