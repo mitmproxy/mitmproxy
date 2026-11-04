@@ -55,6 +55,42 @@ For instance, here is a complete script that adds a header to every request:
 
 {{< example src="examples/addons/anatomy2.py" lang="py" >}}
 
+# Entry Points (Plugins)
+
+In addition to loading scripts via `-s`, mitmproxy supports auto-loading addons registered via Python entry points in the `mitmproxy.addons` group. This allows Python packages distributed via PyPI or wheels to integrate seamlessly with mitmproxy without requiring manual `-s` script paths:
+
+```bash
+pip install mitmproxy-addon-foo
+mitmdump
+```
+
+Or using `uvx`:
+
+```bash
+uvx --from mitmproxy --with mitmproxy-addon-foo mitmdump
+```
+
+### Registering an Entry Point Addon
+
+In your package's `pyproject.toml`, register the addon under the `mitmproxy.addons` entry point group:
+
+```toml
+[project.entry-points."mitmproxy.addons"]
+my_addon = "my_package.addon:MyAddon"
+```
+
+The entry point may point to:
+- An addon class (instantiated with zero arguments)
+- A zero-argument factory function returning an addon instance or a sequence of addon instances
+- An addon module or instance
+
+### Contracts & Guarantees
+
+- **Trust Model**: Third-party packages installed in your Python environment run with ambient user privileges. Only install trusted packages.
+- **Ordering**: Built-in core and tool addons are registered first. Entry point addons load after built-ins, sorted deterministically in alphabetical order by entry point name (`ep.name`).
+- **Name Reservation**: Entry point addons cannot override or collide with reserved built-in or tool addon names (such as `core`, `dumper`, `webaddon`, etc.). Conflicting entry points are logged with an error and skipped.
+- **Opt-Out**: Automatic loading of entry point addons can be disabled by setting either the `MITMPROXY_NO_ENTRYPOINTS=1` or `MITMPROXY_NO_PLUGINS=1` environment variable.
+
 # Developing Addons
 
 ## Live Reloading
