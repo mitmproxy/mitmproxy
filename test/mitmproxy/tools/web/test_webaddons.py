@@ -60,6 +60,12 @@ class TestWebAuth:
             tctx.options.web_theme = "dark"
             assert tctx.options.web_theme == "dark"
 
+    def test_web_split_flowview_option(self):
+        with taddons.context(webaddons.WebAddon()) as tctx:
+            assert tctx.options.web_split_flowview is False
+            tctx.options.web_split_flowview = True
+            assert tctx.options.web_split_flowview is True
+
     @pytest.mark.parametrize(
         "web_host,web_port,expected_web_url",
         [
