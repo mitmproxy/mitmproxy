@@ -13,6 +13,8 @@
 - Fix filter expressions where a filter without an argument is followed by a closing bracket,
   e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
   ([#8537](https://github.com/mitmproxy/mitmproxy/pull/8537), @qodelicious)
+- mitmweb: Validate flow filters on the backend and remove the duplicate frontend flow-filter parser.
+  ([#8331](https://github.com/mitmproxy/mitmproxy/pull/8331), @lups2000)
 
 ## 25 October 2026: mitmproxy 12.3.1
 
