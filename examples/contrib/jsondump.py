@@ -8,7 +8,7 @@ Usage:
 
     mitmproxy
         --mode reverse:http://example.com/
-        -s examples/complex/jsondump.py
+        -s examples/contrib/jsondump.py
 
 Configuration:
 

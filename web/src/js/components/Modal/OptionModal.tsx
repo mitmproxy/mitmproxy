@@ -9,6 +9,9 @@ import { useAppDispatch, useAppSelector } from "../../ducks";
 import OptionInput from "./OptionInput";
 import Icon from "../common/Icon";
 
+// The column picker in Options ▸ Appearance sets this one; a raw list of column names is a second, worse way to edit the same thing.
+const HIDDEN_OPTIONS: Option[] = ["web_columns"];
+
 function OptionHelp({ name }: { name: Option }) {
     const help = useAppSelector((state) => state.options_meta[name]?.help);
     return <div className="help-block text-small">{help}</div>;
@@ -56,10 +59,14 @@ const OptionDefault = connect(
 
 export default function OptionModal() {
     const dispatch = useAppDispatch();
-    const options = useAppSelector(
-        (state) => Object.keys(state.options_meta),
-        shallowEqual,
-    ).sort() as Option[];
+    const options = (
+        useAppSelector(
+            (state) => Object.keys(state.options_meta),
+            shallowEqual,
+        ) as Option[]
+    )
+        .filter((name) => !HIDDEN_OPTIONS.includes(name))
+        .sort();
 
     return (
         <div>

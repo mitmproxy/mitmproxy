@@ -60,7 +60,7 @@ def eq(
     b: PlaybookEntry | Iterable[PlaybookEntry],
 ):
     """
-    Compare an indiviual event/command or a list of events/commands.
+    Compare an individual event/command or a list of events/commands.
     """
     if isinstance(a, collections.abc.Iterable) and isinstance(
         b, collections.abc.Iterable

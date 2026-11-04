@@ -182,7 +182,7 @@ class TlsClienthelloHook(StartHook):
 @dataclass
 class TlsStartClientHook(StartHook):
     """
-    TLS negotation between mitmproxy and a client is about to start.
+    TLS negotiation between mitmproxy and a client is about to start.
 
     An addon is expected to initialize data.ssl_conn.
     (by default, this is done by `mitmproxy.addons.tlsconfig`)
@@ -194,7 +194,7 @@ class TlsStartClientHook(StartHook):
 @dataclass
 class TlsStartServerHook(StartHook):
     """
-    TLS negotation between mitmproxy and a server is about to start.
+    TLS negotiation between mitmproxy and a server is about to start.
 
     An addon is expected to initialize data.ssl_conn.
     (by default, this is done by `mitmproxy.addons.tlsconfig`)

@@ -738,8 +738,10 @@ def _make():
     # Order is important - multi-char expressions need to come before narrow
     # ones.
     parts = []
+    # A closing bracket ends a filter name, so that e.g. "!(~s)" works.
+    word_end = pp.WordEnd(pp.printables.replace(")", ""))
     for cls in filter_unary:
-        f = pp.Literal(f"~{cls.code}") + pp.WordEnd()
+        f = pp.Literal(f"~{cls.code}") + word_end
         f.set_parse_action(cls.make)
         parts.append(f)
 

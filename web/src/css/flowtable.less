@@ -7,10 +7,23 @@
     user-select: @val;
 }
 
+// A column drag ranges over the whole document, so the cursor and the selection blocker have to live there too rather than on the handle.
+body.resizing-columns {
+    .user-select(none);
+
+    &,
+    * {
+        cursor: col-resize !important;
+    }
+}
+
 .flow-table {
+    // Keeps neighbouring columns apart, and the labels in line with the values beneath them.
+    @cell-padding: 4px;
+
     width: 100%;
     overflow-y: scroll;
-    overflow-x: hidden;
+    overflow-x: auto;
 
     table {
         width: 100%;
@@ -31,7 +44,6 @@
         vertical-align: bottom;
         position: relative !important;
         padding: 0;
-        padding-left: 1px;
         .user-select(none);
 
         &.sort-asc,
@@ -40,9 +52,30 @@
             padding-right: 18px;
         }
 
+        .col-resize-handle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 6px;
+            height: 100%;
+            cursor: col-resize;
+            z-index: 1;
+            // Keep touch drags from panning the table instead of resizing.
+            touch-action: none;
+        }
+
+        .col-resize-handle:hover {
+            background-color: var(--mitmweb-col-resize-hover);
+        }
+
         .th-content {
             display: block;
             min-height: 23px;
+            padding: 0 @cell-padding;
+            // A label wider than its column would otherwise spill past the table and scroll it sideways.
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
         }
 
         .sort-indicator {
@@ -94,10 +127,18 @@
     }
 
     td {
-        padding: 0;
+        padding: 0 @cell-padding;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
+    }
+
+    // These hold a colour or an icon rather than text, and are sized to fit it exactly.
+    td.col-tls,
+    td.col-icon,
+    td.col-quickactions,
+    td.col-filler {
+        padding: 0;
     }
 
     @interceptorange: hsl(30, 100%, 50%);
@@ -130,8 +171,7 @@
     }
 
     .col-index {
-        text-align: right;
-        width: 4ch;
+        width: calc(4ch + 2 * @cell-padding);
     }
 
     .col-icon {
@@ -193,18 +233,16 @@
 
     .col-comment {
         width: 150px;
-        padding-left: 5px;
     }
 
-    td.col-time,
-    td.col-size,
-    td.col-timestamp,
-    td.col-comment {
-        text-align: right;
-    }
-
-    .col-quickactions {
+    // Collapsed for good: its buttons overflow into the row on hover.
+    // As with the filler, the width may only sit on the col.
+    col.col-quickactions {
         width: 0;
+    }
+
+    // Only the cells: the icon sizing and the right-to-left flow are for the buttons, not for the header label.
+    td.col-quickactions {
         direction: rtl;
         * {
             direction: ltr;
@@ -214,11 +252,11 @@
         font-size: 20px;
     }
 
-    tr:hover .col-quickactions {
+    tr:hover td.col-quickactions {
         overflow: visible;
     }
 
-    .col-quickactions > div {
+    td.col-quickactions > div {
         height: 32px;
         background-color: inherit;
         display: inline-flex;
@@ -237,5 +275,10 @@
                 background-color: rgba(0, 0, 0, 5%);
             }
         }
+    }
+
+    // A gutter that keeps the last resize handle clear of the scrollbar, until it becomes the column taking the slack.
+    col.col-filler {
+        width: 12px;
     }
 }

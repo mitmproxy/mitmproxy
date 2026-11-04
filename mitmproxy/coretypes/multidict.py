@@ -89,6 +89,7 @@ class _MultiDict(MutableMapping[KT, VT], metaclass=ABCMeta):
         Remove the old values for a key and add new ones.
         """
         key_kconv = self._kconv(key)
+        values = values.copy()
 
         new_fields: list[tuple[KT, VT]] = []
         for field in self.fields:

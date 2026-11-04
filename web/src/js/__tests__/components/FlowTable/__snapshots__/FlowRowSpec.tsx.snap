@@ -162,6 +162,9 @@ exports[`FlowRow 1`] = `
             </a>
           </div>
         </td>
+        <td
+          class="col-filler"
+        />
       </tr>
       <tr
         class=""
@@ -264,6 +267,9 @@ exports[`FlowRow 1`] = `
         </td>
         <td
           class="col-quickactions"
+        />
+        <td
+          class="col-filler"
         />
       </tr>
     </tbody>

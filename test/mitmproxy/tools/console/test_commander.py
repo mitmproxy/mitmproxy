@@ -69,7 +69,7 @@ class TestCommandEdit:
         try:
             edit.update()
         except IndexError:
-            pytest.faied("Unexpected IndexError")
+            pytest.fail("Unexpected IndexError")
 
     def test_insert(self, commander_tctx):
         edit = commander.CommandEdit(commander_tctx.master, "")

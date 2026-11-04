@@ -62,6 +62,22 @@ _DEFAULT_CIPHERS = (
 
 _DEFAULT_CIPHERS_WITH_SECLEVEL_0 = ("@SECLEVEL=0", *_DEFAULT_CIPHERS)
 
+# Hosts that serve OCSP and CRL responses for the eMudhra CA chain and its
+# Sectigo cross-sign. When --emudhra is enabled, clients validate
+# mitmproxy-issued certificates against this chain and send revocation
+# lookups to these hosts. Those lookups are unnecessary and
+# counterproductive, so they are blocked.
+_EMUDHRA_REVOCATION_HOSTS = frozenset(
+    {
+        "ocsp-a.emsign.com",
+        "ocsp-b.emsign.com",
+        "ocsp-c.emsign.com",
+        "crl.emsign.com",
+        "ocsp.comodoca.com",
+        "crl.comodoca.com",
+    }
+)
+
 
 def _default_ciphers(
     min_tls_version: net_tls.Version,
@@ -200,6 +216,18 @@ class TlsConfig:
             None,
             "Set supported ciphers for mitmproxy <-> server connections using OpenSSL syntax.",
         )
+        loader.add_option(
+            "emudhra",
+            bool,
+            False,
+            "Sign certificates with a compromised eMudhra intermediate CA key.",
+        )
+        loader.add_option(
+            "emudhra_old",
+            bool,
+            False,
+            "Like --emudhra, but prioritize the Sectigo AAA Certificate Services cross-sign for older OpenSSL trust stores.",
+        )
 
     def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
         conn_context = tls_clienthello.context
@@ -226,11 +254,12 @@ class TlsConfig:
             net_tls.Version[ctx.options.tls_version_client_min]
         )
 
+        extra_chain_certs = []
+        if entry.chain_file is None and len(entry.chain_certs) > 1:
+            extra_chain_certs.extend(entry.chain_certs)
         if ctx.options.add_upstream_certs_to_client_chain:  # pragma: no cover
             # exempted from coverage until https://bugs.python.org/issue18233 is fixed.
-            extra_chain_certs = server.certificate_list
-        else:
-            extra_chain_certs = []
+            extra_chain_certs.extend(server.certificate_list)
 
         ssl_ctx = net_tls.create_client_proxy_context(
             method=net_tls.Method.DTLS_SERVER_METHOD
@@ -474,6 +503,8 @@ class TlsConfig:
             or "confdir" in updated
             or "key_size" in updated
             or "cert_passphrase" in updated
+            or "emudhra" in updated
+            or "emudhra_old" in updated
         ):
             certstore_path = os.path.expanduser(ctx.options.confdir)
             self.certstore = certs.CertStore.from_store(
@@ -484,6 +515,24 @@ class TlsConfig:
                 if ctx.options.cert_passphrase
                 else None,
             )
+            if ctx.options.emudhra or ctx.options.emudhra_old:
+                self.certstore.default_privatekey = certs.load_pem_private_key(
+                    certs.EMUDHRA_CHAIN_PEM, None
+                )
+                self.certstore.default_chain_certs = [
+                    certs.Cert(c)
+                    for c in x509.load_pem_x509_certificates(certs.EMUDHRA_CHAIN_PEM)
+                ]
+                if ctx.options.emudhra_old:
+                    self.certstore.default_chain_certs.insert(
+                        0, self.certstore.default_chain_certs.pop()
+                    )
+                self.certstore.default_ca = self.certstore.default_chain_certs[0]
+                self.certstore.default_chain_file = None
+                self.certstore.default_crl = certs.dummy_crl(
+                    self.certstore.default_privatekey,
+                    self.certstore.default_ca._cert,
+                )
             if self.certstore.default_ca.has_expired():
                 logger.warning(
                     "The mitmproxy certificate authority has expired!\n"
@@ -642,6 +691,14 @@ class TlsConfig:
                 self.certstore.default_crl,
                 {"Content-Type": "application/pkix-crl"},
             )
+            return
+        # Block OCSP and CRL lookups for the eMudhra chain: with --emudhra
+        # enabled, clients would otherwise phone home to these hosts to
+        # validate our certificates.
+        if (ctx.options.emudhra or ctx.options.emudhra_old) and (
+            flow.request.host in _EMUDHRA_REVOCATION_HOSTS
+        ):
+            flow.kill()
 
 
 def _ip_or_dns_name(val: str) -> x509.GeneralName:

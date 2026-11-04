@@ -20,7 +20,7 @@ class BiDi:
     def __getattr__(self, k):
         if k in self.names:
             return self.names[k]
-        raise AttributeError("No such attribute: %s", k)
+        raise AttributeError(f"No such attribute: {k}")
 
     def get_name(self, n, default=None):
         return self.values.get(n, default)

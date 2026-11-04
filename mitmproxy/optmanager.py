@@ -475,7 +475,7 @@ class OptManager:
                 choices=o.choices,
             )
         else:
-            raise ValueError("Unsupported option type: %s", o.typespec)
+            raise ValueError(f"Unsupported option type: {o.typespec}")
 
 
 def dump_defaults(opts, out: TextIO):

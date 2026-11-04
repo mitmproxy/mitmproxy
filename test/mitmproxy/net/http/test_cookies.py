@@ -181,6 +181,47 @@ def test_parse_set_cookie_header():
                 ("doo", "dar", ()),
             ],
         ],
+        [
+            "session=abc; Expires=0; Secure; HttpOnly",
+            [
+                (
+                    "session",
+                    "abc",
+                    (("Expires", "0"), ("Secure", None), ("HttpOnly", None)),
+                ),
+            ],
+        ],
+        [
+            "a=b; expires=0, c=d",
+            [
+                ("a", "b", (("expires", "0"),)),
+                ("c", "d", ()),
+            ],
+        ],
+        [
+            "a=b; expires=Wednesday, 21-Oct-2026 07:28:00 GMT; path=/",
+            [
+                (
+                    "a",
+                    "b",
+                    (
+                        ("expires", "Wednesday, 21-Oct-2026 07:28:00 GMT"),
+                        ("path", "/"),
+                    ),
+                ),
+            ],
+        ],
+        [
+            "a=b; expires=Wednesday, 21-Oct-2026 07:28:00 GMT, c=d; path=/",
+            [
+                (
+                    "a",
+                    "b",
+                    (("expires", "Wednesday, 21-Oct-2026 07:28:00 GMT"),),
+                ),
+                ("c", "d", (("path", "/"),)),
+            ],
+        ],
     ]
     for s, expected in vals:
         ret = cookies.parse_set_cookie_header(s)
@@ -299,3 +340,17 @@ def test_group_cookies():
     for c, expected in groups:
         observed = cookies.group_cookies(cookies.parse_cookie_header(c))
         assert observed == expected
+
+
+@pytest.mark.parametrize("value", ["", '""'])
+def test_refresh_empty_cookie_value(value):
+    header = f"session={value}; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Path=/"
+    refreshed = cookies.refresh_set_cookie_header(header, 3600)
+    assert refreshed == "session=; Expires=Wed, 21 Oct 2015 08:28:00 GMT; Path=/"
+
+
+def test_refresh_valueless_cookie_still_invalid():
+    with pytest.raises(ValueError, match="Invalid Cookie"):
+        cookies.refresh_set_cookie_header(
+            "session; Expires=Wed, 21 Oct 2015 07:28:00 GMT", 3600
+        )

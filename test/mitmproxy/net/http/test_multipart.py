@@ -38,7 +38,7 @@ def test_encode():
         b"Content-Type: text/plain; charset=utf-8\r\n\r\nshell.jpg\r\n\r\n--127824672498\r\n"
         in content
     )
-    assert b"1000\r\n\r\n--127824672498--\r\n"
+    assert b"1000\r\n\r\n--127824672498--\r\n" in content
     assert len(content) == 252
 
     with pytest.raises(ValueError, match=r"boundary found in encoded string"):

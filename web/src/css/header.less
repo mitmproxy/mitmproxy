@@ -93,12 +93,37 @@ header {
     input[type="checkbox"] {
         margin: 0;
     }
-    .theme-select {
+    // A select takes the width of its widest option and a button that of its text, so both get one fixed size instead.
+    .theme-select,
+    .column-select {
+        width: 8rem;
+        height: 2rem;
         font-size: 1.2rem;
         padding: 1px 2px;
         border: 1px solid var(--mitmweb-border);
         border-radius: 3px;
     }
+
+    .column-select {
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 2px;
+        cursor: pointer;
+        background-color: var(--mitmweb-bg);
+        color: var(--mitmweb-fg);
+
+        .icon {
+            width: 12px;
+            height: 12px;
+        }
+    }
+}
+
+// Takes a row of its own so the dropdown sits above the reset button rather than beside it.
+.column-visibility {
+    position: relative;
+    display: block;
 }
 
 .menu-legend {

@@ -12,7 +12,7 @@
  * with the same capabilities.
  *
  * It can be compiled as follows:
- * gcc examples/mitmproxy_shim.c -o mitmproxy_shim -lcap
+ * gcc examples/contrib/full_transparency_shim.c -o mitmproxy_shim -lcap
 */
 
 int set_caps(cap_t cap_struct, cap_value_t *cap_list, size_t bufsize) {

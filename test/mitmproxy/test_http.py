@@ -21,6 +21,17 @@ from mitmproxy.test.tutils import tresp
 
 
 class TestRequest:
+    def test_reuse_query_values(self):
+        values = ["one", "two"]
+        first = Request.make("GET", "https://example.com/?id=old&keep=yes")
+        second = Request.make("GET", "https://example.com/?id=old&keep=yes")
+        first.query.set_all("id", values)
+        second.query.set_all("id", values)
+        assert values == ["one", "two"]
+        assert first.query.get_all("id") == ["one", "two"]
+        assert second.url == first.url
+        assert first.query["keep"] == "yes"
+
     def test_simple(self):
         f = tflow()
         r = f.request
@@ -607,6 +618,18 @@ class TestResponseUtils:
             ["two", ("due", CookieAttrs())],
         ]
         assert list(resp.cookies.keys()) == ["one", "two"]
+
+    @pytest.mark.parametrize("value", ["", '""'])
+    def test_refresh_empty_cookie_value(self, value):
+        response = tresp()
+        response.timestamp_start = 1445412480
+        response.headers["set-cookie"] = (
+            f"session={value}; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Path=/"
+        )
+        response.refresh(1445416080)
+        assert response.headers["set-cookie"] == (
+            "session=; Expires=Wed, 21 Oct 2015 08:28:00 GMT; Path=/"
+        )
 
     def test_refresh(self):
         r = tresp()

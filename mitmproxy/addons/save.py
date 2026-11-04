@@ -53,7 +53,7 @@ class Save:
             None,
             """
             Stream flows to file as they arrive. Prefix path with + to append.
-            The full path can use python strftime() formating, missing
+            The full path can use python strftime() formatting, missing
             directories are created as needed. A new file is opened every time
             the formatted string changes.
             """,
