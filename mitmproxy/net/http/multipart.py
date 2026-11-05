@@ -8,12 +8,20 @@ from urllib.parse import quote
 from mitmproxy.net.http import headers
 
 
+def _get_boundary(params: dict[str, str]) -> str:
+    """Return the boundary parameter, with the optional RFC 2046 quoting removed."""
+    boundary = params["boundary"]
+    if len(boundary) >= 2 and boundary[0] == boundary[-1] == '"':
+        boundary = boundary[1:-1]
+    return boundary
+
+
 def encode_multipart(content_type: str, parts: list[tuple[bytes, bytes]]) -> bytes:
     if content_type:
         ct = headers.parse_content_type(content_type)
         if ct is not None:
             try:
-                raw_boundary = ct[2]["boundary"].encode("ascii")
+                raw_boundary = _get_boundary(ct[2]).encode("ascii")
                 boundary = quote(raw_boundary)
             except (KeyError, UnicodeError):
                 return b""
@@ -56,7 +64,7 @@ def decode_multipart(
         if not ct:
             return []
         try:
-            boundary = ct[2]["boundary"].encode("ascii")
+            boundary = _get_boundary(ct[2]).encode("ascii")
         except (KeyError, UnicodeError):
             return []
 

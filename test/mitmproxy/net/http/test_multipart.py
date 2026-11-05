@@ -27,6 +27,26 @@ def test_decode():
     assert multipart.decode_multipart("", content) == []
 
 
+def test_decode_quoted_boundary():
+    content = (
+        b"--ab\r\n"
+        b'Content-Disposition: form-data; name="field1"\r\n\r\n'
+        b"value1\r\n"
+        b"--ab--\r\n"
+    )
+    assert multipart.decode_multipart(
+        'multipart/form-data; boundary="ab"', content
+    ) == [(b"field1", b"value1")]
+
+
+def test_encode_quoted_boundary():
+    assert multipart.encode_multipart(
+        'multipart/form-data; boundary="ab"', [(b"key", b"value")]
+    ) == multipart.encode_multipart(
+        "multipart/form-data; boundary=ab", [(b"key", b"value")]
+    )
+
+
 def test_encode():
     data = [(b"file", b"shell.jpg"), (b"file_size", b"1000")]
     content = multipart.encode_multipart(
