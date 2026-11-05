@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix options-editor help showing the wrong key bindings and closing the editor.
+  ([#8428](https://github.com/mitmproxy/mitmproxy/pull/8428), @twelfthlabor)
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)

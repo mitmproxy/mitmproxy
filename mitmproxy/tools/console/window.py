@@ -72,7 +72,19 @@ class WindowStack:
             edit_focus_response_headers=grideditor.ResponseHeaderEditor(master),
         )
         self.stack = [base]
-        self.overlay = None
+        self._overlays: dict[int, overlay.SimpleOverlay] = {}
+
+    @property
+    def overlay(self):
+        """The overlay belonging to the current stack entry, if any."""
+        return self._overlays.get(len(self.stack))
+
+    @overlay.setter
+    def overlay(self, value):
+        if value is None:
+            self._overlays.pop(len(self.stack), None)
+        else:
+            self._overlays[len(self.stack)] = value
 
     def set_overlay(self, o, **kwargs):
         self.overlay = overlay.SimpleOverlay(
@@ -100,7 +112,7 @@ class WindowStack:
     def push(self, wname):
         if self.stack[-1] == wname:
             return
-        prev = self.top_window()
+        prev = self.top_widget()
         self.stack.append(wname)
         self.call("layout_pushed", prev)
 

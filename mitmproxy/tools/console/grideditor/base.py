@@ -350,7 +350,7 @@ class BaseGridEditor(urwid.WidgetWrap):
             self.walker.left()
         elif key == "right":
             self.walker.right()
-        elif column.keypress(key, self) and not self.handle_key(key):
+        elif column.keypress(key, self):
             return self._w.keypress(size, key)
 
     def data_out(self, data: Sequence[list]) -> Any:
@@ -371,11 +371,6 @@ class BaseGridEditor(urwid.WidgetWrap):
         Return None, or a string error message.
         """
         return None
-
-    def handle_key(self, key):
-        if key == "?":
-            signals.pop_view_state.send()
-        return False
 
     def cmd_add(self):
         self.walker.add()
