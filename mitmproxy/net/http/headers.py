@@ -25,7 +25,7 @@ def parse_content_type(c: str) -> tuple[str, str, dict[str, str]] | None:
         for i in parts[1].split(";"):
             clause = i.split("=", 1)
             if len(clause) == 2:
-                d[clause[0].strip()] = clause[1].strip()
+                d[clause[0].strip().lower()] = clause[1].strip()
     return ts[0].lower(), ts[1].lower(), d
 
 
@@ -40,6 +40,7 @@ def infer_content_encoding(content_type: str, content: bytes = b"") -> str:
     """
     Infer the encoding of content from the content-type header.
     """
+    content_type = content_type.lower()
     enc = None
 
     # BOM has the highest priority
