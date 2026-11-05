@@ -13,6 +13,7 @@ from mitmproxy import connection
 from mitmproxy import options
 from mitmproxy import tls
 from mitmproxy.addons import tlsconfig
+from mitmproxy.exceptions import OptionsError
 from mitmproxy.net import tls as net_tls
 from mitmproxy.proxy import context
 from mitmproxy.proxy.layers import modes
@@ -397,6 +398,134 @@ class TestTlsConfig:
             quic_tls_start = quic.QuicTlsData(ctx.client, context=ctx)
             ta.quic_start_client(quic_tls_start)
             assert len(quic_tls_start.settings.certificate_chain) == 3
+
+    @pytest.mark.parametrize("ca_name", sorted(certs.EMUDHRA_CA_CHAINS))
+    def test_emudhra_ca(self, ca_name, tmp_path):
+        """Every compromised TLS intermediate can be selected and used."""
+        # emSign ECC Root CA - G3, the anchor for the emSign cross-sign.
+        trusted_root = (
+            "-----BEGIN CERTIFICATE-----\n"
+            "MIICTjCCAdOgAwIBAgIKPPYHqWhwDtqLhDAKBggqhkjOPQQDAzBrMQswCQYDVQQG\n"
+            "EwJJTjETMBEGA1UECxMKZW1TaWduIFBLSTElMCMGA1UEChMcZU11ZGhyYSBUZWNo\n"
+            "bm9sb2dpZXMgTGltaXRlZDEgMB4GA1UEAxMXZW1TaWduIEVDQyBSb290IENBIC0g\n"
+            "RzMwHhcNMTgwMjE4MTgzMDAwWhcNNDMwMjE4MTgzMDAwWjBrMQswCQYDVQQGEwJJ\n"
+            "TjETMBEGA1UECxMKZW1TaWduIFBLSTElMCMGA1UEChMcZU11ZGhyYSBUZWNobm9s\n"
+            "b2dpZXMgTGltaXRlZDEgMB4GA1UEAxMXZW1TaWduIEVDQyBSb290IENBIC0gRzMw\n"
+            "djAQBgcqhkjOPQIBBgUrgQQAIgNiAAQjpQy4LRL1KPOxst3iAhKAnjlfSU2fySU0\n"
+            "WXTsuwYc58Byr+iuL+FBVIcUqEqy6HyC5ltqtdyzdc6LBtCGI79G1Y4PPwT01xyS\n"
+            "fvalY8L1X44uT6EYGQIrMgqCZH0Wk9GjQjBAMB0GA1UdDgQWBBR8XQKEE9TMipuB\n"
+            "zhccLikenEhjQjAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0TAQH/BAUwAwEB/zAKBggq\n"
+            "hkjOPQQDAwNpADBmAjEAvvNhzwIQHWSVB7gYboiFBS+DCBeQyh+KTOgNG3qxrdWB\n"
+            "CUfvO6wIBHxcmbHtRwfSAjEAnbpV/KlK6O3t5nYBQnvI+GDZjVGLVTv7jHvrZQnD\n"
+            "+JbNR6iC8hZVdyR+EhCVBCyj\n"
+            "-----END CERTIFICATE-----\n"
+        )
+        ca_file = tmp_path / "root.pem"
+        ca_file.write_text(trusted_root)
+
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            tctx.configure(
+                ta,
+                emudhra=True,
+                emudhra_ca=ca_name,
+                ssl_verify_upstream_trusted_ca=str(ca_file),
+            )
+            # The selected CA is the one that signs the leaf.
+            assert ta.certstore.default_ca.cn == ca_name
+
+            ctx = _ctx(tctx.options)
+            ctx.client.sni = "example.mitmproxy.org"
+
+            tls_start = tls.TlsData(ctx.client, context=ctx)
+            ta.tls_start_client(tls_start)
+            tssl_server = tls_start.ssl_conn
+
+            ctx.server.address = ("example.mitmproxy.org", 443)
+            tls_start_server = tls.TlsData(ctx.server, context=ctx)
+            ta.tls_start_server(tls_start_server)
+            tssl_client = tls_start_server.ssl_conn
+
+            assert self.do_handshake(tssl_client, tssl_server)
+            # The client validated the forged chain against the real root.
+            san = (
+                tssl_client.get_peer_certificate()
+                .to_cryptography()
+                .extensions.get_extension_for_class(x509.SubjectAlternativeName)
+            )
+            assert san.value.get_values_for_type(x509.DNSName) == [
+                "example.mitmproxy.org"
+            ]
+
+            quic_tls_start = quic.QuicTlsData(ctx.client, context=ctx)
+            ta.quic_start_client(quic_tls_start)
+            assert len(quic_tls_start.settings.certificate_chain) == 3
+
+    def test_emudhra_ca_default(self):
+        """Without --emudhra-ca the previously hardcoded CA is used."""
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            tctx.configure(ta, emudhra=True)
+            assert tctx.options.emudhra_ca is None
+            assert ta.certstore.default_ca.cn == certs.DEFAULT_EMUDHRA_CA
+
+    def test_emudhra_ca_unknown(self):
+        """An unknown CA name is a configuration error."""
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            with pytest.raises(OptionsError, match="Unknown eMudhra CA"):
+                tctx.configure(ta, emudhra=True, emudhra_ca="does not exist")
+
+    def test_emudhra_ca_old_variant(self):
+        """--emudhra-old moves the AAA-issued intermediate to the front."""
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            tctx.configure(ta, emudhra_old=True, emudhra_ca="EM DV TLS CA - G3B")
+            chain = ta.certstore.default_chain_certs
+            assert len(chain) == 3
+            assert (
+                "AAA Certificate Services"
+                in chain[0].to_cryptography().issuer.rfc4514_string()
+            )
+            assert (
+                "emSign ECC Root CA - G3"
+                in chain[-1].to_cryptography().issuer.rfc4514_string()
+            )
+
+    def test_emudhra_chain_data(self):
+        """The bundled chain data is internally consistent."""
+        assert certs.DEFAULT_EMUDHRA_CA in certs.EMUDHRA_CA_CHAINS
+        # The backwards-compatible alias points at the default entry.
+        assert (
+            certs.EMUDHRA_CHAIN_PEM == certs.EMUDHRA_CA_CHAINS[certs.DEFAULT_EMUDHRA_CA]
+        )
+        for name, pem in certs.EMUDHRA_CA_CHAINS.items():
+            chain = x509.load_pem_x509_certificates(pem)
+            assert len(chain) == 3, name
+            inter, root, aaa = chain
+
+            # The two intermediates share subject and key, but differ in issuer.
+            assert inter.subject == aaa.subject, name
+            assert inter.public_key().public_numbers() == (
+                aaa.public_key().public_numbers()
+            ), name
+            assert inter.issuer != aaa.issuer, name
+
+            # The root is cross-signed, so clients can path to the real anchor.
+            assert root.subject != root.issuer, name
+            assert "emSign ECC Root CA - G3" in root.issuer.rfc4514_string(), name
+            assert root.subject == inter.issuer, name
+
+            # The private key belongs to the intermediate.
+            key = certs.load_pem_private_key(pem, None)
+            assert key.public_key().public_numbers() == (
+                inter.public_key().public_numbers()
+            ), name
+
+    def test_emudhra_code_signing_cas_excluded(self):
+        """The codeSigning-only intermediates cannot sign TLS server certs."""
+        assert "EM OV CS CA - G3B" not in certs.EMUDHRA_CA_CHAINS
+        assert "EM OV CS CA - G3C" not in certs.EMUDHRA_CA_CHAINS
 
     def test_tls_start_server_cannot_verify(self):
         ta = tlsconfig.TlsConfig()

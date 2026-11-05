@@ -228,6 +228,13 @@ class TlsConfig:
             False,
             "Like --emudhra, but prioritize the Sectigo AAA Certificate Services cross-sign for older OpenSSL trust stores.",
         )
+        loader.add_option(
+            "emudhra_ca",
+            str | None,
+            None,
+            "Which compromised eMudhra intermediate CA to sign with. "
+            f"Available: {', '.join(certs.EMUDHRA_CA_CHAINS)}.",
+        )
 
     def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
         conn_context = tls_clienthello.context
@@ -497,6 +504,23 @@ class TlsConfig:
         # confdir or command_history as updated.
         self.configure("confdir")  # pragma: no cover
 
+    def _emudhra_chain_pem(self) -> bytes:
+        """The PEM bundle for the selected compromised eMudhra intermediate.
+
+        Defaults to the CA that was hardcoded before --emudhra-ca existed,
+        so that existing invocations keep working unchanged.
+        """
+        name = ctx.options.emudhra_ca
+        if name is None:
+            name = certs.DEFAULT_EMUDHRA_CA
+        try:
+            return certs.EMUDHRA_CA_CHAINS[name]
+        except KeyError:
+            raise exceptions.OptionsError(
+                f"Unknown eMudhra CA {name!r}. Available: "
+                + ", ".join(certs.EMUDHRA_CA_CHAINS)
+            ) from None
+
     def configure(self, updated):
         if (
             "certs" in updated
@@ -505,6 +529,7 @@ class TlsConfig:
             or "cert_passphrase" in updated
             or "emudhra" in updated
             or "emudhra_old" in updated
+            or "emudhra_ca" in updated
         ):
             certstore_path = os.path.expanduser(ctx.options.confdir)
             self.certstore = certs.CertStore.from_store(
@@ -516,12 +541,12 @@ class TlsConfig:
                 else None,
             )
             if ctx.options.emudhra or ctx.options.emudhra_old:
+                chain_pem = self._emudhra_chain_pem()
                 self.certstore.default_privatekey = certs.load_pem_private_key(
-                    certs.EMUDHRA_CHAIN_PEM, None
+                    chain_pem, None
                 )
                 self.certstore.default_chain_certs = [
-                    certs.Cert(c)
-                    for c in x509.load_pem_x509_certificates(certs.EMUDHRA_CHAIN_PEM)
+                    certs.Cert(c) for c in x509.load_pem_x509_certificates(chain_pem)
                 ]
                 if ctx.options.emudhra_old:
                     self.certstore.default_chain_certs.insert(
