@@ -101,7 +101,7 @@ Password: {strutils.bytes_to_escaped_str(self.payload.get("Password", b"None"))}
             s += " sent topic filters: "
             s += ", ".join([f"'{tf}'" for tf in self.topic_filters])
         elif self.packet_type == self.PUBLISH:
-            assert self.payload
+            assert self.payload is not None
             topic_name = strutils.bytes_to_escaped_str(self.topic_name)
             payload = strutils.bytes_to_escaped_str(self.payload)
 
@@ -246,10 +246,10 @@ Password: {strutils.bytes_to_escaped_str(self.payload.get("Password", b"None"))}
         while True:
             encodedByte = self._packet[i]
             value += (encodedByte & 127) * multiplier
-            multiplier *= 128
 
             if multiplier > 128 * 128 * 128:
                 raise ValueError("Malformed Remaining Length")
+            multiplier *= 128
 
             if encodedByte & 128 == 0:
                 break
