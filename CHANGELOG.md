@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix the MQTT contentview failing on PUBLISH packets with an empty payload
+  (e.g. clearing a retained message) and on packets whose remaining length uses all four bytes.
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)
