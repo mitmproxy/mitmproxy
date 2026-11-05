@@ -30,6 +30,11 @@ from mitmproxy.contentviews._view_mqtt import mqtt
             id="PUBLISH",
         ),
         pytest.param(
+            b"\x31\x07\x00\x05topic",
+            "[PUBLISH] '' to topic 'topic'",
+            id="PUBLISH-empty-payload",
+        ),
+        pytest.param(
             b"""\x10\xba\x01\x00\x04MQTT\x04\x06\x00\x1e\x00\x1156:6F:5E:6A:01:05\x00-"""
             b"""xxxx/yy/zzzzzz/56:6F:5E:6A:01:05/messages/out"""
             b"""\x00l{"body":{"parameters":null},"header":{"from":"56:6F:5E:6A:01:05","messageId":"disconnected","type":"event"}}""",
@@ -52,7 +57,15 @@ def test_view_mqtt(data, expected_text):
     assert mqtt.prettify(data, Metadata()) == expected_text
 
 
-@pytest.mark.parametrize("data", [b"\xc0\xff\xff\xff\xff"])
+@pytest.mark.parametrize("data", [b"\xc0\xff\xff\xff\xff", b"\xc0\xff\xff\xff\xff\x01"])
 def test_mqtt_malformed(data):
     with pytest.raises(Exception):
         mqtt.prettify(data, Metadata())
+
+
+def test_mqtt_four_byte_remaining_length():
+    # a remaining length of 2_097_159 needs all four length bytes
+    payload = b"x" * 128**3
+    data = b"\x30\x87\x80\x80\x01\x00\x05topic" + payload
+    expected = f"[PUBLISH] '{payload.decode()}' to topic 'topic'"
+    assert mqtt.prettify(data, Metadata()) == expected
