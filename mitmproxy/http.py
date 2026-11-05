@@ -1,6 +1,7 @@
 import binascii
 import json
 import os
+import re
 import time
 import urllib.parse
 import warnings
@@ -923,11 +924,18 @@ class Request(Message):
         """
         accept_encoding = self.headers.get("accept-encoding")
         if accept_encoding:
-            self.headers["accept-encoding"] = ", ".join(
-                e
-                for e in {"gzip", "identity", "deflate", "br", "zstd"}
-                if e in accept_encoding
-            )
+            supported = {"gzip", "identity", "deflate", "br", "zstd"}
+            tokens = []
+            for token in accept_encoding.split(","):
+                coding, _, parameters = token.partition(";")
+                if coding.strip().lower() in supported or (
+                    coding.strip() == "*"
+                    and re.fullmatch(
+                        r"\s*q\s*=\s*0(?:\.0{0,3})?\s*", parameters, re.IGNORECASE
+                    )
+                ):
+                    tokens.append(token.strip())
+            self.headers["accept-encoding"] = ", ".join(tokens)
 
     def _get_urlencoded_form(self):
         is_valid_content_type = (
