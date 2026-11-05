@@ -1,9 +1,12 @@
 import urllib
+from types import SimpleNamespace
 
 import pytest
 
 import mitmproxy.test.tutils
+from mitmproxy import ctx
 from mitmproxy import exceptions
+from mitmproxy import http
 from mitmproxy import io
 from mitmproxy.addons import serverplayback
 from mitmproxy.test import taddons
@@ -439,3 +442,131 @@ def test_server_playback_response_deleted():
         f1.response = f2.response = None
         assert not sp.next_flow(f1)
         assert not sp.flowmap
+
+
+@pytest.fixture
+def playback(monkeypatch):
+    """ServerPlayback with in-memory options and no event loop or sockets."""
+    sp = serverplayback.ServerPlayback()
+    options = SimpleNamespace(
+        server_replay_ignore_content=False,
+        server_replay_ignore_payload_params=[],
+        server_replay_ignore_host=False,
+        server_replay_ignore_port=False,
+        server_replay_ignore_params=[],
+        server_replay_use_headers=[],
+        server_replay_reuse=False,
+        server_replay_nopop=False,
+    )
+    monkeypatch.setattr(ctx, "options", options, raising=False)
+    monkeypatch.setattr(
+        ctx,
+        "master",
+        SimpleNamespace(addons=SimpleNamespace(trigger=lambda hook: None)),
+        raising=False,
+    )
+    return sp, options
+
+
+def _replay_flow(path: str, body: bytes) -> http.HTTPFlow:
+    f = tflow.tflow()
+    f.request = http.Request.make("GET", "https://example.invalid" + path)
+    f.response = http.Response.make(200, body)
+    return f
+
+
+def _selected(sp, path: str) -> bytes:
+    selected = sp.next_flow(_replay_flow(path, b""))
+    assert selected is not None
+    return selected.response.content
+
+
+def test_replay_path_params_distinguish_final_segment_values(playback):
+    sp, _ = playback
+    old = _replay_flow("/record;revision=old", b"old fixture")
+    new = _replay_flow("/record;revision=new", b"new fixture")
+
+    sp.load_flows([old, new])
+    assert _selected(sp, "/record;revision=new") == b"new fixture"
+    assert _selected(sp, "/record;revision=old") == b"old fixture"
+
+    sp.load_flows([new, old])
+    assert _selected(sp, "/record;revision=old") == b"old fixture"
+
+
+def test_replay_path_params_present_absent_and_multiple(playback):
+    sp, _ = playback
+    sp.load_flows(
+        [
+            _replay_flow("/record;revision=new", b"with param"),
+            _replay_flow("/record", b"without param"),
+            _replay_flow("/record;a=1;b=2", b"a1b2"),
+            _replay_flow("/record;a=1;b=3", b"a1b3"),
+        ]
+    )
+    assert _selected(sp, "/record") == b"without param"
+    assert _selected(sp, "/record;revision=new") == b"with param"
+    assert _selected(sp, "/record;a=1;b=3") == b"a1b3"
+    assert _selected(sp, "/record;a=1;b=2") == b"a1b2"
+
+
+def test_replay_path_params_percent_encoded_semicolon(playback):
+    sp, _ = playback
+    sp.load_flows(
+        [
+            _replay_flow("/record%3Brevision=old", b"encoded old"),
+            _replay_flow("/record%3Brevision=new", b"encoded new"),
+            _replay_flow("/record;revision=old", b"literal old"),
+        ]
+    )
+    assert _selected(sp, "/record%3Brevision=new") == b"encoded new"
+    assert _selected(sp, "/record%3Brevision=old") == b"encoded old"
+    assert _selected(sp, "/record;revision=old") == b"literal old"
+
+
+def test_replay_path_params_survive_ignored_query(playback):
+    sp, options = playback
+    options.server_replay_ignore_params = ["token"]
+    sp.load_flows(
+        [
+            _replay_flow("/record;revision=old?token=1", b"old fixture"),
+            _replay_flow("/record;revision=new?token=2", b"new fixture"),
+        ]
+    )
+    assert _selected(sp, "/record;revision=new?token=3") == b"new fixture"
+    assert _selected(sp, "/record;revision=old?token=1") == b"old fixture"
+
+
+def test_replay_path_params_query_only_ignore_matches_path(playback):
+    sp, options = playback
+    options.server_replay_ignore_params = ["token"]
+    sp.load_flows([_replay_flow("/record;revision=new?token=abc", b"new fixture")])
+    assert _selected(sp, "/record;revision=new?token=zzz") == b"new fixture"
+    assert not sp.flowmap
+    assert sp.next_flow(_replay_flow("/record;revision=new?token=zzz", b"")) is None
+
+
+def test_replay_path_params_prior_segment_semicolon_unchanged(playback):
+    sp, _ = playback
+    sp.load_flows(
+        [
+            _replay_flow("/group;v=1/record", b"old fixture"),
+            _replay_flow("/group;v=2/record", b"new fixture"),
+        ]
+    )
+    assert _selected(sp, "/group;v=2/record") == b"new fixture"
+    assert _selected(sp, "/group;v=1/record") == b"old fixture"
+
+
+def test_replay_path_params_reuse_and_pop(playback):
+    sp, options = playback
+    sp.load_flows([_replay_flow("/record;revision=new", b"new fixture")])
+    assert sp.next_flow(_replay_flow("/record;revision=old", b"")) is None
+    assert _selected(sp, "/record;revision=new") == b"new fixture"
+    assert not sp.flowmap
+
+    options.server_replay_reuse = True
+    sp.load_flows([_replay_flow("/record;revision=new", b"new fixture")])
+    assert _selected(sp, "/record;revision=new") == b"new fixture"
+    assert _selected(sp, "/record;revision=new") == b"new fixture"
+    assert sp.count() == 1
