@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix editing multipart forms whose boundary contains characters like `=`. The boundary was
+  percent-encoded in the body, so it no longer matched the `Content-Type` header and the form was lost.
+  ([#8570](https://github.com/mitmproxy/mitmproxy/pull/8570), @qodelicious)
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)
