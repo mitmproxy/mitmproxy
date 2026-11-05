@@ -13,6 +13,9 @@
 - Fix filter expressions where a filter without an argument is followed by a closing bracket,
   e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
   ([#8537](https://github.com/mitmproxy/mitmproxy/pull/8537), @qodelicious)
+- Fix `curl` export for `GET` requests with a body: emit an explicit `-X GET` so that
+  curl does not implicitly switch to `POST` because of `-d`.
+  ([#8564](https://github.com/mitmproxy/mitmproxy/pull/8564), @liangzaihuanyv)
 
 ## 25 October 2026: mitmproxy 12.3.1
 
