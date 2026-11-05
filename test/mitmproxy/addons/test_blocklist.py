@@ -12,6 +12,7 @@ from mitmproxy.test import tflow
         ("/~u index.html/TOOMANY/300", "Invalid number of parameters"),
         (":~d ~d ~d:200", "Invalid filter"),
         ("/~u index.html/abc", "Invalid HTTP status code"),
+        ("", "Invalid number of parameters"),
     ],
 )
 def test_parse_spec_err(filter, err):

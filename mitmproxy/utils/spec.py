@@ -8,6 +8,8 @@ def parse_spec(option: str) -> tuple[flowfilter.TFilter, str, str]:
         [/flow-filter]/subject/replacement
 
     """
+    if not option:
+        raise ValueError("Invalid number of parameters (2 or 3 are expected)")
     sep, rem = option[0], option[1:]
     parts = rem.split(sep, 2)
     if len(parts) == 2:

@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix a crash when `map_local`, `map_remote`, `modify_headers`, `modify_body` or `block_list`
+  gets an empty entry. It now shows the usual "Invalid number of parameters" error.
+  ([#8569](https://github.com/mitmproxy/mitmproxy/pull/8569), @qodelicious)
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)
