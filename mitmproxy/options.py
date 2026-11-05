@@ -245,5 +245,15 @@ class Options(optmanager.OptManager):
             Timeout in seconds for inactive TCP connections. Connections will be closed after this period of inactivity.
             """,
         )
+        self.add_option(
+            "connection_max_per_address",
+            int,
+            5,
+            """
+            Maximum number of concurrent connections mitmproxy will hold open to any single
+            destination address. A destination that already has this many connections open
+            will delay new ones until one of the existing connections closes.
+            """,
+        )
 
         self.update(**kwargs)
