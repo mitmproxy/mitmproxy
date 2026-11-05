@@ -143,8 +143,8 @@ class LayeredH3Connection(H3Connection):
     def _after_send(self, stream_id: int, end_stream: bool) -> None:
         # if the stream ended, `QuicConnection` has an assert that no further data is being sent
         # to catch this more early on, we set the header state on the `H3Stream`
-        if end_stream:
-            self._stream[stream_id].headers_send_state = HeadersState.AFTER_TRAILERS
+        if end_stream and (stream := self._stream.get(stream_id)) is not None:
+            stream.headers_send_state = HeadersState.AFTER_TRAILERS
 
     def _handle_request_or_push_frame(
         self,
@@ -182,10 +182,11 @@ class LayeredH3Connection(H3Connection):
     def end_stream(self, stream_id: int) -> None:
         """Ends the given stream if not already done so."""
 
-        stream = self._get_or_create_stream(stream_id)
-        if stream.headers_send_state != HeadersState.AFTER_TRAILERS:
+        with self._get_or_create_stream(stream_id) as stream:
+            stream_ended = stream.headers_send_state == HeadersState.AFTER_TRAILERS
+        if not stream_ended:
             super().send_data(stream_id, b"", end_stream=True)
-            stream.headers_send_state = HeadersState.AFTER_TRAILERS
+            self._after_send(stream_id, end_stream=True)
 
     def get_next_available_stream_id(self, is_unidirectional: bool = False):
         """Reserves and returns the next available stream ID."""
@@ -221,9 +222,6 @@ class LayeredH3Connection(H3Connection):
                 event.error_code,
                 stop_send=isinstance(event, QuicStreamStopSending),
             )
-            stream = self._get_or_create_stream(event.stream_id)
-            stream.ended = True
-            stream.headers_recv_state = HeadersState.AFTER_TRAILERS
             return [StreamClosed(event.stream_id, event.error_code)]
 
         # convert data events from the QUIC layer back to aioquic events
@@ -231,7 +229,9 @@ class LayeredH3Connection(H3Connection):
             # Discard contents if we have already sent STOP_SENDING on this stream.
             if event.stream_id in self._closed_streams:
                 return []
-            elif self._get_or_create_stream(event.stream_id).ended:
+            with self._get_or_create_stream(event.stream_id) as stream:
+                receiving_ended = stream.receiving_ended
+            if receiving_ended:
                 # aioquic will not send us any data events once a stream has ended.
                 # Instead, it will close the connection. We simulate this here for H3 tests.
                 self.close_connection(
@@ -263,8 +263,11 @@ class LayeredH3Connection(H3Connection):
         if stream_id not in self._closed_streams:
             self._closed_streams.add(stream_id)
 
-            stream = self._get_or_create_stream(stream_id)
-            stream.headers_send_state = HeadersState.AFTER_TRAILERS
+            with self._get_or_create_stream(stream_id) as stream:
+                stream.headers_send_state = HeadersState.AFTER_TRAILERS
+                stream.headers_recv_state = HeadersState.AFTER_TRAILERS
+                stream.sending_ended = True
+                stream.receiving_ended = True
             # https://www.rfc-editor.org/rfc/rfc9000.html#section-3.5-8
             # An endpoint that wishes to terminate both directions of
             # a bidirectional stream can terminate one direction by
@@ -291,9 +294,11 @@ class LayeredH3Connection(H3Connection):
         """Sends headers over the given stream."""
 
         # ensure we haven't sent something before
-        stream = self._get_or_create_stream(stream_id)
-        if stream.headers_send_state != HeadersState.INITIAL:
-            raise FrameUnexpected("initial HEADERS frame is not allowed in this state")
+        with self._get_or_create_stream(stream_id) as stream:
+            if stream.headers_send_state != HeadersState.INITIAL:
+                raise FrameUnexpected(
+                    "initial HEADERS frame is not allowed in this state"
+                )
         super().send_headers(stream_id, headers, end_stream)
         self._after_send(stream_id, end_stream)
 
@@ -301,9 +306,11 @@ class LayeredH3Connection(H3Connection):
         """Sends trailers over the given stream and ends it."""
 
         # ensure we got some headers first
-        stream = self._get_or_create_stream(stream_id)
-        if stream.headers_send_state != HeadersState.AFTER_HEADERS:
-            raise FrameUnexpected("trailing HEADERS frame is not allowed in this state")
+        with self._get_or_create_stream(stream_id) as stream:
+            if stream.headers_send_state != HeadersState.AFTER_HEADERS:
+                raise FrameUnexpected(
+                    "trailing HEADERS frame is not allowed in this state"
+                )
         super().send_headers(stream_id, trailers, end_stream=True)
         self._after_send(stream_id, end_stream=True)
 
