@@ -266,6 +266,86 @@ def test_content_raises():
     assert SaveHar().make_har([flow])
 
 
+@pytest.mark.parametrize("method", ["DELETE", "GET", "PURGE"])
+def test_request_body_exported_for_other_methods(method: str, tmp_path: Path):
+    # GET/DELETE/PURGE bodies are synthetic inert bytes; any nonempty raw body is kept.
+    body = b'{"inert": true, "id": 7}'
+    flow = tflow.tflow()
+    flow.request = Request.make(
+        method,
+        f"https://example.invalid/items/{method.lower()}",
+        body,
+        Headers(content_type="application/json"),
+    )
+
+    har = SaveHar().make_har([flow])
+    entry = har["log"]["entries"][0]
+    assert entry["request"]["bodySize"] == len(body)
+    assert entry["request"]["postData"]["text"] == body.decode()
+
+    path = tmp_path / f"{method}.har"
+    SaveHar().export_har([flow], types.Path(str(path)))
+    with open(path, "rb") as f:
+        imported = list(io.FlowReader(f).stream())
+    assert len(imported) == 1
+    assert imported[0].request.method == method
+    assert imported[0].request.pretty_url == flow.request.pretty_url
+    assert imported[0].request.get_content(strict=False) == body
+
+
+def test_request_body_exported_for_delete_form(tmp_path: Path):
+    flow = tflow.tflow()
+    flow.request = Request.make(
+        "DELETE",
+        "https://example.invalid/items",
+        b"tag=a&tag=b",
+        Headers(content_type="application/x-www-form-urlencoded"),
+    )
+
+    har = SaveHar().make_har([flow])
+    post_data = har["log"]["entries"][0]["request"]["postData"]
+    assert [p["value"] for p in post_data["params"]] == ["a", "b"]
+
+    path = tmp_path / "delete-form.har"
+    SaveHar().export_har([flow], types.Path(str(path)))
+    with open(path, "rb") as f:
+        imported = list(io.FlowReader(f).stream())
+    assert imported[0].request.get_content(strict=False) == b"tag=a&tag=b"
+
+
+@pytest.mark.parametrize("method", ["DELETE", "GET", "PURGE"])
+def test_no_post_data_for_bodyless_request(method: str):
+    flow = tflow.tflow()
+    flow.request = Request.make(method, "https://example.invalid/items/7")
+    har = SaveHar().make_har([flow])
+    assert "postData" not in har["log"]["entries"][0]["request"]
+
+
+@pytest.mark.parametrize("method", ["POST", "PUT", "PATCH"])
+def test_post_data_preserved_for_whitelisted_methods(method: str):
+    flow = tflow.tflow()
+    flow.request = Request.make(
+        method,
+        "https://example.invalid/items",
+        b"x=1",
+        Headers(content_type="application/x-www-form-urlencoded"),
+    )
+    har = SaveHar().make_har([flow])
+    post_data = har["log"]["entries"][0]["request"]["postData"]
+    assert post_data["text"] == "x=1"
+    assert post_data["mimeType"] == "application/x-www-form-urlencoded"
+    assert post_data["params"] == [{"name": "x", "value": "1"}]
+
+
+@pytest.mark.parametrize("method", ["POST", "PUT", "PATCH"])
+def test_empty_post_data_metadata_preserved(method: str):
+    flow = tflow.tflow()
+    flow.request = Request.make(method, "https://example.invalid/items", b"")
+    har = SaveHar().make_har([flow])
+    post_data = har["log"]["entries"][0]["request"]["postData"]
+    assert post_data == {"mimeType": "", "text": "", "params": []}
+
+
 if __name__ == "__main__":
     version.VERSION = "1.2.3"
     s = SaveHar()

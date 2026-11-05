@@ -256,7 +256,7 @@ class SaveHar:
             "timings": timings,
         }
 
-        if flow.request.method in ["POST", "PUT", "PATCH"]:
+        if flow.request.method in ["POST", "PUT", "PATCH"] or flow.request.raw_content:
             params = self.format_multidict(flow.request.urlencoded_form)
             entry["request"]["postData"] = {
                 "mimeType": flow.request.headers.get("Content-Type", ""),
