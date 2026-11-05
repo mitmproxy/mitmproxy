@@ -3,7 +3,6 @@ from __future__ import annotations
 import mimetypes
 import re
 import warnings
-from urllib.parse import quote
 
 from mitmproxy.net.http import headers
 
@@ -13,8 +12,7 @@ def encode_multipart(content_type: str, parts: list[tuple[bytes, bytes]]) -> byt
         ct = headers.parse_content_type(content_type)
         if ct is not None:
             try:
-                raw_boundary = ct[2]["boundary"].encode("ascii")
-                boundary = quote(raw_boundary)
+                boundary = ct[2]["boundary"].encode("ascii")
             except (KeyError, UnicodeError):
                 return b""
             hdrs = []
@@ -24,7 +22,7 @@ def encode_multipart(content_type: str, parts: list[tuple[bytes, bytes]]) -> byt
                 )
 
                 if key:
-                    hdrs.append(b"--%b" % boundary.encode("utf-8"))
+                    hdrs.append(b"--%b" % boundary)
                     disposition = b'form-data; name="%b"' % key
                     hdrs.append(b"Content-Disposition: %b" % disposition)
                     hdrs.append(b"Content-Type: %b" % file_type.encode("utf-8"))
@@ -34,12 +32,10 @@ def encode_multipart(content_type: str, parts: list[tuple[bytes, bytes]]) -> byt
 
                 if value is not None:
                     # If boundary is found in value then raise ValueError
-                    if re.search(
-                        rb"^--%b$" % re.escape(boundary.encode("utf-8")), value
-                    ):
+                    if re.search(rb"^--%b$" % re.escape(boundary), value):
                         raise ValueError(b"boundary found in encoded string")
 
-            hdrs.append(b"--%b--\r\n" % boundary.encode("utf-8"))
+            hdrs.append(b"--%b--\r\n" % boundary)
             temp = b"\r\n".join(hdrs)
             return temp
     return b""
