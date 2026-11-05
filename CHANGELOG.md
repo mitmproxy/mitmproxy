@@ -9,6 +9,7 @@
 
 - Fix a crash when `map_local`, `map_remote`, `modify_headers`, `modify_body` or `block_list`
   gets an empty entry. It now shows the usual "Invalid number of parameters" error.
+  ([#8569](https://github.com/mitmproxy/mitmproxy/pull/8569), @qodelicious)
 - mitmweb: Add a clear button to the filter inputs (`Search`, `Highlight`, `Intercept`).
   ([#8626](https://github.com/mitmproxy/mitmproxy/pull/8626), @Anto1368)
 - Show the traceback when client replay crashes.
