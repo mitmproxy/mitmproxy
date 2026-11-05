@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix HAR import of `application/x-www-form-urlencoded` requests whose body is provided
+  through `postData.params` instead of `postData.text`. Previously, these entries aborted
+  HAR import with a missing-text error; now the parameters are imported as an URL-encoded body.
+  ([#8561](https://github.com/mitmproxy/mitmproxy/pull/8561), @liangzaihuanyv)
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)

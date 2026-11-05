@@ -8,6 +8,7 @@ from datetime import datetime
 from mitmproxy import connection
 from mitmproxy import exceptions
 from mitmproxy import http
+from mitmproxy.net.http import url
 from mitmproxy.net.http.headers import infer_content_encoding
 
 logger = logging.getLogger(__name__)
@@ -76,7 +77,21 @@ def request_to_flow(request_json: dict) -> http.HTTPFlow:
     new_flow = http.HTTPFlow(client_conn, server_conn)
 
     if "postData" in request_json["request"]:
-        request_content = request_json["request"]["postData"]["text"]
+        post_data = request_json["request"]["postData"]
+        if "text" in post_data:
+            # `text` always wins, even if it is empty.
+            request_content = post_data["text"]
+        elif (
+            post_data.get("mimeType", "").split(";", 1)[0].strip().lower()
+            == "application/x-www-form-urlencoded"
+        ):
+            # HAR allows `params` as an alternative to `text` for form bodies.
+            request_content = url.encode(
+                [(param["name"], param["value"]) for param in post_data["params"]]
+            )
+        else:
+            # Other params-only payloads keep their previous behavior.
+            request_content = post_data["text"]
 
     new_flow.request = http.Request.make(
         request_method, request_url, request_content, request_headers
