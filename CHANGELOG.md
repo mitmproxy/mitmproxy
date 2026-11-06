@@ -6,6 +6,8 @@
 -->
 
 ## Unreleased: mitmproxy next
+- Keep mitmdump running until concurrent client replays finish.
+  ([#8525](https://github.com/mitmproxy/mitmproxy/pull/8525), @hakarrr)
 
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.

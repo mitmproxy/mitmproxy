@@ -240,9 +240,9 @@ class ClientPlayback:
     @command.command("replay.client.count")
     def count(self) -> int:
         """
-        Approximate number of flows queued for replay.
+        Approximate number of queued and in-flight client replays.
         """
-        return self.queue.qsize() + int(bool(self.inflight))
+        return self.queue.qsize() + int(bool(self.inflight)) + len(self.replay_tasks)
 
     @command.command("replay.client.stop")
     def stop_replay(self) -> None:
