@@ -6,6 +6,8 @@
 -->
 
 ## Unreleased: mitmproxy next
+- Report decoded response content sizes in HAR exports while retaining encoded body sizes.
+  ([#8534](https://github.com/mitmproxy/mitmproxy/pull/8534), @hakarrr)
 
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
