@@ -6,6 +6,8 @@
 -->
 
 ## Unreleased: mitmproxy next
+- Preserve unknown HTTPS DNS service parameters when decoding JSON.
+  ([#8531](https://github.com/mitmproxy/mitmproxy/pull/8531), @hakarrr)
 
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
