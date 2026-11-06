@@ -155,6 +155,26 @@ class TestScript:
             ]
             sc.done()
 
+    def test_load_script_bad_option(self, tdata, caplog):
+        with taddons.context():
+            script.Script(
+                tdata.path("mitmproxy/data/addonscripts/bad_option.py"),
+                False,
+            )
+        assert "error in script" in caplog.text
+        assert "bad_option.py" in caplog.text
+        assert "TypeError" in caplog.text
+
+    def test_load_script_register_error(self, tdata, caplog):
+        with taddons.context():
+            script.Script(
+                tdata.path("mitmproxy/data/addonscripts/register_error.py"),
+                False,
+            )
+        assert "error in script" in caplog.text
+        assert "register_error.py" in caplog.text
+        assert "ValueError" in caplog.text
+
 
 class TestCutTraceback:
     def raise_(self, i):
