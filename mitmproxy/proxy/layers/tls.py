@@ -594,10 +594,15 @@ class ClientTLSLayer(TLSLayer):
                 parent_layer.conn = parent_layer.tunnel_connection = connection.Server(
                     address=None
                 )
+            # Respect show_ignored_hosts here too, just like the --ignore/--allow path in
+            # next_layer.py: `ignore=True` hides the flow entirely, so hardcoding it means
+            # connections ignored via a `tls_clienthello` hook never show up regardless of
+            # this option.
+            show = self.context.options.show_ignored_hosts
             if self.is_dtls:
-                self.child_layer = udp.UDPLayer(self.context, ignore=True)
+                self.child_layer = udp.UDPLayer(self.context, ignore=not show)
             else:
-                self.child_layer = tcp.TCPLayer(self.context, ignore=True)
+                self.child_layer = tcp.TCPLayer(self.context, ignore=not show)
             yield from self.event_to_child(
                 events.DataReceived(self.context.client, bytes(self.recv_buffer))
             )
