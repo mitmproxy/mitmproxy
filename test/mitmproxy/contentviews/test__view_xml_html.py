@@ -51,3 +51,39 @@ def test_render_priority():
     assert not xml_html.render_priority(b"data", Metadata(content_type="text/plain"))
     assert not xml_html.render_priority(b"", Metadata(content_type="text/xml"))
     assert xml_html.render_priority(b"<html/>", Metadata())
+
+
+@pytest.mark.parametrize(
+    "markup",
+    [
+        b'<p title="1 > 0">text</p>',
+        b"<p title='1 > 0'>text</p>",
+        b'<p title="a > b > c" other=">">text</p>',
+        b'<p title="it\'s > zero">text</p>',
+        b"<p title='say \"yes > no\"'>text</p>",
+    ],
+)
+def test_quoted_tag_delimiters(markup):
+    assert xml_html.prettify(markup, Metadata()) == markup.decode() + "\n"
+
+
+def test_quoted_tag_delimiter_in_nested_element():
+    markup = b'<root><item value="a > b"><child/></item></root>'
+    assert xml_html.prettify(markup, Metadata()) == (
+        '<root>\n  <item value="a > b">\n    <child/>\n  </item>\n</root>\n'
+    )
+
+
+@pytest.mark.parametrize(
+    "markup",
+    [
+        b'<p title="a > b"/>',
+        b'<p title="a > b">',
+        b'<p title="unterminated > value',
+        b'<p title="unterminated > value>',
+        b'<!-- " > quoted -->',
+        b'<![CDATA[" > quoted]]>',
+    ],
+)
+def test_quoted_tag_delimiter_special_cases(markup):
+    assert xml_html.prettify(markup, Metadata()) == markup.decode() + "\n"
