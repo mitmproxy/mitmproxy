@@ -6,6 +6,8 @@
 -->
 
 ## Unreleased: mitmproxy next
+- Match HTTP/1 Connection tokens case-insensitively when deciding whether to close a connection.
+  ([#8523](https://github.com/mitmproxy/mitmproxy/pull/8523), @hakarrr)
 
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.

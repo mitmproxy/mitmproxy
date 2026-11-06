@@ -289,3 +289,23 @@ class TestReadHeaders:
         data = b"bar:"
         headers = self._read(data)
         assert headers.fields == ((b"bar", b""),)
+
+
+@pytest.mark.parametrize(
+    "version,values,expected",
+    [
+        (b"HTTP/1.1", ["Close"], True),
+        (b"HTTP/1.1", ["CLOSE"], True),
+        (b"HTTP/1.0", ["Keep-Alive"], False),
+        (b"HTTP/1.0", ["KEEP-ALIVE"], False),
+        (b"HTTP/1.1", ["keep-alive, Close"], True),
+        (b"HTTP/1.1", ["Keep-Alive", "CLOSE"], True),
+        (b"HTTP/1.0", ["other", "Keep-Alive"], False),
+        (b"HTTP/1.1", ["disclose, xkeep-alive"], False),
+    ],
+)
+def test_connection_close_case_insensitive(version, values, expected):
+    headers = Headers()
+    headers.set_all("Connection", values)
+    assert connection_close(version, headers) is expected
+    assert headers.get_all("Connection") == values

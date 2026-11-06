@@ -1,6 +1,7 @@
 import pytest
 
 from mitmproxy import http
+from mitmproxy.proxy.commands import CloseConnection
 from mitmproxy.proxy.commands import SendData
 from mitmproxy.proxy.events import DataReceived
 from mitmproxy.proxy.layers.http import Http1Client
@@ -230,3 +231,42 @@ class TestClient:
             >> RequestHeaders(3, req, True)
             << SendData(tctx.server, Placeholder(bytes))
         )
+
+
+@pytest.mark.parametrize("connection_value", [b"Close", b"CLOSE", b"keep-alive, Close"])
+def test_server_closes_after_mixed_case_connection(tctx, connection_value):
+    assert (
+        Playbook(Http1Server(tctx))
+        >> DataReceived(
+            tctx.client,
+            b"GET / HTTP/1.1\r\nHost: example.com\r\nConnection: "
+            + connection_value
+            + b"\r\n\r\n",
+        )
+        << ReceiveHttp(Placeholder(RequestHeaders))
+        << ReceiveHttp(RequestEndOfMessage(1))
+        >> ResponseHeaders(1, http.Response.make(200))
+        << SendData(tctx.client, b"HTTP/1.1 200 OK\r\ncontent-length: 0\r\n\r\n")
+        >> ResponseEndOfMessage(1)
+        << CloseConnection(tctx.client)
+    )
+
+
+@pytest.mark.parametrize("connection_value", [b"Close", b"CLOSE", b"keep-alive, Close"])
+def test_client_closes_after_mixed_case_connection(tctx, connection_value):
+    request = http.Request.make("GET", "http://example.com/")
+    assert (
+        Playbook(Http1Client(tctx))
+        >> RequestHeaders(1, request, True)
+        << SendData(tctx.server, b"GET / HTTP/1.1\r\ncontent-length: 0\r\n\r\n")
+        >> RequestEndOfMessage(1)
+        >> DataReceived(
+            tctx.server,
+            b"HTTP/1.1 200 OK\r\ncontent-length: 0\r\nConnection: "
+            + connection_value
+            + b"\r\n\r\n",
+        )
+        << ReceiveHttp(Placeholder(ResponseHeaders))
+        << ReceiveHttp(ResponseEndOfMessage(1))
+        << CloseConnection(tctx.server)
+    )
