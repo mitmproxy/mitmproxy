@@ -13,9 +13,13 @@ RUN apt-get update \
 RUN mkdir /home/mitmproxy/.mitmproxy \
     && chown mitmproxy:mitmproxy /home/mitmproxy/.mitmproxy
 
-COPY --from=wheelbuilder /wheels /wheels
-RUN pip install --no-index --find-links=/wheels mitmproxy
-RUN rm -rf /wheels
+# The wheels are bind-mounted from the `wheelbuilder` stage rather than COPYed
+# in. A COPY commits them to their own layer, and the `rm -rf /wheels` below it
+# could only write a whiteout on top -- a layer that is already committed cannot
+# be removed by a later one, so the wheels shipped in every published image. A
+# bind mount is never committed to a layer, so there is nothing left to remove.
+RUN --mount=type=bind,from=wheelbuilder,source=/wheels,target=/wheels \
+    pip install --no-index --find-links=/wheels mitmproxy
 
 VOLUME /home/mitmproxy/.mitmproxy
 
