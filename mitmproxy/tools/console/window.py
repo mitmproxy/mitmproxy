@@ -16,6 +16,7 @@ from mitmproxy.tools.console import options
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import statusbar
+from mitmproxy.tools.console import versioninfo
 
 
 class StackWidget(urwid.Frame):
@@ -60,6 +61,7 @@ class WindowStack:
             options=options.Options(master),
             help=help.HelpView(master),
             eventlog=eventlog.EventLog(master),
+            versioninfo=versioninfo.VersionInfo(master),
             edit_focus_query=grideditor.QueryEditor(master),
             edit_focus_comment=grideditor.CommentEditor(master),
             edit_focus_cookies=grideditor.CookieEditor(master),
