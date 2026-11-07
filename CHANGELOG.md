@@ -9,6 +9,7 @@
 
 - Fix a crash when HTTP/2 or HTTP/3 trailers are forwarded to an HTTP/1 peer.
   Trailers are now sent with the last chunk of a chunked body, and dropped otherwise.
+  ([#8579](https://github.com/mitmproxy/mitmproxy/pull/8579), @1AbdullahButt)
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)
