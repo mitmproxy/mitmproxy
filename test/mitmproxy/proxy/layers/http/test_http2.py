@@ -266,6 +266,46 @@ def test_request_trailers(tctx: Context, open_h2_server_conn: Server, stream):
     ]
 
 
+def test_request_trailers_to_http1_server(tctx: Context):
+    """HTTP/1 can't carry trailers without chunked encoding, so they are dropped."""
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                ((b":method", b"POST"), *example_request_headers[1:])
+                + ((b"content-length", b"5"),)
+            ).serialize()
+            + cff.build_data_frame(b"Hello").serialize()
+            + cff.build_headers_frame(
+                example_request_trailers, flags=["END_STREAM"]
+            ).serialize(),
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(
+            server,
+            b"POST / HTTP/1.1\r\nHost: example.com\r\ncontent-length: 5\r\n\r\nHello",
+        )
+        >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+        << http.HttpResponseHeadersHook(flow)
+        << CloseConnection(server)
+        >> reply(to=-2)
+        << http.HttpResponseHook(flow)
+        >> reply()
+        << SendData(tctx.client, Placeholder(bytes))
+    )
+    assert flow().request.trailers == Headers(example_request_trailers)
+    assert flow().response.status_code == 200
+
+
 def test_upstream_error(tctx):
     playbook, cff = start_h2_client(tctx)
     flow = Placeholder(HTTPFlow)
