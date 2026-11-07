@@ -41,6 +41,7 @@ export interface OptionsState {
     listen_port: number | undefined;
     map_local: string[];
     map_remote: string[];
+    max_decoded_size: string | undefined;
     mode: string[];
     modify_body: string[];
     modify_headers: string[];
@@ -151,6 +152,7 @@ export const defaultState: OptionsState = {
     listen_port: undefined,
     map_local: [],
     map_remote: [],
+    max_decoded_size: "100m",
     mode: ["regular"],
     modify_body: [],
     modify_headers: [],

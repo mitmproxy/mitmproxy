@@ -24,6 +24,12 @@ else:  # pragma: no cover
 CachedDecode = collections.namedtuple("CachedDecode", "encoded encoding errors decoded")
 _cache = CachedDecode(None, None, None, None)
 
+# Maximum size of decompressed data. This protects against decompression
+# bombs, where a small compressed body expands to an arbitrarily large
+# amount of data. The limit is configurable through the `max_decoded_size`
+# option and can be set to `None` to disable it.
+MAX_DECODED_SIZE: int | None = 100 * 1024 * 1024
+
 
 @overload
 def decode(encoded: None, encoding: str, errors: str = "strict") -> None: ...
@@ -149,6 +155,25 @@ def identity(content):
     return content
 
 
+def _size_limit_error() -> ValueError:
+    return ValueError(
+        f"Decompressed content exceeds the maximum size of {MAX_DECODED_SIZE} bytes."
+    )
+
+
+def _decompress_zlib(wbits: int, content: bytes) -> bytes:
+    decompressor = zlib.decompressobj(wbits)
+    if MAX_DECODED_SIZE is None:
+        return decompressor.decompress(content) + decompressor.flush()
+
+    # Ask for one byte more than the limit so we can distinguish content
+    # that fits exactly from content that does not.
+    out = decompressor.decompress(content, MAX_DECODED_SIZE + 1)
+    if len(out) > MAX_DECODED_SIZE or decompressor.unconsumed_tail:
+        raise _size_limit_error()
+    return out + decompressor.flush()
+
+
 def decode_gzip(content: bytes) -> bytes:
     """Decode gzip or zlib-compressed data using zlib's auto-detection."""
     if not content:
@@ -158,8 +183,7 @@ def decode_gzip(content: bytes) -> bytes:
         # Using wbits=47 (32 + 15) tells zlib to automatically detect both gzip and zlib headers.
         # This simplifies decoding and avoids the need for a separate gzip.GzipFile fallback.
         # Reference: https://docs.python.org/3/library/zlib.html#zlib.decompress
-        decompressor = zlib.decompressobj(47)
-        return decompressor.decompress(content) + decompressor.flush()
+        return _decompress_zlib(47, content)
     except zlib.error as e:
         raise ValueError(f"Decompression failed: {e}")
 
@@ -176,7 +200,42 @@ def encode_gzip(content: bytes) -> bytes:
 def decode_brotli(content: bytes) -> bytes:
     if not content:
         return b""
-    return brotli.decompress(content)
+    if MAX_DECODED_SIZE is None:
+        return brotli.decompress(content)
+
+    decompressor = brotli.Decompressor()
+    # Limit the decoder's internal output buffer. Without this, a tiny
+    # compressed body can expand to hundreds of megabytes in a single
+    # process() call before we get a chance to check MAX_DECODED_SIZE.
+    buffer_limit = min(64 * 1024, MAX_DECODED_SIZE + 1)
+    out = bytearray()
+
+    def drain() -> None:
+        # The decoder buffers output once the buffer limit is reached.
+        # Drain it with empty input before feeding more data.
+        while not decompressor.can_accept_more_data():
+            before = len(out)
+            out.extend(decompressor.process(b"", buffer_limit))
+            if len(out) > MAX_DECODED_SIZE:
+                raise _size_limit_error()
+            if len(out) == before:  # pragma: no cover
+                raise ValueError("Decompression failed: incomplete brotli stream")
+
+    chunk_size = 8192
+    for i in range(0, len(content), chunk_size):
+        out.extend(decompressor.process(content[i : i + chunk_size], buffer_limit))
+        if len(out) > MAX_DECODED_SIZE:
+            raise _size_limit_error()
+        drain()
+
+    while not decompressor.is_finished():
+        more = decompressor.process(b"", buffer_limit)
+        if not more:
+            raise ValueError("Decompression failed: incomplete brotli stream")
+        out.extend(more)
+        if len(out) > MAX_DECODED_SIZE:
+            raise _size_limit_error()
+    return bytes(out)
 
 
 def encode_brotli(content: bytes) -> bytes:
@@ -187,7 +246,21 @@ def encode_brotli(content: bytes) -> bytes:
 def decode_zstd(content: bytes) -> bytes:
     if not content:
         return b""
-    return zstd.decompress(content)
+    if MAX_DECODED_SIZE is None:
+        return zstd.decompress(content)
+
+    out = bytearray()
+    remaining = content
+    while remaining:
+        decompressor = zstd.ZstdDecompressor()
+        max_length = MAX_DECODED_SIZE - len(out) + 1
+        out.extend(decompressor.decompress(remaining, max_length=max_length))
+        if len(out) > MAX_DECODED_SIZE:
+            raise _size_limit_error()
+        if not decompressor.eof:
+            raise ValueError("Decompression failed: incomplete zstd frame")
+        remaining = decompressor.unused_data
+    return bytes(out)
 
 
 def encode_zstd(content: bytes) -> bytes:
@@ -207,9 +280,9 @@ def decode_deflate(content: bytes) -> bytes:
     if not content:
         return b""
     try:
-        return zlib.decompress(content)
+        return _decompress_zlib(15, content)
     except zlib.error:
-        return zlib.decompress(content, -15)
+        return _decompress_zlib(-15, content)
 
 
 def encode_deflate(content: bytes) -> bytes:
