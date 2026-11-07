@@ -17,10 +17,12 @@ from ._events import RequestData
 from ._events import RequestEndOfMessage
 from ._events import RequestHeaders
 from ._events import RequestProtocolError
+from ._events import RequestTrailers
 from ._events import ResponseData
 from ._events import ResponseEndOfMessage
 from ._events import ResponseHeaders
 from ._events import ResponseProtocolError
+from ._events import ResponseTrailers
 from mitmproxy import http
 from mitmproxy import version
 from mitmproxy.connection import Connection
@@ -44,6 +46,8 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
     response: http.Response | None = None
     request_done: bool = False
     response_done: bool = False
+    trailers: http.Headers | None = None
+    """Trailers to send with the last chunk of the message we are currently sending."""
     # this is a bit of a hack to make both mypy and PyCharm happy.
     state: Callable[[events.Event], layer.CommandGenerator[None]] | Callable
     body_reader: TBodyReader
@@ -256,6 +260,10 @@ class Http1Server(Http1Connection):
                 raw = event.data
             if raw:
                 yield commands.SendData(self.conn, raw)
+        elif isinstance(event, ResponseTrailers):
+            # HTTP/1 can only carry trailers in a chunked body,
+            # so we send them with the last chunk or drop them otherwise.
+            self.trailers = event.trailers
         elif isinstance(event, ResponseEndOfMessage):
             assert self.request
             assert self.response
@@ -264,7 +272,8 @@ class Http1Server(Http1Connection):
                 and "chunked"
                 in self.response.headers.get("transfer-encoding", "").lower()
             ):
-                yield commands.SendData(self.conn, b"0\r\n\r\n")
+                yield commands.SendData(self.conn, _last_chunk(self.trailers))
+            self.trailers = None
             yield from self.mark_done(response=True)
         elif isinstance(event, ResponseProtocolError):
             if not (self.conn.state & ConnectionState.CAN_WRITE):
@@ -384,12 +393,17 @@ class Http1Client(Http1Connection):
                 raw = event.data
             if raw:
                 yield commands.SendData(self.conn, raw)
+        elif isinstance(event, RequestTrailers):
+            # HTTP/1 can only carry trailers in a chunked body,
+            # so we send them with the last chunk or drop them otherwise.
+            self.trailers = event.trailers
         elif isinstance(event, RequestEndOfMessage):
             assert self.request
             if "chunked" in self.request.headers.get("transfer-encoding", "").lower():
-                yield commands.SendData(self.conn, b"0\r\n\r\n")
+                yield commands.SendData(self.conn, _last_chunk(self.trailers))
             elif http1.expected_http_body_size(self.request, self.response) == -1:
                 yield commands.CloseTcpConnection(self.conn, half_close=True)
+            self.trailers = None
             yield from self.mark_done(request=True)
         else:
             raise AssertionError(f"Unexpected event: {event}")
@@ -478,6 +492,13 @@ def make_body_reader(expected_size: int | None) -> TBodyReader:
         return Http10Reader()
     else:
         return ContentLengthReader(expected_size)
+
+
+def _last_chunk(trailers: http.Headers | None) -> bytes:
+    if trailers:
+        return b"0\r\n%s\r\n" % bytes(trailers)
+    else:
+        return b"0\r\n\r\n"
 
 
 def make_error_response(
