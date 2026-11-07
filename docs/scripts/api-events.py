@@ -82,8 +82,8 @@ with outfile.open("w") as f, contextlib.redirect_stdout(f):
         "",
         [
             addonmanager.LoadHook,
-            hooks.RunningHook,
             hooks.ConfigureHook,
+            hooks.RunningHook,
             hooks.DoneHook,
         ],
     )
