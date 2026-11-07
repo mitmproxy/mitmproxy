@@ -287,6 +287,12 @@ class AddonManager:
         Asynchronously trigger an event across all addons.
         """
         for i in self.chain:
+            # Most addons only implement a handful of hooks. Skip the ones that
+            # cannot handle this event before setting up safecall() and invoke_addon(),
+            # which is the bulk of the cost per addon. Addons with sub-addons always
+            # take the full path.
+            if not hasattr(i, "addons") and getattr(i, event.name, None) is None:
+                continue
             try:
                 with safecall():
                     await self.invoke_addon(i, event)

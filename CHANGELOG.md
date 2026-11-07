@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Speed up addon event dispatch by skipping addons that don't implement the event.
+  This saves work on every flow and makes plain HTTP proxying noticeably faster.
+  ([#8577](https://github.com/mitmproxy/mitmproxy/pull/8577), @b84330808)
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)
