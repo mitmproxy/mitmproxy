@@ -178,6 +178,11 @@ class HttpStream(layer.Layer):
         self.server_state = self.state_uninitialized
         self.stream_id = stream_id
 
+    @staticmethod
+    def _supports_trailers(connection: Connection) -> bool:
+        """Whether trailers can be forwarded to the peer on this connection."""
+        return connection.alpn == b"h2" or is_h3_alpn(connection.alpn)
+
     def __repr__(self):
         if self._handle_event == self.passthrough:
             return f"HttpStream(id={self.stream_id}, passthrough)"
@@ -348,7 +353,9 @@ class HttpStream(layer.Layer):
             yield HttpRequestHook(self.flow)
             self.client_state = self.state_done
 
-            if self.flow.request.trailers:
+            if self.flow.request.trailers and self._supports_trailers(
+                self.context.server
+            ):
                 # we've delayed sending trailers until after `request` has been triggered.
                 yield SendHttp(
                     RequestTrailers(self.stream_id, self.flow.request.trailers),
@@ -391,7 +398,12 @@ class HttpStream(layer.Layer):
                     return
 
                 content = self.flow.request.raw_content
-                done_after_headers = not (content or self.flow.request.trailers)
+                trailers = (
+                    self.flow.request.trailers
+                    if self._supports_trailers(self.context.server)
+                    else None
+                )
+                done_after_headers = not (content or trailers)
                 yield SendHttp(
                     RequestHeaders(
                         self.stream_id, self.flow.request, done_after_headers
@@ -402,9 +414,9 @@ class HttpStream(layer.Layer):
                     yield SendHttp(
                         RequestData(self.stream_id, content), self.context.server
                     )
-                if self.flow.request.trailers:
+                if trailers:
                     yield SendHttp(
-                        RequestTrailers(self.stream_id, self.flow.request.trailers),
+                        RequestTrailers(self.stream_id, trailers),
                         self.context.server,
                     )
                 yield SendHttp(RequestEndOfMessage(self.stream_id), self.context.server)
@@ -513,9 +525,14 @@ class HttpStream(layer.Layer):
         if (yield from self.check_killed(False)):
             return
 
+        trailers = (
+            self.flow.response.trailers
+            if self._supports_trailers(self.context.client)
+            else None
+        )
         if not already_streamed:
             content = self.flow.response.raw_content
-            done_after_headers = not (content or self.flow.response.trailers)
+            done_after_headers = not (content or trailers)
             yield SendHttp(
                 ResponseHeaders(self.stream_id, self.flow.response, done_after_headers),
                 self.context.client,
@@ -525,9 +542,9 @@ class HttpStream(layer.Layer):
                     ResponseData(self.stream_id, content), self.context.client
                 )
 
-        if self.flow.response.trailers:
+        if trailers:
             yield SendHttp(
-                ResponseTrailers(self.stream_id, self.flow.response.trailers),
+                ResponseTrailers(self.stream_id, trailers),
                 self.context.client,
             )
 
@@ -829,7 +846,12 @@ class HttpStream(layer.Layer):
             self.flow.live = False
 
         content = self.flow.response.raw_content
-        done_after_headers = not (content or self.flow.response.trailers)
+        trailers = (
+            self.flow.response.trailers
+            if self._supports_trailers(self.context.client)
+            else None
+        )
+        done_after_headers = not (content or trailers)
         yield SendHttp(
             ResponseHeaders(self.stream_id, self.flow.response, done_after_headers),
             self.context.client,
@@ -837,9 +859,9 @@ class HttpStream(layer.Layer):
         if content:
             yield SendHttp(ResponseData(self.stream_id, content), self.context.client)
 
-        if self.flow.response.trailers:
+        if trailers:
             yield SendHttp(
-                ResponseTrailers(self.stream_id, self.flow.response.trailers),
+                ResponseTrailers(self.stream_id, trailers),
                 self.context.client,
             )
         yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)

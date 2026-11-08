@@ -266,6 +266,92 @@ def test_request_trailers(tctx: Context, open_h2_server_conn: Server, stream):
     ]
 
 
+def test_request_trailers_to_http1_server(tctx: Context):
+    """Trailers from an h2 client are dropped instead of crashing the h1 upstream."""
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    data = Placeholder(bytes)
+
+    request_headers = (
+        (b":method", b"POST"),
+        (b":scheme", b"http"),
+        (b":path", b"/"),
+        (b":authority", b"example.com"),
+        (b"content-length", b"13"),
+    )
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(request_headers).serialize()
+            + cff.build_data_frame(b"Hello, World!").serialize(),
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_trailers, flags=["END_STREAM"]
+            ).serialize(),
+        )
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(server, data)
+    )
+
+    assert flow().request.trailers["req-trailer-a"] == "a"
+    assert data().endswith(b"Hello, World!")
+    assert b"req-trailer-a" not in data()
+
+
+def test_response_trailers_to_http1_client(tctx: Context, open_h2_server_conn: Server):
+    """Trailers from an h2 server are dropped instead of crashing the h1 client."""
+    tctx.server = open_h2_server_conn
+    tctx.options.http2_ping_keepalive = 0
+    sff = FrameFactory()
+    flow = Placeholder(HTTPFlow)
+    server_data = Placeholder(bytes)
+    data = Placeholder(bytes)
+
+    assert (
+        Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+        >> DataReceived(
+            tctx.client,
+            b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n",
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << SendData(tctx.server, server_data)
+        >> DataReceived(
+            tctx.server,
+            sff.build_headers_frame(
+                ((b":status", b"200"), (b"content-length", b"13"))
+            ).serialize()
+            + sff.build_data_frame(b"Hello, World!").serialize(),
+        )
+        << http.HttpResponseHeadersHook(flow)
+        >> reply()
+        >> DataReceived(
+            tctx.server,
+            sff.build_headers_frame(
+                example_response_trailers, flags=["END_STREAM"]
+            ).serialize(),
+        )
+        << http.HttpResponseHook(flow)
+        >> reply()
+        << SendData(tctx.client, data)
+    )
+
+    assert flow().response.trailers["resp-trailer-a"] == "a"
+    assert data().endswith(b"Hello, World!")
+    assert b"resp-trailer-a" not in data()
+
+
 def test_upstream_error(tctx):
     playbook, cff = start_h2_client(tctx)
     flow = Placeholder(HTTPFlow)
