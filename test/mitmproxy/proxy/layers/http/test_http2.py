@@ -13,6 +13,7 @@ from mitmproxy.flow import Error
 from mitmproxy.http import Headers
 from mitmproxy.http import HTTPFlow
 from mitmproxy.http import Request
+from mitmproxy.http import Response
 from mitmproxy.proxy.commands import CloseConnection
 from mitmproxy.proxy.commands import Log
 from mitmproxy.proxy.commands import OpenConnection
@@ -1423,3 +1424,772 @@ def test_forward_empty_data_frame(tctx):
         >> DataReceived(server, cff.build_data_frame(b"").serialize())
         << SendData(tctx.client, cff.build_data_frame(b"").serialize())
     )
+
+
+h2_supports_draining = hasattr(h2.connection.H2ConnectionStateMachine(), "draining")
+requires_h2_draining = pytest.mark.skipif(
+    not h2_supports_draining, reason="h2 without graceful GOAWAY support"
+)
+
+
+def start_h2_request(
+    tctx: Context, cff: FrameFactory, playbook: Playbook, flow, server, stream_id=1
+) -> Placeholder:
+    """Send a GET from the client and let mitmproxy forward it on a new HTTP/2 server connection."""
+    initial = Placeholder(bytes)
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"], stream_id=stream_id
+            ).serialize(),
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply(None, side_effect=make_h2)
+        << SendData(server, initial)
+    )
+    return initial
+
+
+@requires_h2_draining
+def test_graceful_goaway_completes_open_stream(tctx):
+    """
+    A server's graceful GOAWAY, followed by a PING (RFC 9113 two-stage shutdown),
+    lets the in-flight response complete. We acknowledge the PING, finish the stream,
+    then send our own GOAWAY and close the server connection.
+    """
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    sff = FrameFactory()
+    start_h2_request(tctx, cff, playbook, flow, server)
+
+    assert (
+        playbook
+        >> DataReceived(
+            server, sff.build_headers_frame(example_response_headers).serialize()
+        )
+        << http.HttpResponseHeadersHook(flow)
+        >> reply()
+        >> DataReceived(
+            server,
+            sff.build_goaway_frame(last_stream_id=2**31 - 1).serialize()
+            + sff.build_ping_frame(b"12345678").serialize(),
+        )
+        << SendData(
+            server, sff.build_ping_frame(b"12345678", flags=["ACK"]).serialize()
+        )
+        >> DataReceived(
+            server,
+            sff.build_data_frame(b"Hello, World!", flags=["END_STREAM"]).serialize(),
+        )
+        << http.HttpResponseHook(flow)
+        # the last stream is done: we send our own GOAWAY and close.
+        << SendData(server, sff.build_goaway_frame(last_stream_id=0).serialize())
+        << CloseConnection(server)
+        >> reply(to=-3)
+        << SendData(
+            tctx.client,
+            cff.build_headers_frame(example_response_headers).serialize()
+            + cff.build_data_frame(b"Hello, World!").serialize()
+            + cff.build_data_frame(b"", flags=["END_STREAM"]).serialize(),
+        )
+    )
+    assert flow().response.text == "Hello, World!"
+    assert flow().error is None
+
+
+def finish_response(tctx, cff, sff, playbook, flow, server, stream_id=1):
+    """Let the server answer stream 1 in full and check that the client gets it."""
+    assert (
+        playbook
+        >> DataReceived(
+            server,
+            sff.build_headers_frame(example_response_headers).serialize()
+            + sff.build_data_frame(b"ok", flags=["END_STREAM"]).serialize(),
+        )
+        << http.HttpResponseHeadersHook(flow)
+        >> reply()
+        << http.HttpResponseHook(flow)
+        >> reply()
+        << SendData(
+            tctx.client,
+            cff.build_headers_frame(
+                example_response_headers, stream_id=stream_id
+            ).serialize()
+            + cff.build_data_frame(b"ok", stream_id=stream_id).serialize()
+            + cff.build_data_frame(
+                b"", flags=["END_STREAM"], stream_id=stream_id
+            ).serialize(),
+        )
+    )
+
+
+@requires_h2_draining
+def test_graceful_goaway_idle_connection(tctx):
+    """A server retires an idle connection: we acknowledge the PING, send GOAWAY and close."""
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    sff = FrameFactory()
+    start_h2_request(tctx, cff, playbook, flow, server)
+    finish_response(tctx, cff, sff, playbook, flow, server)
+
+    assert (
+        playbook
+        >> DataReceived(
+            server,
+            sff.build_goaway_frame(last_stream_id=2**31 - 1).serialize()
+            + sff.build_ping_frame(b"12345678").serialize(),
+        )
+        << SendData(
+            server, sff.build_ping_frame(b"12345678", flags=["ACK"]).serialize()
+        )
+        << SendData(server, sff.build_goaway_frame(last_stream_id=0).serialize())
+        << CloseConnection(server)
+    )
+
+
+@requires_h2_draining
+def test_graceful_goaway_new_request_uses_new_connection(tctx):
+    """While a connection drains, a new request opens a new server connection."""
+    playbook, cff = start_h2_client(tctx)
+    flow1 = Placeholder(HTTPFlow)
+    flow2 = Placeholder(HTTPFlow)
+    server1 = Placeholder(Server)
+    server2 = Placeholder(Server)
+    sff = FrameFactory()
+    start_h2_request(tctx, cff, playbook, flow1, server1)
+
+    assert (
+        playbook
+        >> DataReceived(
+            server1,
+            sff.build_headers_frame(example_response_headers).serialize()
+            + sff.build_goaway_frame(last_stream_id=1).serialize(),
+        )
+        << http.HttpResponseHeadersHook(flow1)
+        >> reply()
+    )
+    start_h2_request(tctx, cff, playbook, flow2, server2, stream_id=3)
+    assert server1() is not server2()
+    assert server1().connected
+
+
+def test_goaway_with_error_closes_connection(tctx):
+    """A GOAWAY with an error code still tears down the connection and fails open streams."""
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    sff = FrameFactory()
+    start_h2_request(tctx, cff, playbook, flow, server)
+
+    assert (
+        playbook
+        >> DataReceived(
+            server,
+            sff.build_goaway_frame(
+                last_stream_id=1, error_code=ErrorCodes.INTERNAL_ERROR
+            ).serialize(),
+        )
+        << CloseConnection(server)
+        << http.HttpErrorHook(flow)
+        >> reply()
+        << SendData(tctx.client, Placeholder(bytes))
+    )
+    assert "HTTP/2 connection closed" in flow().error.msg
+
+
+@requires_h2_draining
+def test_graceful_goaway_fails_unprocessed_streams(tctx):
+    """
+    Streams above the GOAWAY's last stream id were never processed by the server:
+    they fail at once, while the stream at or below it completes.
+    """
+    playbook, cff = start_h2_client(tctx)
+    flow1 = Placeholder(HTTPFlow)
+    flow2 = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    sff = FrameFactory()
+    to_server = Placeholder(bytes)
+    to_client = Placeholder(bytes)
+    reqheadershook1 = http.HttpRequestHeadersHook(flow1)
+    reqheadershook2 = http.HttpRequestHeadersHook(flow2)
+    reqhook1 = http.HttpRequestHook(flow1)
+    reqhook2 = http.HttpRequestHook(flow2)
+
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"], stream_id=1
+            ).serialize()
+            + cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"], stream_id=3
+            ).serialize(),
+        )
+        << reqheadershook1
+        << reqheadershook2
+        >> reply(to=reqheadershook1)
+        << reqhook1
+        >> reply(to=reqheadershook2)
+        << reqhook2
+        >> reply(to=reqhook1)
+        << OpenConnection(server)
+        >> reply(None, side_effect=make_h2)
+        << SendData(server, Placeholder(bytes))
+        >> reply(to=reqhook2)
+        << SendData(server, Placeholder(bytes))
+        # The server processed stream 1 only.
+        >> DataReceived(server, sff.build_goaway_frame(last_stream_id=1).serialize())
+        << http.HttpErrorHook(flow2)
+        << SendData(server, to_server)
+        >> reply(to=-2)
+        << SendData(tctx.client, to_client)
+    )
+    assert [type(f) for f in decode_frames(to_server())] == [
+        hyperframe.frame.RstStreamFrame
+    ]
+    assert decode_frames(to_server())[0].stream_id == 3
+    assert decode_frames(to_server())[0].error_code == ErrorCodes.CANCEL
+    assert "HTTP/2 connection closed" in flow2().error.msg
+    client_frames = decode_frames(to_client())
+    assert {f.stream_id for f in client_frames} == {3}
+    assert flow1().error is None
+
+    assert (
+        playbook
+        >> DataReceived(
+            server,
+            sff.build_headers_frame(example_response_headers).serialize()
+            + sff.build_data_frame(b"ok", flags=["END_STREAM"]).serialize(),
+        )
+        << http.HttpResponseHeadersHook(flow1)
+        # stream 1 was the last one and has ended: we send our own GOAWAY and close.
+        << SendData(server, sff.build_goaway_frame(last_stream_id=0).serialize())
+        << CloseConnection(server)
+        >> reply(to=-3)
+        << http.HttpResponseHook(flow1)
+        >> reply()
+        << SendData(tctx.client, Placeholder(bytes))
+    )
+    assert flow1().response.text == "ok"
+    assert flow1().error is None
+
+
+@requires_h2_draining
+def test_graceful_goaway_client_layer(tctx):
+    """
+    Http2Client signals the drain to the HTTP layer, refuses a stream that got the
+    connection just before the GOAWAY, and closes once the last open stream is reset.
+    """
+    from mitmproxy.proxy.layers.http._base import DrainHttpConnection
+
+    tctx.options.http2_ping_keepalive = 0
+    ff = FrameFactory()
+    req = Request.make("GET", "http://example.com/")
+    refused = Placeholder(http.ResponseProtocolError)
+    assert (
+        Playbook(Http2Client(tctx))
+        << SendData(tctx.server, Placeholder(bytes))
+        >> DataReceived(tctx.server, ff.build_settings_frame({}, ack=True).serialize())
+        >> http.RequestHeaders(1, req, end_stream=True)
+        << SendData(tctx.server, Placeholder(bytes))
+        >> DataReceived(
+            tctx.server, ff.build_goaway_frame(last_stream_id=1).serialize()
+        )
+        << DrainHttpConnection(tctx.server)
+        >> http.RequestHeaders(3, req, end_stream=True)
+        << http.ReceiveHttp(refused)
+        >> http.RequestProtocolError(1, "cancelled", code=ErrorCode.CLIENT_DISCONNECTED)
+        << SendData(
+            tctx.server, ff.build_rst_stream_frame(1, ErrorCodes.CANCEL).serialize()
+        )
+        << SendData(tctx.server, ff.build_goaway_frame(last_stream_id=0).serialize())
+        << CloseConnection(tctx.server)
+    )
+    assert refused().stream_id == 3
+    assert "GOAWAY" in refused().message
+
+
+@requires_h2_draining
+def test_graceful_goaway_fails_queued_streams(tctx):
+    """Requests waiting for a free stream fail when the connection starts draining."""
+    playbook, cff = start_h2_client(tctx)
+    playbook.hooks = False
+    server = Placeholder(Server)
+    sff = FrameFactory()
+    error_response = Placeholder(bytes)
+
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"], stream_id=1
+            ).serialize(),
+        )
+        << OpenConnection(server)
+        >> reply(None, side_effect=make_h2)
+        << SendData(server, Placeholder(bytes))
+        >> DataReceived(
+            server,
+            sff.build_settings_frame(
+                {h2.settings.SettingCodes.MAX_CONCURRENT_STREAMS: 1}
+            ).serialize(),
+        )
+        << SendData(server, Placeholder(bytes))
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"], stream_id=3
+            ).serialize(),
+        )
+        # stream 3 is queued: all streams are in use.
+        >> DataReceived(server, sff.build_goaway_frame(last_stream_id=1).serialize())
+        << SendData(tctx.client, error_response)
+    )
+    frames = decode_frames(error_response())
+    assert {f.stream_id for f in frames} == {3}
+    body = b"".join(f.data for f in frames if isinstance(f, hyperframe.frame.DataFrame))
+    assert b"502 Bad Gateway" in body
+    assert b"shutting down (GOAWAY)" in body
+
+
+@requires_h2_draining
+class TestGracefulGoAwayClient:
+    """Http2Client while a server connection drains (direct layer tests)."""
+
+    def start(self, tctx, settings=None) -> tuple[Playbook, FrameFactory]:
+        tctx.options.http2_ping_keepalive = 0
+        ff = FrameFactory()
+        playbook = Playbook(Http2Client(tctx))
+        assert playbook << SendData(tctx.server, Placeholder(bytes))
+        if settings is not None:
+            assert (
+                playbook
+                >> DataReceived(
+                    tctx.server, ff.build_settings_frame(settings).serialize()
+                )
+                << SendData(
+                    tctx.server, ff.build_settings_frame({}, ack=True).serialize()
+                )
+            )
+        return playbook, ff
+
+    @pytest.mark.parametrize("trailers", [False, True])
+    def test_buffered_upload_completes(self, tctx, trailers):
+        """Request body (and trailers) held back by flow control are still sent after a graceful GOAWAY."""
+        from mitmproxy.proxy.layers.http._base import DrainHttpConnection
+
+        playbook, ff = self.start(
+            tctx, {h2.settings.SettingCodes.INITIAL_WINDOW_SIZE: 10}
+        )
+        req = Request.make("POST", "http://example.com/upload")
+        rest = Placeholder(bytes)
+        assert (
+            playbook
+            >> http.RequestHeaders(1, req, end_stream=False)
+            << SendData(tctx.server, Placeholder(bytes))
+            >> http.RequestData(1, b"x" * 30)
+            << SendData(tctx.server, ff.build_data_frame(b"x" * 10).serialize())
+        )
+        if trailers:
+            assert playbook >> http.RequestTrailers(
+                1, Headers(example_request_trailers)
+            )
+        assert (
+            playbook
+            >> http.RequestEndOfMessage(1)
+            >> DataReceived(
+                tctx.server, ff.build_goaway_frame(last_stream_id=1).serialize()
+            )
+            << DrainHttpConnection(tctx.server)
+            >> DataReceived(
+                tctx.server, ff.build_window_update_frame(1, 100).serialize()
+            )
+            << SendData(tctx.server, rest)
+            >> DataReceived(
+                tctx.server,
+                ff.build_headers_frame(
+                    example_response_headers, flags=["END_STREAM"]
+                ).serialize(),
+            )
+            << http.ReceiveHttp(Placeholder(http.ResponseHeaders))
+            << http.ReceiveHttp(http.ResponseEndOfMessage(1))
+            << SendData(
+                tctx.server, ff.build_goaway_frame(last_stream_id=0).serialize()
+            )
+            << CloseConnection(tctx.server)
+        )
+        if trailers:
+            data, end = decode_frames(rest())
+            assert data.data == b"x" * 20 and "END_STREAM" not in data.flags
+            assert isinstance(end, hyperframe.frame.HeadersFrame)
+            assert "END_STREAM" in end.flags
+        else:
+            data, end = decode_frames(rest())
+            assert data.data == b"x" * 20
+            assert end.data == b"" and "END_STREAM" in end.flags
+
+    def test_goaway_and_reset_in_one_read(self, tctx):
+        """
+        GOAWAY(last=1) and RST_STREAM for the unprocessed stream in one read: the
+        stream fails exactly once, under the client's stream id, and is not reset again.
+        """
+        from mitmproxy.proxy.layers.http._base import DrainHttpConnection
+
+        playbook, ff = self.start(tctx, {})
+        req = Request.make("GET", "http://example.com/")
+        failed = Placeholder(http.ResponseProtocolError)
+        assert (
+            playbook
+            >> http.RequestHeaders(5, req, end_stream=True)  # our stream 1
+            << SendData(tctx.server, Placeholder(bytes))
+            >> http.RequestHeaders(7, req, end_stream=True)  # our stream 3
+            << SendData(tctx.server, Placeholder(bytes))
+            >> DataReceived(
+                tctx.server,
+                ff.build_goaway_frame(last_stream_id=1).serialize()
+                + ff.build_rst_stream_frame(3, ErrorCodes.REFUSED_STREAM).serialize(),
+            )
+            << DrainHttpConnection(tctx.server)
+            << http.ReceiveHttp(failed)
+            >> DataReceived(
+                tctx.server,
+                ff.build_headers_frame(
+                    example_response_headers, flags=["END_STREAM"]
+                ).serialize(),
+            )
+            << http.ReceiveHttp(Placeholder(http.ResponseHeaders))
+            << http.ReceiveHttp(http.ResponseEndOfMessage(5))
+            << SendData(
+                tctx.server, ff.build_goaway_frame(last_stream_id=0).serialize()
+            )
+            << CloseConnection(tctx.server)
+        )
+        assert failed().stream_id == 7
+
+    def test_retired_stream_frames_in_same_read(self, tctx):
+        """
+        A server sends GOAWAY(last=1), then a response for the unprocessed stream 3
+        and a full response for stream 1, all in one read (#7879). Stream 3 fails
+        once; its later frames are dropped (DATA is still acknowledged); stream 1
+        completes; we close gracefully, not with PROTOCOL_ERROR.
+        """
+        from mitmproxy.proxy.layers.http._base import DrainHttpConnection
+
+        playbook, ff = self.start(tctx, {})
+        req = Request.make("GET", "http://example.com/")
+        failed = Placeholder(http.ResponseProtocolError)
+        response = Placeholder(http.ResponseHeaders)
+        to_server = Placeholder(bytes)
+        h2_conn = playbook.layer.h2_conn
+        acknowledged = []
+        acknowledge = h2_conn.acknowledge_received_data
+
+        def record(size, stream_id):
+            acknowledged.append((stream_id, size))
+            acknowledge(size, stream_id)
+
+        h2_conn.acknowledge_received_data = record
+        assert (
+            playbook
+            >> http.RequestHeaders(5, req, end_stream=True)  # our stream 1
+            << SendData(tctx.server, Placeholder(bytes))
+            >> http.RequestHeaders(7, req, end_stream=True)  # our stream 3
+            << SendData(tctx.server, Placeholder(bytes))
+            >> DataReceived(
+                tctx.server,
+                ff.build_goaway_frame(last_stream_id=1).serialize()
+                + ff.build_headers_frame(
+                    example_response_headers, stream_id=3
+                ).serialize()
+                + ff.build_data_frame(b"late", stream_id=3).serialize()
+                + ff.build_headers_frame(
+                    example_response_trailers, flags=["END_STREAM"], stream_id=3
+                ).serialize()
+                + ff.build_headers_frame(
+                    example_response_headers, stream_id=1
+                ).serialize()
+                + ff.build_data_frame(
+                    b"ok", flags=["END_STREAM"], stream_id=1
+                ).serialize(),
+            )
+            << DrainHttpConnection(tctx.server)
+            << http.ReceiveHttp(failed)
+            << http.ReceiveHttp(response)
+            << http.ReceiveHttp(http.ResponseData(5, b"ok"))
+            << http.ReceiveHttp(http.ResponseEndOfMessage(5))
+            << SendData(tctx.server, to_server)
+            << CloseConnection(tctx.server)
+        )
+        assert failed().stream_id == 7
+        assert response().stream_id == 5
+        # the retired stream's DATA still counts toward connection flow control.
+        assert acknowledged == [(3, 4), (1, 2)]
+        frames = decode_frames(to_server())
+        goaways = [f for f in frames if isinstance(f, hyperframe.frame.GoAwayFrame)]
+        assert [g.error_code for g in goaways] == [ErrorCodes.NO_ERROR]
+        # stream 3 already ended in this read, so it needs no RST_STREAM.
+        assert not any(isinstance(f, hyperframe.frame.RstStreamFrame) for f in frames)
+
+    def test_two_stage_goaway(self, tctx):
+        """The first GOAWAY (2**31-1) fails nothing; the second fails streams above its boundary."""
+        from mitmproxy.proxy.layers.http._base import DrainHttpConnection
+
+        playbook, ff = self.start(tctx, {})
+        req = Request.make("GET", "http://example.com/")
+        failed = Placeholder(http.ResponseProtocolError)
+        reset = Placeholder(bytes)
+        assert (
+            playbook
+            >> http.RequestHeaders(1, req, end_stream=True)
+            << SendData(tctx.server, Placeholder(bytes))
+            >> http.RequestHeaders(3, req, end_stream=True)
+            << SendData(tctx.server, Placeholder(bytes))
+            >> DataReceived(
+                tctx.server,
+                ff.build_goaway_frame(last_stream_id=2**31 - 1).serialize()
+                + ff.build_ping_frame(b"12345678").serialize(),
+            )
+            << DrainHttpConnection(tctx.server)
+            << SendData(
+                tctx.server, ff.build_ping_frame(b"12345678", flags=["ACK"]).serialize()
+            )
+            >> DataReceived(
+                tctx.server, ff.build_goaway_frame(last_stream_id=1).serialize()
+            )
+            << http.ReceiveHttp(failed)
+            << SendData(tctx.server, reset)
+        )
+        assert failed().stream_id == 3
+        (rst,) = decode_frames(reset())
+        assert isinstance(rst, hyperframe.frame.RstStreamFrame)
+        assert rst.stream_id == 3
+
+    def test_response_done_before_request_body(self, tctx):
+        """The connection stays open until the request body is sent, then closes."""
+        from mitmproxy.proxy.layers.http._base import DrainHttpConnection
+
+        playbook, ff = self.start(tctx, {})
+        req = Request.make("POST", "http://example.com/")
+        assert (
+            playbook
+            >> http.RequestHeaders(1, req, end_stream=False)
+            << SendData(tctx.server, Placeholder(bytes))
+            >> DataReceived(
+                tctx.server,
+                ff.build_goaway_frame(last_stream_id=1).serialize()
+                + ff.build_headers_frame(
+                    example_response_headers, flags=["END_STREAM"]
+                ).serialize(),
+            )
+            << DrainHttpConnection(tctx.server)
+            << http.ReceiveHttp(Placeholder(http.ResponseHeaders))
+            << http.ReceiveHttp(http.ResponseEndOfMessage(1))
+            >> http.RequestData(1, b"body")
+            << SendData(tctx.server, ff.build_data_frame(b"body").serialize())
+            >> http.RequestEndOfMessage(1)
+            << SendData(
+                tctx.server, ff.build_data_frame(b"", flags=["END_STREAM"]).serialize()
+            )
+            << SendData(
+                tctx.server, ff.build_goaway_frame(last_stream_id=0).serialize()
+            )
+            << CloseConnection(tctx.server)
+        )
+
+    def test_keepalive_while_draining_and_after_close(self, tctx, monkeypatch):
+        """Keepalive PINGs continue while draining; wakeups after the close are ignored."""
+        from mitmproxy.proxy.layers.http._base import DrainHttpConnection
+
+        tctx.options.http2_ping_keepalive = 58
+        ff = FrameFactory()
+        req = Request.make("GET", "http://example.com/")
+
+        def advance_time(_):
+            t = time.time()
+            monkeypatch.setattr(time, "time", lambda: t + 60)
+
+        wakeup = RequestWakeup(58)
+        assert (
+            Playbook(Http2Client(tctx))
+            << wakeup
+            << SendData(tctx.server, Placeholder(bytes))
+            >> http.RequestHeaders(1, req, end_stream=True)
+            << SendData(tctx.server, Placeholder(bytes))
+            >> DataReceived(
+                tctx.server, ff.build_goaway_frame(last_stream_id=1).serialize()
+            )
+            << DrainHttpConnection(tctx.server)
+            >> reply(to=wakeup, side_effect=advance_time)
+            << SendData(tctx.server, ff.build_ping_frame(b"0" * 8).serialize())
+            << RequestWakeup(58)
+            >> DataReceived(
+                tctx.server,
+                ff.build_headers_frame(
+                    example_response_headers, flags=["END_STREAM"]
+                ).serialize(),
+            )
+            << http.ReceiveHttp(Placeholder(http.ResponseHeaders))
+            << http.ReceiveHttp(http.ResponseEndOfMessage(1))
+            << SendData(
+                tctx.server, ff.build_goaway_frame(last_stream_id=0).serialize()
+            )
+            << CloseConnection(tctx.server)
+            >> reply(to=wakeup)
+            << None
+        )
+
+
+@requires_h2_draining
+def test_graceful_goaway_from_client(tctx):
+    """A client's graceful GOAWAY lets its pending response finish; then we close."""
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    sff = FrameFactory()
+    start_h2_request(tctx, cff, playbook, flow, server)
+
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client, cff.build_goaway_frame(last_stream_id=0).serialize()
+        )
+        >> DataReceived(
+            server,
+            sff.build_headers_frame(example_response_headers).serialize()
+            + sff.build_data_frame(b"ok", flags=["END_STREAM"]).serialize(),
+        )
+        << http.HttpResponseHeadersHook(flow)
+        >> reply()
+        << http.HttpResponseHook(flow)
+        >> reply()
+        << SendData(
+            tctx.client,
+            cff.build_headers_frame(example_response_headers).serialize()
+            + cff.build_data_frame(b"ok").serialize()
+            + cff.build_data_frame(b"", flags=["END_STREAM"]).serialize(),
+        )
+        << SendData(tctx.client, cff.build_goaway_frame(last_stream_id=1).serialize())
+        << CloseConnection(tctx.client)
+    )
+    assert flow().response.text == "ok"
+
+
+@requires_h2_draining
+def test_graceful_goaway_from_client_buffered_response(tctx):
+    """A response held back by the client's flow control still completes after its graceful GOAWAY."""
+    from mitmproxy.proxy.layers.http._base import DrainHttpConnection
+    from mitmproxy.proxy.layers.http._http2 import Http2Server
+
+    tctx.client.alpn = b"h2"
+    ff = FrameFactory()
+    resp = Response.make(200)
+    rest = Placeholder(bytes)
+    assert (
+        Playbook(Http2Server(tctx))
+        << SendData(tctx.client, Placeholder(bytes))
+        >> DataReceived(
+            tctx.client,
+            ff.preamble()
+            + ff.build_settings_frame(
+                {h2.settings.SettingCodes.INITIAL_WINDOW_SIZE: 10}
+            ).serialize(),
+        )
+        << SendData(tctx.client, ff.build_settings_frame({}, ack=True).serialize())
+        >> DataReceived(
+            tctx.client,
+            ff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"]
+            ).serialize(),
+        )
+        << http.ReceiveHttp(Placeholder(http.RequestHeaders))
+        << http.ReceiveHttp(http.RequestEndOfMessage(1))
+        >> http.ResponseHeaders(1, resp, end_stream=False)
+        << SendData(tctx.client, Placeholder(bytes))
+        >> http.ResponseData(1, b"y" * 30)
+        << SendData(tctx.client, ff.build_data_frame(b"y" * 10).serialize())
+        >> http.ResponseEndOfMessage(1)
+        >> DataReceived(
+            tctx.client, ff.build_goaway_frame(last_stream_id=0).serialize()
+        )
+        << DrainHttpConnection(tctx.client)
+        >> DataReceived(tctx.client, ff.build_window_update_frame(1, 100).serialize())
+        # the buffered tail, then our GOAWAY (merged into one write by the playbook)
+        << SendData(tctx.client, rest)
+        << CloseConnection(tctx.client)
+    )
+    data, end, goaway = decode_frames(rest())
+    assert data.data == b"y" * 20
+    assert end.data == b"" and "END_STREAM" in end.flags
+    assert isinstance(goaway, hyperframe.frame.GoAwayFrame)
+    assert goaway.error_code == ErrorCodes.NO_ERROR and goaway.last_stream_id == 1
+
+
+@pytest.mark.parametrize("how", ["remote reset", "local reset", "error goaway"])
+def test_discard_buffered_trailers(tctx, how):
+    """Trailers queued behind flow-controlled data are discarded with that data."""
+    tctx.options.http2_ping_keepalive = 0
+    ff = FrameFactory()
+    client = Http2Client(tctx)
+    playbook = Playbook(client)
+    req = Request.make("POST", "http://example.com/upload")
+    assert (
+        playbook
+        << SendData(tctx.server, Placeholder(bytes))
+        >> DataReceived(
+            tctx.server,
+            ff.build_settings_frame(
+                {h2.settings.SettingCodes.INITIAL_WINDOW_SIZE: 10}
+            ).serialize(),
+        )
+        << SendData(tctx.server, ff.build_settings_frame({}, ack=True).serialize())
+        >> http.RequestHeaders(1, req, end_stream=False)
+        << SendData(tctx.server, Placeholder(bytes))
+        >> http.RequestData(1, b"x" * 30)
+        << SendData(tctx.server, ff.build_data_frame(b"x" * 10).serialize())
+        >> http.RequestTrailers(1, Headers(example_request_trailers))
+        >> http.RequestEndOfMessage(1)
+    )
+    assert client.h2_conn.stream_buffers and client.h2_conn.stream_trailers
+
+    if how == "remote reset":
+        assert (
+            playbook
+            >> DataReceived(
+                tctx.server, ff.build_rst_stream_frame(1, ErrorCodes.CANCEL).serialize()
+            )
+            << http.ReceiveHttp(Placeholder(http.ResponseProtocolError))
+        )
+    elif how == "local reset":
+        assert (
+            playbook
+            >> http.RequestProtocolError(
+                1, "cancelled", code=ErrorCode.CLIENT_DISCONNECTED
+            )
+            << SendData(
+                tctx.server, ff.build_rst_stream_frame(1, ErrorCodes.CANCEL).serialize()
+            )
+        )
+    else:
+        assert (
+            playbook
+            >> DataReceived(
+                tctx.server,
+                ff.build_goaway_frame(
+                    last_stream_id=1, error_code=ErrorCodes.INTERNAL_ERROR
+                ).serialize(),
+            )
+            << CloseConnection(tctx.server)
+            << http.ReceiveHttp(Placeholder(http.ResponseProtocolError))
+        )
+    assert not client.h2_conn.stream_buffers
+    assert not client.h2_conn.stream_trailers
