@@ -118,6 +118,7 @@ class BufferedH2Connection(h2.connection.H2Connection):
 
     def reset_stream(self, stream_id: int, error_code: int = 0) -> None:
         self.stream_buffers.pop(stream_id, None)
+        self.stream_trailers.pop(stream_id, None)
         super().reset_stream(stream_id, error_code)
 
     def receive_data(self, data: Buffer):
@@ -138,8 +139,12 @@ class BufferedH2Connection(h2.connection.H2Connection):
                     self.connection_window_updated()
             elif isinstance(event, h2.events.StreamReset):
                 self.stream_buffers.pop(event.stream_id, None)
+                self.stream_trailers.pop(event.stream_id, None)
             elif isinstance(event, h2.events.ConnectionTerminated):
-                self.stream_buffers.clear()
+                # After a graceful GOAWAY, open streams still drain: keep their buffered data.
+                if not getattr(self.state_machine, "draining", False):
+                    self.stream_buffers.clear()
+                    self.stream_trailers.clear()
             ret.append(event)
         return ret
 
