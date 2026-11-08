@@ -53,7 +53,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/",
-            "http_version": "HTTP/2",
+            "http_version": "HTTP/2.0",
             "headers": [
                 [
                     ":authority",
@@ -151,7 +151,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/2",
+            "http_version": "HTTP/2.0",
             "status_code": 304,
             "reason": "Not Modified",
             "headers": [
