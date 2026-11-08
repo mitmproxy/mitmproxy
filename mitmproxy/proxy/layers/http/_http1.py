@@ -282,8 +282,13 @@ class Http1Server(Http1Connection):
         self, event: events.ConnectionEvent
     ) -> layer.CommandGenerator[None]:
         if isinstance(event, events.DataReceived):
+            buf_size = len(self.buf)
             request_head = self.buf.maybe_extract_lines()
+            head_limit = human.parse_size(self.context.options.http1_head_size_limit)
             if request_head:
+                if head_limit is not None and buf_size - len(self.buf) > head_limit:
+                    yield from self.reject_oversized_head(head_limit)
+                    return
                 try:
                     self.request = http1.read_request_head(
                         [bytes(x) for x in request_head]
@@ -316,8 +321,8 @@ class Http1Server(Http1Connection):
                 self.body_reader = make_body_reader(expected_body_size)
                 self.state = self.read_body
                 yield from self.state(event)
-            else:
-                pass  # FIXME: protect against header size DoS
+            elif head_limit is not None and len(self.buf) > head_limit:
+                yield from self.reject_oversized_head(head_limit)
         elif isinstance(event, events.ConnectionClosed):
             buf = bytes(self.buf)
             if buf.strip():
@@ -327,6 +332,16 @@ class Http1Server(Http1Connection):
             yield commands.CloseConnection(self.conn)
         else:
             raise AssertionError(f"Unexpected event: {event}")
+
+    def reject_oversized_head(self, limit: int) -> layer.CommandGenerator[None]:
+        msg = f"Request headers exceed the configured limit of {human.pretty_size(limit)}."
+        yield commands.SendData(
+            self.conn,
+            make_error_response(status_codes.REQUEST_HEADER_FIELDS_TOO_LARGE, msg),
+        )
+        yield commands.CloseConnection(self.conn)
+        yield commands.Log(f"{human.format_address(self.conn.peername)}: {msg}")
+        self.state = self.done
 
     def mark_done(
         self, *, request: bool = False, response: bool = False
@@ -405,8 +420,13 @@ class Http1Client(Http1Connection):
                 return
             assert self.stream_id is not None
 
+            buf_size = len(self.buf)
             response_head = self.buf.maybe_extract_lines()
+            head_limit = human.parse_size(self.context.options.http1_head_size_limit)
             if response_head:
+                if head_limit is not None and buf_size - len(self.buf) > head_limit:
+                    yield from self.reject_oversized_head(head_limit)
+                    return
                 try:
                     self.response = http1.read_response_head(
                         [bytes(x) for x in response_head]
@@ -431,8 +451,8 @@ class Http1Client(Http1Connection):
 
                 self.state = self.read_body
                 yield from self.state(event)
-            else:
-                pass  # FIXME: protect against header size DoS
+            elif head_limit is not None and len(self.buf) > head_limit:
+                yield from self.reject_oversized_head(head_limit)
         elif isinstance(event, events.ConnectionClosed):
             if self.conn.state & ConnectionState.CAN_WRITE:
                 yield commands.CloseConnection(self.conn)
@@ -460,6 +480,18 @@ class Http1Client(Http1Connection):
                 return
         else:
             raise AssertionError(f"Unexpected event: {event}")
+
+    def reject_oversized_head(self, limit: int) -> layer.CommandGenerator[None]:
+        assert self.stream_id is not None
+        yield commands.CloseConnection(self.conn)
+        yield ReceiveHttp(
+            ResponseProtocolError(
+                self.stream_id,
+                f"Response headers exceed the configured limit of {human.pretty_size(limit)}.",
+                ErrorCode.RESPONSE_HEADERS_TOO_LARGE,
+            )
+        )
+        self.state = self.done
 
 
 def should_make_pipe(request: http.Request, response: http.Response) -> bool:

@@ -970,6 +970,34 @@ def test_upstream_proxy_ipv6(tctx):
     assert server().address == ("proxy", 8080)
 
 
+def test_upstream_proxy_oversized_connect_response(tctx):
+    """An upstream proxy must not make us buffer an unbounded CONNECT response head."""
+    server = Placeholder(Server)
+    tctx.client.proxy_mode = ProxyMode.parse("upstream:http://proxy:8080")
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.upstream), hooks=False)
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            b"CONNECT example.com:443 HTTP/1.1\r\nHost: example.com:443\r\n\r\n",
+        )
+        << SendData(tctx.client, b"HTTP/1.1 200 Connection established\r\n\r\n")
+        >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
+        << layer.NextLayerHook(Placeholder())
+        >> reply_next_layer(lambda ctx: http.HttpLayer(ctx, HTTPMode.transparent))
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(
+            server,
+            b"CONNECT example.com:443 HTTP/1.1\r\nHost: example.com:443\r\n\r\n",
+        )
+        >> DataReceived(server, b"HTTP/1.1 200 OK\r\nX-Pad: " + b"a" * 65536)
+        << CloseConnection(server)
+        << SendData(tctx.client, BytesMatching(b"502 Bad Gateway"))
+        << CloseConnection(tctx.client)
+    )
+
+
 @pytest.mark.parametrize("mode", ["regular", "upstream"])
 @pytest.mark.parametrize("close_first", ["client", "server"])
 def test_http_proxy_tcp(tctx, mode, close_first):

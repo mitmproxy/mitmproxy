@@ -1,8 +1,10 @@
 import pytest
 
 from mitmproxy import http
+from mitmproxy.proxy.commands import CloseConnection
 from mitmproxy.proxy.commands import SendData
 from mitmproxy.proxy.events import DataReceived
+from mitmproxy.proxy.layers.http import ErrorCode
 from mitmproxy.proxy.layers.http import Http1Client
 from mitmproxy.proxy.layers.http import Http1Server
 from mitmproxy.proxy.layers.http import ReceiveHttp
@@ -12,6 +14,8 @@ from mitmproxy.proxy.layers.http import RequestHeaders
 from mitmproxy.proxy.layers.http import ResponseData
 from mitmproxy.proxy.layers.http import ResponseEndOfMessage
 from mitmproxy.proxy.layers.http import ResponseHeaders
+from mitmproxy.proxy.layers.http import ResponseProtocolError
+from test.mitmproxy.proxy.tutils import BytesMatching
 from test.mitmproxy.proxy.tutils import Placeholder
 from test.mitmproxy.proxy.tutils import Playbook
 
@@ -109,6 +113,20 @@ class TestServer:
             >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\n\r\n")
             << ReceiveHttp(Placeholder(RequestHeaders))
             << ReceiveHttp(RequestEndOfMessage(3))
+        )
+
+    @pytest.mark.parametrize("terminated", [False, True])
+    def test_oversized_head(self, tctx, terminated):
+        data = b"GET / HTTP/1.1\r\nX-Pad: " + b"a" * 65536
+        if terminated:
+            data += b"\r\n\r\n"
+        assert (
+            Playbook(Http1Server(tctx))
+            >> DataReceived(tctx.client, data)
+            << SendData(
+                tctx.client, BytesMatching(b"431 Request Header Fields Too Large")
+            )
+            << CloseConnection(tctx.client)
         )
 
 
@@ -230,3 +248,21 @@ class TestClient:
             >> RequestHeaders(3, req, True)
             << SendData(tctx.server, Placeholder(bytes))
         )
+
+    @pytest.mark.parametrize("terminated", [False, True])
+    def test_oversized_head(self, tctx, terminated):
+        req = http.Request.make("GET", "http://example.com/")
+        error = Placeholder(ResponseProtocolError)
+        data = b"HTTP/1.1 200 OK\r\nX-Pad: " + b"a" * 65536
+        if terminated:
+            data += b"\r\n\r\n"
+        assert (
+            Playbook(Http1Client(tctx))
+            >> RequestHeaders(1, req, True)
+            << SendData(tctx.server, b"GET / HTTP/1.1\r\ncontent-length: 0\r\n\r\n")
+            >> RequestEndOfMessage(1)
+            >> DataReceived(tctx.server, data)
+            << CloseConnection(tctx.server)
+            << ReceiveHttp(error)
+        )
+        assert error().code is ErrorCode.RESPONSE_HEADERS_TOO_LARGE

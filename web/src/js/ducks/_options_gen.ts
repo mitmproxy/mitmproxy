@@ -27,6 +27,7 @@ export interface OptionsState {
     emudhra_old: boolean;
     export_preserve_original_ip: boolean;
     hardump: string;
+    http1_head_size_limit: string | undefined;
     http2: boolean;
     http2_ping_keepalive: number;
     http3: boolean;
@@ -137,6 +138,7 @@ export const defaultState: OptionsState = {
     emudhra_old: false,
     export_preserve_original_ip: false,
     hardump: "",
+    http1_head_size_limit: "64k",
     http2: true,
     http2_ping_keepalive: 58,
     http3: true,

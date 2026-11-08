@@ -174,6 +174,8 @@ class Http2Connection(HttpConnection):
                             case (
                                 ErrorCode.GENERIC_CLIENT_ERROR
                                 | ErrorCode.GENERIC_SERVER_ERROR
+                                | ErrorCode.REQUEST_HEADERS_TOO_LARGE
+                                | ErrorCode.RESPONSE_HEADERS_TOO_LARGE
                                 | ErrorCode.REQUEST_TOO_LARGE
                                 | ErrorCode.RESPONSE_TOO_LARGE
                                 | ErrorCode.CONNECT_FAILED
