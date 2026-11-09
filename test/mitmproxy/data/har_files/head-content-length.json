@@ -53,7 +53,7 @@
             "host": "files.pythonhosted.org",
             "port": 443,
             "path": "/packages/00/e5/f12a80907d0884e6dff9c16d0c0114d81b8cd07dc3ae54c5e962cc83037e/tqdm-4.66.1-py3-none-any.whl",
-            "http_version": "HTTP/1.1",
+            "http_version": "HTTP/2.0",
             "headers": [
                 [
                     "accept",
@@ -79,7 +79,7 @@
             "pretty_host": "files.pythonhosted.org"
         },
         "response": {
-            "http_version": "HTTP/1.1",
+            "http_version": "HTTP/2.0",
             "status_code": 200,
             "reason": "OK",
             "headers": [

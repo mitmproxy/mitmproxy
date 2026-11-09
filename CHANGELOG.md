@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+- Mark HTTP/2 flows imported from HAR files as HTTP/2. Previously they were tagged with an
+  unknown `HTTP/2` version (or `HTTP/1.1` for HAR files exported by mitmproxy itself), and client
+  replay sent `HTTP/2` in the HTTP/1 request line, which servers reject.
+  ([#8583](https://github.com/mitmproxy/mitmproxy/pull/8583), @JayOfTheKeyboard)
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)
