@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- mitmweb: Add a quiet zone around the WireGuard QR code so that it can be scanned in dark mode.
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)
