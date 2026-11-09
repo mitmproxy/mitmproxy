@@ -40,6 +40,7 @@ from . import ResponseEndOfMessage
 from . import ResponseHeaders
 from . import ResponseProtocolError
 from . import ResponseTrailers
+from ._base import DrainHttpConnection
 from ._base import format_error
 from ._base import HttpConnection
 from ._base import HttpEvent
@@ -74,6 +75,13 @@ class Http2Connection(HttpConnection):
     h2_conn: BufferedH2Connection
     streams: dict[int, StreamState]
     """keep track of all active stream ids to send protocol errors on teardown"""
+    draining: bool = False
+    """
+    The peer sent a graceful GOAWAY: open streams complete, then we close.
+    Requires an h2 version with graceful shutdown support (state_machine.draining).
+    """
+    retired: set[int]
+    """Streams that drain() failed because the peer never processed them."""
 
     ReceiveProtocolError: type[RequestProtocolError | ResponseProtocolError]
     ReceiveData: type[RequestData | ResponseData]
@@ -91,6 +99,17 @@ class Http2Connection(HttpConnection):
         )
         self.h2_conn = BufferedH2Connection(self.h2_conf)
         self.streams = {}
+        self.retired = set()
+
+    def connection_closed(self) -> bool:
+        """
+        Check if the HTTP/2 connection accepts no more frames. A connection
+        that drains after a graceful GOAWAY is CLOSED for new streams only.
+        """
+        state_machine = self.h2_conn.state_machine
+        return state_machine.state is h2.connection.ConnectionState.CLOSED and not (
+            getattr(state_machine, "draining", False)
+        )
 
     def is_closed(self, stream_id: int) -> bool:
         """Check if a non-idle stream is closed"""
@@ -98,8 +117,7 @@ class Http2Connection(HttpConnection):
         if (
             stream is not None
             and stream.state_machine.state is not h2.stream.StreamState.CLOSED
-            and self.h2_conn.state_machine.state
-            is not h2.connection.ConnectionState.CLOSED
+            and not self.connection_closed()
         ):
             return False
         else:
@@ -113,12 +131,15 @@ class Http2Connection(HttpConnection):
             and stream.state_machine.state
             is not h2.stream.StreamState.HALF_CLOSED_LOCAL
             and stream.state_machine.state is not h2.stream.StreamState.CLOSED
-            and self.h2_conn.state_machine.state
-            is not h2.connection.ConnectionState.CLOSED
+            and not self.connection_closed()
         ):
             return True
         else:
             return False
+
+    def is_local_stream(self, stream_id: int) -> bool:
+        """Check if a stream was opened by us (odd stream ids are client-initiated)."""
+        return bool(stream_id % 2) == self.h2_conf.client_side
 
     def _handle_event(self, event: Event) -> CommandGenerator[None]:
         if isinstance(event, Start):
@@ -190,6 +211,8 @@ class Http2Connection(HttpConnection):
             data_to_send = self.h2_conn.data_to_send()
             if data_to_send:
                 yield SendData(self.conn, data_to_send)
+            if self.draining:
+                yield from self.close_if_drained()
 
         elif isinstance(event, DataReceived):
             try:
@@ -208,6 +231,13 @@ class Http2Connection(HttpConnection):
             for h2_event in events:
                 if self.debug:
                     yield Log(f"{self.debug}[h2] {h2_event}", DEBUG)
+                if getattr(h2_event, "stream_id", None) in self.retired:
+                    # drain() already failed this stream, but the same read had more for it.
+                    if isinstance(h2_event, h2.events.DataReceived):
+                        self.h2_conn.acknowledge_received_data(
+                            h2_event.flow_controlled_length, h2_event.stream_id
+                        )
+                    continue
                 if (yield from self.handle_h2_event(h2_event)):
                     if self.debug:
                         yield Log(f"{self.debug}[h2] done", DEBUG)
@@ -216,6 +246,8 @@ class Http2Connection(HttpConnection):
             data_to_send = self.h2_conn.data_to_send()
             if data_to_send:
                 yield SendData(self.conn, data_to_send)
+            if self.draining:
+                yield from self.close_if_drained()
 
         elif isinstance(event, ConnectionClosed):
             yield from self.close_connection("peer closed connection")
@@ -276,14 +308,13 @@ class Http2Connection(HttpConnection):
             yield from self.protocol_error(f"HTTP/2 protocol error: {event}")
             return True
         elif isinstance(event, h2.events.ConnectionTerminated):
-            yield from self.close_connection(f"HTTP/2 connection closed: {event!r}")
-            return True
-            # The implementation above isn't really ideal, we should probably only terminate streams > last_stream_id?
-            # We currently lack a mechanism to signal that connections are still active but cannot be reused.
-            # for stream_id in self.streams:
-            #    if stream_id > event.last_stream_id:
-            #        yield ReceiveHttp(self.ReceiveProtocolError(stream_id, f"HTTP/2 connection closed: {event!r}"))
-            #        self.streams.pop(stream_id)
+            graceful = event.error_code == h2.errors.ErrorCodes.NO_ERROR and getattr(
+                self.h2_conn.state_machine, "draining", False
+            )
+            if not graceful:
+                yield from self.close_connection(f"HTTP/2 connection closed: {event!r}")
+                return True
+            yield from self.drain(event)
         elif isinstance(event, h2.events.RemoteSettingsChanged):
             pass
         elif isinstance(event, h2.events.SettingsAcknowledged):
@@ -320,6 +351,42 @@ class Http2Connection(HttpConnection):
         self.h2_conn.close_connection(error_code, message.encode())
         yield SendData(self.conn, self.h2_conn.data_to_send())
         yield from self.close_connection(message)
+
+    def drain(self, event: h2.events.ConnectionTerminated) -> CommandGenerator[None]:
+        """
+        The peer sent a graceful GOAWAY (RFC 9113, Section 6.8). Streams we opened
+        above its last stream id were never processed and fail; the others complete,
+        and then we close the connection (see close_if_drained).
+        """
+        if not self.draining:
+            self.draining = True
+            yield DrainHttpConnection(self.conn)
+        msg = f"HTTP/2 connection closed: {event!r}"
+        assert event.last_stream_id is not None  # always set for a received GOAWAY
+        unprocessed = [
+            stream_id
+            for stream_id in self.streams
+            if self.is_local_stream(stream_id) and stream_id > event.last_stream_id
+        ]
+        for stream_id in unprocessed:
+            del self.streams[stream_id]
+            self.retired.add(stream_id)
+            # The server may already have reset it in the same read.
+            if not self.is_closed(stream_id):
+                self.h2_conn.reset_stream(stream_id, h2.errors.ErrorCodes.CANCEL)
+            yield ReceiveHttp(
+                self.ReceiveProtocolError(
+                    stream_id, msg, self.ReceiveProtocolError.code
+                )
+            )
+
+    def close_if_drained(self) -> CommandGenerator[None]:
+        """Once every stream of a draining connection is closed, send our GOAWAY and close."""
+        if all(self.is_closed(stream_id) for stream_id in self.streams):
+            self.streams.clear()
+            self.h2_conn.close_connection()
+            yield SendData(self.conn, self.h2_conn.data_to_send())
+            yield from self.close_connection("HTTP/2 connection drained")
 
     def close_connection(self, msg: str) -> CommandGenerator[None]:
         yield CloseConnection(self.conn)
@@ -508,6 +575,18 @@ class Http2Client(Http2Connection):
         # To mitigate this, we transparently map the outside's stream id to our stream id.
         if isinstance(event, HttpEvent):
             ours = self.our_stream_id.get(event.stream_id, None)
+            if ours is None and self.draining:
+                # The server sent a graceful GOAWAY: this connection takes no new streams.
+                # The HTTP layer no longer hands it out, but a stream may have got it just before.
+                if isinstance(event, RequestHeaders):
+                    yield ReceiveHttp(
+                        ResponseProtocolError(
+                            event.stream_id,
+                            "HTTP/2 connection is shutting down (GOAWAY)",
+                            ErrorCode.GENERIC_SERVER_ERROR,
+                        )
+                    )
+                return
             if ours is None:
                 no_free_streams = self.h2_conn.open_outbound_streams >= (
                     self.provisional_max_concurrency
@@ -525,6 +604,18 @@ class Http2Client(Http2Connection):
             if isinstance(cmd, ReceiveHttp):
                 cmd.event.stream_id = self.their_stream_id[cmd.event.stream_id]
             yield cmd
+
+        if self.draining and self.stream_queue:
+            # Requests still waiting for a free stream will never be sent on this connection.
+            for their_stream_id in self.stream_queue:
+                yield ReceiveHttp(
+                    ResponseProtocolError(
+                        their_stream_id,
+                        "HTTP/2 connection is shutting down (GOAWAY)",
+                        ErrorCode.GENERIC_SERVER_ERROR,
+                    )
+                )
+            self.stream_queue.clear()
 
         can_resume_queue = self.stream_queue and self.h2_conn.open_outbound_streams < (
             self.provisional_max_concurrency

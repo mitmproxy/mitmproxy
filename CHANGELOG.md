@@ -7,6 +7,16 @@
 
 ## Unreleased: mitmproxy next
 
+- HTTP/2: Handle graceful shutdowns (GOAWAY with NO_ERROR) from servers and clients.
+  Open streams now complete and the connection is closed afterwards, instead of failing
+  every stream with a protocol error such as `Invalid input ConnectionInputs.RECV_PING in
+  state ConnectionState.CLOSED`. A draining server connection is no longer reused for new
+  requests. Requires an h2 release with graceful shutdown support; older h2 versions keep
+  the previous behavior.
+  ([#8580](https://github.com/mitmproxy/mitmproxy/pull/8580), @benpbolton)
+- HTTP/2: Discard trailers queued behind flow-controlled data when their stream is reset or the
+  connection fails. Previously they stayed in memory until the connection closed.
+  ([#8580](https://github.com/mitmproxy/mitmproxy/pull/8580), @benpbolton)
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)
