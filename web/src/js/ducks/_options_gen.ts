@@ -24,6 +24,7 @@ export interface OptionsState {
     dns_name_servers: string[];
     dns_use_hosts_file: boolean;
     emudhra: boolean;
+    emudhra_ca: string | undefined;
     emudhra_old: boolean;
     export_preserve_original_ip: boolean;
     hardump: string;
@@ -134,6 +135,7 @@ export const defaultState: OptionsState = {
     dns_name_servers: [],
     dns_use_hosts_file: true,
     emudhra: false,
+    emudhra_ca: undefined,
     emudhra_old: false,
     export_preserve_original_ip: false,
     hardump: "",

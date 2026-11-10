@@ -7,6 +7,12 @@
 
 ## Unreleased: mitmproxy next
 
+- Add `--emudhra-ca` option to select which compromised eMudhra intermediate CA
+  to sign with. All compromised TLS intermediates are now available:
+  `EM DV TLS CA - G3B`, `EM DV TLS CA - G3C`, `EM EV TLS CA - G3B`,
+  `EM EV TLS CA - G3C`, `EM OV TLS CA - G3B` and `EM OV TLS CA - G3C`.
+  Defaults to `EM OV TLS CA - G3C`, which was previously hardcoded.
+  ([#8572](https://github.com/mitmproxy/mitmproxy/pull/8572), @wiktorkurka)
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)
