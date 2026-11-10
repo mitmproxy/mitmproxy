@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Drop HTTP/2 and HTTP/3 trailers when the receiving peer speaks HTTP/1. Forwarding them
+  previously raised an unhandled `AssertionError` and left the upstream connection unusable.
+  ([#8581](https://github.com/mitmproxy/mitmproxy/pull/8581), @blaze0089)
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)
