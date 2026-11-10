@@ -229,6 +229,10 @@ def test_options():
         tctx.configure(ps, body_size_limit="1m")
 
         with pytest.raises(exceptions.OptionsError):
+            tctx.configure(ps, http1_head_size_limit="invalid")
+        tctx.configure(ps, http1_head_size_limit="128k")
+
+        with pytest.raises(exceptions.OptionsError):
             tctx.configure(ps, connect_addr="invalid")
         tctx.configure(ps, connect_addr="1.2.3.4")
         assert ps._connect_addr == ("1.2.3.4", 0)

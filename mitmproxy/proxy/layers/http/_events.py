@@ -96,6 +96,10 @@ class ErrorCode(enum.Enum):
     """Client or server cancelled h2/h3 stream."""
     REQUEST_VALIDATION_FAILED = 12
     RESPONSE_VALIDATION_FAILED = 13
+    REQUEST_HEADERS_TOO_LARGE = 14
+    """Request head exceeds the configured HTTP/1 head size limit."""
+    RESPONSE_HEADERS_TOO_LARGE = 15
+    """Response head exceeds the configured HTTP/1 head size limit."""
 
     def http_status_code(self) -> int | None:
         match self:
@@ -106,12 +110,15 @@ class ErrorCode(enum.Enum):
                 | ErrorCode.DESTINATION_UNKNOWN
             ):
                 return status_codes.BAD_REQUEST
+            case ErrorCode.REQUEST_HEADERS_TOO_LARGE:
+                return status_codes.REQUEST_HEADER_FIELDS_TOO_LARGE
             case ErrorCode.REQUEST_TOO_LARGE:
                 return status_codes.PAYLOAD_TOO_LARGE
             case (
                 ErrorCode.CONNECT_FAILED
                 | ErrorCode.GENERIC_SERVER_ERROR
                 | ErrorCode.RESPONSE_VALIDATION_FAILED
+                | ErrorCode.RESPONSE_HEADERS_TOO_LARGE
                 | ErrorCode.RESPONSE_TOO_LARGE
             ):
                 return status_codes.BAD_GATEWAY

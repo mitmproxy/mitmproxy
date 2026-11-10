@@ -89,7 +89,20 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
         if not self.send_connect:
             return (yield from super().receive_handshake_data(data))
         self.buf += data
+        buf_size = len(self.buf)
         response_head = self.buf.maybe_extract_lines()
+        head_limit = human.parse_size(self.context.options.http1_head_size_limit)
+        if head_limit is not None and (
+            (response_head and buf_size - len(self.buf) > head_limit)
+            or (not response_head and len(self.buf) > head_limit)
+        ):
+            proxyaddr = human.format_address(self.tunnel_connection.address)
+            msg = (
+                f"Upstream proxy {proxyaddr} sent a CONNECT response head larger "
+                f"than the configured limit of {human.pretty_size(head_limit)}."
+            )
+            yield commands.Log(msg)
+            return False, msg
         if response_head:
             try:
                 response = http1.read_response_head([bytes(x) for x in response_head])

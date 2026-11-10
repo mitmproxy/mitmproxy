@@ -7,6 +7,11 @@
 
 ## Unreleased: mitmproxy next
 
+- Bound HTTP/1 request and response heads to 64 KiB by default. A peer that never finishes
+  sending headers can no longer grow the buffer without limit; oversized requests are
+  rejected with a 431 response and oversized upstream responses become a 502. The new
+  `http1_head_size_limit` option can raise or disable the limit.
+  ([#8582](https://github.com/mitmproxy/mitmproxy/pull/8582), @blaze0089)
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)

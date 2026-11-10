@@ -182,6 +182,17 @@ class Proxyserver(ServerManager):
             """,
         )
         loader.add_option(
+            "http1_head_size_limit",
+            Optional[str],
+            "64k",
+            """
+            Byte size limit of HTTP/1 request and response heads (start line and headers).
+            Requests that exceed it are rejected with a 431 response, oversized upstream
+            responses are turned into a 502. Understands k/m/g suffixes, i.e. 64k for
+            64 KiB. Set to an empty value to disable the limit.
+            """,
+        )
+        loader.add_option(
             "keep_host_header",
             bool,
             False,
@@ -241,6 +252,14 @@ class Proxyserver(ServerManager):
                 raise exceptions.OptionsError(
                     f"Invalid body_size_limit specification: "
                     f"{ctx.options.body_size_limit}"
+                )
+        if "http1_head_size_limit" in updated:
+            try:
+                human.parse_size(ctx.options.http1_head_size_limit)
+            except ValueError:
+                raise exceptions.OptionsError(
+                    f"Invalid http1_head_size_limit specification: "
+                    f"{ctx.options.http1_head_size_limit}"
                 )
         if "connect_addr" in updated:
             try:
