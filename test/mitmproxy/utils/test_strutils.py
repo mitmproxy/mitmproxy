@@ -62,6 +62,15 @@ def test_bytes_to_escaped_str():
     assert strutils.bytes_to_escaped_str(b"\\\\n", True) == "\\ \\ \\ \\ n".replace(
         " ", ""
     )
+    # A run of several backslashes in front of an unescaped newline or quote
+    # must be kept in full.
+    assert strutils.bytes_to_escaped_str(b"\\\\\n", True) == "\\" * 4 + "\n"
+    assert strutils.bytes_to_escaped_str(b"\\\\'") == "\\" * 4 + "'"
+    assert strutils.bytes_to_escaped_str(b"\\\\\\\t", True) == "\\" * 6 + "\t"
+    for data in [b"\\\\\n", b"\\\\\r", b"\\\\'", b"a\\\\\\'b\\\\\t"]:
+        for keep_spacing in (True, False):
+            escaped = strutils.bytes_to_escaped_str(data, keep_spacing)
+            assert strutils.escaped_str_to_bytes(escaped) == data
 
     with pytest.raises(ValueError):
         strutils.bytes_to_escaped_str("such unicode")
