@@ -32,6 +32,7 @@ from mitmproxy.addons.next_layer import NextLayer
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.addons.tlsconfig import TlsConfig
 from mitmproxy.connection import Address
+from mitmproxy.proxy import events
 from mitmproxy.proxy import layers
 from mitmproxy.proxy import server_hooks
 from mitmproxy.test import taddons
@@ -161,6 +162,20 @@ async def test_inject() -> None:
             writer.close()
             await writer.wait_closed()
             await _wait_for_connection_closes(ps)
+
+
+async def test_flow_killed_no_live_connection(caplog) -> None:
+    """
+    Subscriber for FlowKilledHook must silently no-op when the flow has no
+    live connection. (#4711) The existing flow.kill code path calls this on
+    every kill, including kills of flows already deserialized from disk or
+    flows whose connection has already gone away.
+    """
+    ps = Proxyserver()
+    # tflow with no live connection should not raise and should not log
+    # anything alarming — there's nothing to kill at the layer level.
+    ps.flow_killed(tflow.tflow())
+    assert "Flow is not from a live connection." not in caplog.text
 
 
 async def test_inject_fail(caplog) -> None:
@@ -401,6 +416,93 @@ async def test_udp(caplog_async) -> None:
         stream.close()
         await stream.wait_closed()
         await _wait_for_connection_closes(ps)
+
+
+class CaptureUdpStart:
+    def __init__(self):
+        self.flows = []
+
+    def udp_start(self, f):
+        self.flows.append(f)
+
+
+class KillOnUdpStart:
+    def __init__(self):
+        self.flows = []
+
+    def udp_start(self, f):
+        self.flows.append(f)
+        if f.killable:
+            f.kill()
+
+
+async def test_inject_event_udp_uses_client_id(caplog_async) -> None:
+    """
+    UDP connections register under `client_conn.id` like every other transport,
+    so `inject_event` must look them up by that id. An earlier workaround keyed
+    the lookup on `(peername, sockname)`, which never matched the registry, so
+    `KillInjected` was silently dropped for every UDP flow (#8200).
+    """
+    caplog_async.set_level("INFO")
+
+    def handle_datagram(transport, data, remote_addr: Address):
+        transport.sendto(b"reply", remote_addr)
+
+    ps = Proxyserver()
+    nl = NextLayer()
+    state = CaptureUdpStart()
+    with taddons.context(ps, nl, state) as tctx:
+        async with udp_server(handle_datagram) as server_addr:
+            mode = f"reverse:udp://{server_addr[0]}:{server_addr[1]}@127.0.0.1:0"
+            tctx.configure(ps, mode=[mode])
+            assert await ps.setup_servers()
+            ps.running()
+            await caplog_async.await_log(
+                f"reverse proxy to udp://{server_addr[0]}:{server_addr[1]} listening"
+            )
+            addr = ps.servers[mode].listen_addrs[0]
+            stream = await mitmproxy_rs.udp.open_udp_connection(*addr)
+            stream.write(b"\x16")
+            assert b"reply" == await stream.read(65535)
+            (flow,) = state.flows
+            # the live UDP connection is registered by client id ...
+            assert flow.client_conn.id in ps.connections
+            # ... so inject_event must find it (this raised ValueError before the fix).
+            ps.inject_event(events.KillInjected(flow))
+            stream.close()
+            await stream.wait_closed()
+            await _wait_for_connection_closes(ps)
+
+
+async def test_kill_in_udp_start_no_forward(caplog_async) -> None:
+    """A flow killed inside the udp_start hook must not forward its datagram."""
+    caplog_async.set_level("INFO")
+    upstream_received: list[bytes] = []
+
+    def handle_datagram(transport, data, remote_addr: Address):
+        upstream_received.append(data)
+        transport.sendto(b"reply", remote_addr)
+
+    ps = Proxyserver()
+    nl = NextLayer()
+    state = KillOnUdpStart()
+    with taddons.context(ps, nl, state) as tctx:
+        async with udp_server(handle_datagram) as server_addr:
+            mode = f"reverse:udp://{server_addr[0]}:{server_addr[1]}@127.0.0.1:0"
+            tctx.configure(ps, mode=[mode])
+            assert await ps.setup_servers()
+            ps.running()
+            await caplog_async.await_log(
+                f"reverse proxy to udp://{server_addr[0]}:{server_addr[1]} listening"
+            )
+            addr = ps.servers[mode].listen_addrs[0]
+            stream = await mitmproxy_rs.udp.open_udp_connection(*addr)
+            stream.write(b"\x16")
+            await asyncio.sleep(0.5)
+            assert upstream_received == []
+            stream.close()
+            await stream.wait_closed()
+            await _wait_for_connection_closes(ps)
 
 
 class H3EchoServer(QuicConnectionProtocol):
