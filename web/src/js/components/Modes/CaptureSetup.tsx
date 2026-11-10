@@ -29,7 +29,8 @@ function ServerDescription({
     useEffect(() => {
         if (wireguard_conf && qrCode.current)
             QRCode.toCanvas(qrCode.current, wireguard_conf, {
-                margin: 0,
+                // Draw the quiet zone into the canvas so that the code stays scannable on dark backgrounds.
+                margin: 4,
                 scale: 3,
             });
     }, [wireguard_conf]);

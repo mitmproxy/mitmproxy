@@ -361,10 +361,17 @@ class TestTlsConfig:
             ),
         ],
     )
-    def test_emudhra(self, opts, trusted_root):
+    def test_emudhra(self, opts, trusted_root, tmp_path):
+        ca_file = tmp_path / "root.pem"
+        ca_file.write_text(trusted_root)
+
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
-            tctx.configure(ta, **opts)
+            tctx.configure(
+                ta,
+                ssl_verify_upstream_trusted_ca=str(ca_file),
+                **opts,
+            )
             ctx = _ctx(tctx.options)
             ctx.client.sni = "example.mitmproxy.org"
 
@@ -372,21 +379,20 @@ class TestTlsConfig:
             ta.tls_start_client(tls_start)
             tssl_server = tls_start.ssl_conn
 
-            tssl_client = test_tls.SSLTest()
-            tssl_client.ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-            tssl_client.ctx.verify_mode = ssl.CERT_REQUIRED
-            tssl_client.ctx.check_hostname = True
-            tssl_client.ctx.load_verify_locations(cadata=trusted_root)
-            tssl_client.obj = tssl_client.ctx.wrap_bio(
-                tssl_client.inc,
-                tssl_client.out,
-                server_side=False,
-                server_hostname="example.mitmproxy.org",
-            )
+            ctx.server.address = ("example.mitmproxy.org", 443)
+            tls_start_server = tls.TlsData(ctx.server, context=ctx)
+            ta.tls_start_server(tls_start_server)
+            tssl_client = tls_start_server.ssl_conn
+
             assert self.do_handshake(tssl_client, tssl_server)
-            assert tssl_client.obj.getpeercert()["subjectAltName"] == (
-                ("DNS", "example.mitmproxy.org"),
+            san = (
+                tssl_client.get_peer_certificate()
+                .to_cryptography()
+                .extensions.get_extension_for_class(x509.SubjectAlternativeName)
             )
+            assert san.value.get_values_for_type(x509.DNSName) == [
+                "example.mitmproxy.org"
+            ]
 
             quic_tls_start = quic.QuicTlsData(ctx.client, context=ctx)
             ta.quic_start_client(quic_tls_start)
