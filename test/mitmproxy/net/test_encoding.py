@@ -1,5 +1,6 @@
 from unittest import mock
 
+import brotli
 import pytest
 
 from mitmproxy.net import encoding
@@ -137,3 +138,81 @@ def test_zstd():
 
     # Uncompressed two frames should have the size of FRAME_SIZE * 2
     assert len(encoding.decode_zstd(two_frames)) == FRAME_SIZE * 2
+
+
+@pytest.mark.parametrize("encoder", ["gzip", "deflate", "br", "zstd"])
+def test_decode_size_limit(monkeypatch, encoder):
+    monkeypatch.setattr(encoding, "MAX_DECODED_SIZE", 1024)
+    compressed = encoding.encode(b"a" * 1025, encoder)
+    encoding._cache = encoding.CachedDecode(None, None, None, None)
+
+    with pytest.raises(ValueError, match="maximum size"):
+        encoding.decode(compressed, encoder)
+
+
+@pytest.mark.parametrize("encoder", ["gzip", "deflate", "br", "zstd"])
+def test_decode_size_limit_exact(monkeypatch, encoder):
+    monkeypatch.setattr(encoding, "MAX_DECODED_SIZE", 1024)
+    compressed = encoding.encode(b"a" * 1024, encoder)
+    encoding._cache = encoding.CachedDecode(None, None, None, None)
+
+    assert encoding.decode(compressed, encoder) == b"a" * 1024
+
+
+@pytest.mark.parametrize("encoder", ["gzip", "deflate", "br", "zstd"])
+def test_decode_size_limit_disabled(monkeypatch, encoder):
+    monkeypatch.setattr(encoding, "MAX_DECODED_SIZE", None)
+    compressed = encoding.encode(b"a" * 1025, encoder)
+    encoding._cache = encoding.CachedDecode(None, None, None, None)
+
+    assert len(encoding.decode(compressed, encoder)) == 1025
+
+
+def test_zstd_concatenated_frames_size_limit(monkeypatch):
+    single_frame = encoding.encode_zstd(b"a" * 1024)
+    two_frames = single_frame + single_frame
+
+    monkeypatch.setattr(encoding, "MAX_DECODED_SIZE", 2048)
+    assert len(encoding.decode_zstd(two_frames)) == 2048
+
+    monkeypatch.setattr(encoding, "MAX_DECODED_SIZE", 2047)
+    with pytest.raises(ValueError, match="maximum size"):
+        encoding.decode_zstd(two_frames)
+
+
+def test_zstd_truncated(monkeypatch):
+    monkeypatch.setattr(encoding, "MAX_DECODED_SIZE", 1024)
+    compressed = encoding.encode_zstd(b"a" * 100)
+
+    with pytest.raises(ValueError, match="incomplete zstd frame"):
+        encoding.decode_zstd(compressed[:-2])
+
+
+def test_brotli_truncated(monkeypatch):
+    monkeypatch.setattr(encoding, "MAX_DECODED_SIZE", 1024)
+    compressed = encoding.encode_brotli(b"a" * 100)
+
+    with pytest.raises(ValueError, match="incomplete brotli stream"):
+        encoding.decode_brotli(compressed[:-2])
+
+
+@pytest.mark.parametrize("limit", [1024 * 1024, 9 * 1024 * 1024])
+def test_brotli_decompression_bomb(monkeypatch, limit):
+    # A few hundred bytes of brotli data expand to 10 MB here. The decoder
+    # must stop once the limit is exceeded instead of buffering everything.
+    monkeypatch.setattr(encoding, "MAX_DECODED_SIZE", limit)
+    bomb = brotli.compress(b"\x00" * (10 * 1024 * 1024), quality=5)
+    assert len(bomb) < 1024
+
+    with pytest.raises(ValueError, match="maximum size"):
+        encoding.decode_brotli(bomb)
+
+
+def test_brotli_buffered_output(monkeypatch):
+    # The decoder buffers output when its internal buffer fills up, so a
+    # larger body is drained in several process() calls.
+    monkeypatch.setattr(encoding, "MAX_DECODED_SIZE", 100 * 1024 * 1024)
+    plain = b"\x00" * (10 * 1024 * 1024)
+    compressed = brotli.compress(plain, quality=5)
+
+    assert encoding.decode_brotli(compressed) == plain

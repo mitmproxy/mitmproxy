@@ -32,6 +32,7 @@ from mitmproxy.addons.next_layer import NextLayer
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.addons.tlsconfig import TlsConfig
 from mitmproxy.connection import Address
+from mitmproxy.net import encoding
 from mitmproxy.proxy import layers
 from mitmproxy.proxy import server_hooks
 from mitmproxy.test import taddons
@@ -217,7 +218,8 @@ async def test_self_connect():
         await _wait_for_connection_closes(ps)
 
 
-def test_options():
+def test_options(monkeypatch):
+    monkeypatch.setattr(encoding, "MAX_DECODED_SIZE", encoding.MAX_DECODED_SIZE)
     ps = Proxyserver()
     with taddons.context(ps) as tctx:
         with pytest.raises(exceptions.OptionsError):
@@ -227,6 +229,11 @@ def test_options():
         with pytest.raises(exceptions.OptionsError):
             tctx.configure(ps, body_size_limit="invalid")
         tctx.configure(ps, body_size_limit="1m")
+
+        with pytest.raises(exceptions.OptionsError):
+            tctx.configure(ps, max_decoded_size="invalid")
+        tctx.configure(ps, max_decoded_size="1m")
+        assert encoding.MAX_DECODED_SIZE == 1024 * 1024
 
         with pytest.raises(exceptions.OptionsError):
             tctx.configure(ps, connect_addr="invalid")

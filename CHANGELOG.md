@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+- Cap the size of decompressed HTTP bodies to prevent a malicious upstream from
+  exhausting memory with a small compressed body. The limit can be adjusted with
+  the new `max_decoded_size` option (default: 100m).
+  ([#8578](https://github.com/mitmproxy/mitmproxy/pull/8578), @blaze0089)
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)
