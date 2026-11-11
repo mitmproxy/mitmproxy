@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Add a `websocket_control` event for WebSocket ping, pong and close frames. These frames are
+  now recorded in `flow.websocket.messages` and can be dropped by addons.
 - mitmweb: Add a quiet zone around the WireGuard QR code so that it can be scanned in dark mode.
   ([#8585](https://github.com/mitmproxy/mitmproxy/pull/8585), @yldrmzffr)
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file

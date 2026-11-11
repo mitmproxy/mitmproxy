@@ -315,6 +315,8 @@ def test_protocol_error(ws_testdata):
         >> reply()
         >> DataReceived(tctx.server, b"\x01\x03foo")
         >> DataReceived(tctx.server, b"\x02\x03bar")
+        << websocket.WebsocketControlHook(flow)
+        >> reply()
         << SendData(
             tctx.server,
             masked(b"\x88/\x03\xeaexpected CONTINUATION, got <Opcode.BINARY: 2>"),
@@ -327,7 +329,8 @@ def test_protocol_error(ws_testdata):
         << websocket.WebsocketEndHook(flow)
         >> reply()
     )
-    assert not flow.websocket.messages
+    [close] = flow.websocket.messages
+    assert (close.type, close.from_client) == (Opcode.CLOSE, False)
     assert not flow.live
 
 
@@ -339,12 +342,65 @@ def test_ping(ws_testdata):
         >> reply()
         >> DataReceived(tctx.client, masked_bytes(b"\x89\x11ping-with-payload"))
         << Log("Received WebSocket ping from client (payload: b'ping-with-payload')")
+        << websocket.WebsocketControlHook(flow)
+        >> reply()
         << SendData(tctx.server, masked(b"\x89\x11ping-with-payload"))
         >> DataReceived(tctx.server, b"\x8a\x11pong-with-payload")
         << Log("Received WebSocket pong from server (payload: b'pong-with-payload')")
+        << websocket.WebsocketControlHook(flow)
+        >> reply()
         << SendData(tctx.client, b"\x8a\x11pong-with-payload")
     )
-    assert not flow.websocket.messages
+    ping, pong = flow.websocket.messages
+    assert (ping.type, ping.from_client, ping.content) == (
+        Opcode.PING,
+        True,
+        b"ping-with-payload",
+    )
+    assert (pong.type, pong.from_client, pong.content) == (
+        Opcode.PONG,
+        False,
+        b"pong-with-payload",
+    )
+
+
+def test_drop_ping(ws_testdata):
+    tctx, playbook, flow = ws_testdata
+    assert (
+        playbook
+        << websocket.WebsocketStartHook(flow)
+        >> reply()
+        >> DataReceived(tctx.client, masked_bytes(b"\x89\x04ping"))
+        << Log("Received WebSocket ping from client (payload: b'ping')")
+        << websocket.WebsocketControlHook(flow)
+    )
+    ping = flow.websocket.messages[-1]
+    assert (ping.type, ping.content) == (Opcode.PING, b"ping")
+    ping.drop()
+    assert playbook >> reply() << None
+
+
+def test_drop_close(ws_testdata):
+    tctx, playbook, flow = ws_testdata
+    assert (
+        playbook
+        << websocket.WebsocketStartHook(flow)
+        >> reply()
+        >> DataReceived(tctx.client, masked_bytes(b"\x88\x06\x0f\xa0done"))
+        << websocket.WebsocketControlHook(flow)
+    )
+    close = flow.websocket.messages[-1]
+    assert (close.type, close.content) == (Opcode.CLOSE, b"\x0f\xa0done")
+    close.drop()
+    assert (
+        playbook
+        >> reply()
+        << CloseConnection(tctx.server)
+        << SendData(tctx.client, b"\x88\x06\x0f\xa0done")
+        << CloseConnection(tctx.client)
+        << websocket.WebsocketEndHook(flow)
+        >> reply()
+    )
 
 
 def test_close_normal(ws_testdata):
@@ -356,6 +412,8 @@ def test_close_normal(ws_testdata):
         << websocket.WebsocketStartHook(flow)
         >> reply()
         >> DataReceived(tctx.client, masked_bytes(b"\x88\x00"))
+        << websocket.WebsocketControlHook(flow)
+        >> reply()
         << SendData(tctx.server, masked_close)
         << CloseConnection(tctx.server)
         << SendData(tctx.client, close)
@@ -381,6 +439,8 @@ def test_close_disconnect(ws_testdata):
         << websocket.WebsocketStartHook(flow)
         >> reply()
         >> ConnectionClosed(tctx.server)
+        << websocket.WebsocketControlHook(flow)
+        >> reply()
         << CloseConnection(tctx.server)
         << SendData(tctx.client, b"\x88\x02\x03\xe8")
         << CloseConnection(tctx.client)
@@ -401,6 +461,8 @@ def test_close_code(ws_testdata):
         << websocket.WebsocketStartHook(flow)
         >> reply()
         >> DataReceived(tctx.server, b"\x88\x02\x0f\xa0")
+        << websocket.WebsocketControlHook(flow)
+        >> reply()
         << SendData(tctx.server, masked(b"\x88\x02\x0f\xa0"))
         << CloseConnection(tctx.server)
         << SendData(tctx.client, b"\x88\x02\x0f\xa0")

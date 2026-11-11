@@ -1,6 +1,8 @@
 import pytest
+from wsproto.frame_protocol import Opcode
 
 from mitmproxy import eventsequence
+from mitmproxy import websocket
 from mitmproxy.proxy import layers
 from mitmproxy.test import tflow
 
@@ -44,6 +46,24 @@ def test_websocket_flow():
     assert isinstance(next(i), layers.websocket.WebsocketMessageHook)
     assert len(f.websocket.messages) == 3
     assert isinstance(next(i), layers.websocket.WebsocketEndHook)
+
+
+def test_websocket_flow_control():
+    f = tflow.twebsocketflow()
+    f.websocket.messages = [
+        websocket.WebSocketMessage(Opcode.PING, True, b"ping"),
+        websocket.WebSocketMessage(Opcode.TEXT, True, b"hello"),
+        websocket.WebSocketMessage(Opcode.CLOSE, False, b"\x03\xe8"),
+    ]
+    hooks = [type(h) for h in eventsequence.iterate(f)]
+    assert hooks[4:] == [
+        layers.websocket.WebsocketStartHook,
+        layers.websocket.WebsocketControlHook,
+        layers.websocket.WebsocketMessageHook,
+        layers.websocket.WebsocketControlHook,
+        layers.websocket.WebsocketEndHook,
+    ]
+    assert len(f.websocket.messages) == 3
 
 
 @pytest.mark.parametrize("err", [False, True])

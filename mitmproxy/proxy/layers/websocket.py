@@ -42,6 +42,23 @@ class WebsocketMessageHook(StartHook):
 
 
 @dataclass
+class WebsocketControlHook(StartHook):
+    """
+    Called when a WebSocket control frame (ping, pong or close) is received
+    from the client or server, before it is relayed. The frame will be
+    flow.websocket.messages[-1], with type PING, PONG or CLOSE. The content
+    of a close message is the two-byte close code followed by the reason.
+    Dropping the message keeps the frame from the other peer; a dropped close
+    still ends both connections. Changes to the message content are not
+    relayed. A close is also reported if mitmproxy closes the connection
+    itself, for example with code 1006 if the TCP connection ended without
+    a close frame.
+    """
+
+    flow: http.HTTPFlow
+
+
+@dataclass
 class WebsocketEndHook(StartHook):
     """
     A WebSocket connection has ended.
@@ -198,18 +215,37 @@ class WebsocketLayer(layer.Layer):
                     f"Received WebSocket {ws_event.__class__.__name__.lower()} from {from_str} "
                     f"(payload: {bytes(ws_event.payload)!r})"
                 )
-                yield dst_ws.send2(ws_event)
+                typ = (
+                    Opcode.PING
+                    if isinstance(ws_event, wsproto.events.Ping)
+                    else Opcode.PONG
+                )
+                message = websocket.WebSocketMessage(
+                    typ, from_client, bytes(ws_event.payload), injected=injected
+                )
+                self.flow.websocket.messages.append(message)
+                yield WebsocketControlHook(self.flow)
+                if not message.dropped:
+                    yield dst_ws.send2(ws_event)
             elif isinstance(ws_event, wsproto.events.CloseConnection):
                 self.flow.websocket.timestamp_end = time.time()
                 self.flow.websocket.closed_by_client = from_client
                 self.flow.websocket.close_code = ws_event.code
                 self.flow.websocket.close_reason = ws_event.reason
 
+                payload = int(ws_event.code).to_bytes(2, "big")
+                payload += (ws_event.reason or "").encode()
+                message = websocket.WebSocketMessage(
+                    Opcode.CLOSE, from_client, payload, injected=injected
+                )
+                self.flow.websocket.messages.append(message)
+                yield WebsocketControlHook(self.flow)
+
                 for ws in [self.server_ws, self.client_ws]:
                     if ws.state in {
                         ConnectionState.OPEN,
                         ConnectionState.REMOTE_CLOSING,
-                    }:
+                    } and not (message.dropped and ws is dst_ws):
                         # response == original event, so no need to differentiate here.
                         yield ws.send2(ws_event)
                     yield commands.CloseConnection(ws.conn)

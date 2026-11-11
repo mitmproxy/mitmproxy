@@ -40,7 +40,8 @@ class WebSocketMessage(serializable.Serializable):
     """
     The message type, as per RFC 6455's [opcode](https://tools.ietf.org/html/rfc6455#section-5.2).
 
-    Mitmproxy currently only exposes messages assembled from `TEXT` and `BINARY` frames.
+    Messages are assembled from `TEXT` and `BINARY` frames. `PING`, `PONG` and `CLOSE`
+    control frames are recorded as messages as well, see the `websocket_control` event.
     """
     content: bytes
     """A byte-string representing the content of this message."""
