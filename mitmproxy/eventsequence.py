@@ -26,7 +26,10 @@ def _iterate_http(f: http.HTTPFlow) -> TEventGenerator:
         yield layers.websocket.WebsocketStartHook(f)
         for m in message_queue:
             f.websocket.messages.append(m)
-            yield layers.websocket.WebsocketMessageHook(f)
+            if m.type.iscontrol():
+                yield layers.websocket.WebsocketControlHook(f)
+            else:
+                yield layers.websocket.WebsocketMessageHook(f)
         yield layers.websocket.WebsocketEndHook(f)
     elif f.error:
         yield layers.http.HttpErrorHook(f)
