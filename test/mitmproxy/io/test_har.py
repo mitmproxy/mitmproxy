@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from mitmproxy import exceptions
+from mitmproxy.io import read_flows_from_paths
 from mitmproxy.io.har import fix_headers
 from mitmproxy.io.har import request_to_flow
 from mitmproxy.tools.web.app import flow_to_json
@@ -52,6 +53,39 @@ def test_har_to_flow(har_file: Path):
         actual = json.loads(json.dumps(actual))
 
         assert actual == expected
+
+
+@pytest.mark.parametrize("content_encoding", ["dcb", "utf-8"])
+def test_unsupported_content_encoding(content_encoding):
+    """
+    An entry with a content-encoding we cannot apply must not break the import.
+    HAR files contain the decoded body, so that body is kept and the header is dropped.
+    """
+    entry = json.loads((data_dir / "har_files/head-content-length.har").read_bytes())[
+        "log"
+    ]["entries"][0]
+    entry["request"]["method"] = "GET"
+    entry["response"]["headers"] = [
+        {"name": "Content-Type", "value": "text/plain"},
+        {"name": "Content-Encoding", "value": content_encoding},
+    ]
+    entry["response"]["content"] = {"mimeType": "text/plain", "text": "hello"}
+
+    f = request_to_flow(entry)
+    assert f.response.content == b"hello"
+    assert "content-encoding" not in f.response.headers
+
+
+def test_unsupported_content_encoding_file(tmp_path):
+    """One entry with an unsupported content-encoding must not make the whole file unreadable."""
+    har = json.loads((data_dir / "har_files/head-content-length.har").read_bytes())
+    entry = har["log"]["entries"][0]
+    entry["response"]["headers"].append({"name": "Content-Encoding", "value": "dcb"})
+    har["log"]["entries"].append(entry)
+    path = tmp_path / "dcb.har"
+    path.write_text(json.dumps(har))
+
+    assert len(read_flows_from_paths([path])) == 2
 
 
 if __name__ == "__main__":
