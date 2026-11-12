@@ -17,6 +17,7 @@
   ([#8537](https://github.com/mitmproxy/mitmproxy/pull/8537), @qodelicious)
 - Fix mitmdump printing complete message bodies at `flow_detail=3`. Bodies are truncated after
   `content_view_lines_cutoff` lines again.
+  ([#8589](https://github.com/mitmproxy/mitmproxy/pull/8589), @Dv2Corn)
 
 ## 25 October 2026: mitmproxy 12.3.1
 
