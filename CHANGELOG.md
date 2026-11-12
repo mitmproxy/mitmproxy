@@ -15,6 +15,8 @@
 - Fix filter expressions where a filter without an argument is followed by a closing bracket,
   e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
   ([#8537](https://github.com/mitmproxy/mitmproxy/pull/8537), @qodelicious)
+- Fix mitmdump printing complete message bodies at `flow_detail=3`. Bodies are truncated after
+  `content_view_lines_cutoff` lines again.
 
 ## 25 October 2026: mitmproxy 12.3.1
 
