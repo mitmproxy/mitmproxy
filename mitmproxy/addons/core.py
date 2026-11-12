@@ -262,7 +262,7 @@ class Core:
         """
         try:
             optmanager.save(ctx.options, path)
-        except OSError as e:
+        except (OSError, exceptions.OptionsError) as e:
             raise exceptions.CommandError("Could not save options - %s" % e) from e
 
     @command.command("options.reset")

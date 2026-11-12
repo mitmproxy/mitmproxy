@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from mitmproxy import exceptions
@@ -154,6 +156,12 @@ def test_options(tmpdir):
             f.write("'''")
         with pytest.raises(exceptions.CommandError):
             sa.options_load(p)
+
+        # Saving over a file that cannot be parsed is an error and leaves the file alone.
+        corrupt = Path(p).read_text()
+        with pytest.raises(exceptions.CommandError):
+            sa.options_save(p)
+        assert Path(p).read_text() == corrupt
 
 
 def test_validation_simple():

@@ -15,6 +15,8 @@
 - Fix filter expressions where a filter without an argument is followed by a closing bracket,
   e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
   ([#8537](https://github.com/mitmproxy/mitmproxy/pull/8537), @qodelicious)
+- Fix `options.save` emptying an existing config file that cannot be parsed. The file is now left
+  untouched and the error is reported.
 
 ## 25 October 2026: mitmproxy 12.3.1
 
