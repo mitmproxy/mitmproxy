@@ -17,6 +17,7 @@
   ([#8537](https://github.com/mitmproxy/mitmproxy/pull/8537), @qodelicious)
 - Fix HAR import failing with "Unable to read HAR file" if a response has a `Content-Encoding`
   that mitmproxy cannot apply, for example `dcb`.
+  ([#8592](https://github.com/mitmproxy/mitmproxy/pull/8592), @Dv2Corn)
 
 ## 25 October 2026: mitmproxy 12.3.1
 
