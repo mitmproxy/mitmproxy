@@ -2,6 +2,7 @@ import gzip
 import importlib
 import json
 import logging
+import urllib.parse
 from pathlib import Path
 from unittest import mock
 
@@ -12,6 +13,7 @@ from tornado import websocket
 from tornado.web import create_signed_value
 
 import mitmproxy_rs
+from mitmproxy import contentviews
 from mitmproxy import log
 from mitmproxy import options
 from mitmproxy.test import tflow
@@ -371,6 +373,16 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         }
         assert self.fetch("/flows/42/messages/content/raw").code == 400
 
+    def test_flow_contentview_names(self):
+        """Every contentview is reachable under the URL mitmweb builds for it."""
+        for name in contentviews.registry.available_views():
+            # same escaping as JavaScript's encodeURIComponent
+            view = urllib.parse.quote(name, safe="-_.!~*'()")
+            resp = self.fetch(f"/flows/42/request/content/{view}.json")
+            assert resp.code == 200, name
+            resp = self.fetch(f"/flows/42/request/content/{view}")
+            assert resp.code == 200, name
+
     def test_flow_contentview_websocket(self):
         assert get_json(self.fetch("/flows/43/messages/content/raw?lines=2")) == [
             {
@@ -391,6 +403,14 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             },
         ]
 
+    def test_flow_contentview_websocket_socketio(self):
+        f = self.view.get_by_id("43")
+        f.websocket.messages[0].content = b'42["chat","hi"]'
+        resp = self.fetch("/flows/43/messages/content/socket.io.json?lines=1")
+        assert resp.code == 200
+        assert get_json(resp)[0]["view_name"] == "Socket.IO"
+        assert get_json(resp)[0]["text"] == 'SocketIO.EVENT ["chat","hi"]'
+
     def test_commands(self):
         resp = self.fetch("/commands")
         assert resp.code == 200
@@ -403,6 +423,13 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         resp = self.fetch("/commands/commands.history.get", method="POST")
         assert resp.code == 200
         assert get_json(resp) == {"value": []}
+
+    def test_command_execute_underscore(self):
+        assert len(self.view) == 3
+        resp = self.fetch("/commands/view.clear_unmarked", method="POST")
+        assert resp.code == 200
+        assert get_json(resp) == {"value": None}
+        assert len(self.view) == 0
 
     def test_events(self):
         resp = self.fetch("/events")
