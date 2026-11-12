@@ -17,6 +17,7 @@
   ([#8537](https://github.com/mitmproxy/mitmproxy/pull/8537), @qodelicious)
 - Fix `options.save` emptying an existing config file that cannot be parsed. The file is now left
   untouched and the error is reported.
+  ([#8591](https://github.com/mitmproxy/mitmproxy/pull/8591), @Dv2Corn)
 
 ## 25 October 2026: mitmproxy 12.3.1
 
