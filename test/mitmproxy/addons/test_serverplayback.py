@@ -419,6 +419,35 @@ async def test_server_playback_404(option, status):
         assert f.response.status_code == status
 
 
+@pytest.mark.parametrize(
+    "option,status", [("204", 204), ("400", 400), ("404", 404), ("500", 500)]
+)
+async def test_server_playback_extra_after_exhaustion(option, status):
+    """
+    The non-reusable replay map empties after the final saved flow is consumed.
+    The configured server_replay_extra policy must still be applied to the next
+    request instead of silently falling through to the upstream server.
+    """
+    s = serverplayback.ServerPlayback()
+    with taddons.context(s) as tctx:
+        tctx.configure(s, server_replay_refresh=True, server_replay_extra=option)
+
+        f = tflow.tflow()
+        f.response = mitmproxy.test.tutils.tresp(content=f.request.content)
+        s.load_flows([f])
+
+        # First request consumes the only saved flow.
+        f = tflow.tflow()
+        await tctx.cycle(s, f)
+        assert f.response.status_code == 200
+        assert not s.flowmap
+
+        # The replay map is now empty; the extra policy must still apply.
+        f = tflow.tflow()
+        s.request(f)
+        assert f.response.status_code == status
+
+
 def test_server_playback_response_deleted():
     """
     The server playback addon holds references to flows that can be modified by the user in the meantime.
