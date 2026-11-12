@@ -64,9 +64,10 @@ REPLACED = """
 """
 
 REPLACEMENTS = {
+    "-Z": "body_size_limit",
     "--stream": "stream_large_bodies",
     "--palette": "console_palette",
-    "--palette-transparent": "console_palette_transparent:",
+    "--palette-transparent": "console_palette_transparent",
     "--follow": "console_focus_follow",
     "--order": "view_order",
     "--no-mouse": "console_mouse",
@@ -81,6 +82,7 @@ REPLACEMENTS = {
     "--replay-ignore-payload-param": "server_replay_ignore_payload_params",
     "--replay-ignore-param": "server_replay_ignore_params",
     "--replay-ignore-host": "server_replay_ignore_host",
+    "--server-replay-use-header": "server_replay_use_headers",
     "--replace-from-file": "replacements (use @ to specify path)",
     "-t": "--stickycookie",
     "-u": "--stickyauth",
