@@ -108,6 +108,15 @@ def test_echo_body():
         d._echo_message(f.response, f)
         t = sio.getvalue()
         assert "cut off" in t
+        assert t.count("foo bar voing") == ctx.options.content_view_lines_cutoff
+
+        sio.seek(0)
+        sio.truncate(0)
+        ctx.configure(d, flow_detail=4)
+        d._echo_message(f.response, f)
+        t = sio.getvalue()
+        assert "cut off" not in t
+        assert t.count("foo bar voing") == 600
 
 
 def test_echo_body_custom_cutoff():
@@ -123,6 +132,7 @@ def test_echo_body_custom_cutoff():
         d._echo_message(f.response, f)
         t = sio.getvalue()
         assert "cut off" in t
+        assert t.count("foo bar voing") == 3
 
 
 def test_echo_trailer():

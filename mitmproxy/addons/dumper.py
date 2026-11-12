@@ -130,7 +130,7 @@ class Dumper:
 
         if content_to_echo:
             highlighted = mitmproxy_rs.syntax_highlight.highlight(
-                pretty.text, pretty.syntax_highlight
+                content_to_echo, pretty.syntax_highlight
             )
             self.echo("")
             self.echo(
