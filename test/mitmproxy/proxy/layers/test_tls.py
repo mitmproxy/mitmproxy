@@ -337,6 +337,83 @@ class TestServerTLS:
             << None
         )
 
+    def test_fatal_alert_after_handshake(self, tctx):
+        """A fatal TLS alert that arrives after the handshake is complete must fail
+        the connection, not leave the child layer waiting for data that never comes.
+        This is what happens when a TLS 1.3 server rejects the client certificate:
+        the rejection alert only arrives once the handshake is already established.
+        https://github.com/mitmproxy/mitmproxy/issues/8486"""
+        tls_layer = tls.ServerTLSLayer(tctx)
+        playbook = tutils.Playbook(tls_layer)
+        tctx.server.address = ("example.mitmproxy.org", 443)
+        tctx.server.state = ConnectionState.OPEN
+        tctx.server.sni = "example.mitmproxy.org"
+
+        tssl = SSLTest(server_side=True)
+
+        # send ClientHello, receive ServerHello
+        data = tutils.Placeholder(bytes)
+        assert (
+            playbook
+            << tls.TlsStartServerHook(tutils.Placeholder())
+            >> reply_tls_start_server()
+            << commands.SendData(tctx.server, data)
+        )
+        tssl.bio_write(data())
+        with pytest.raises(ssl.SSLWantReadError):
+            tssl.do_handshake()
+
+        # finish handshake (mitmproxy)
+        finish_handshake(playbook, tctx.server, tssl)
+
+        # finish handshake (locally)
+        tssl.do_handshake()
+        playbook >> events.DataReceived(tctx.server, tssl.bio_read())
+        playbook << None
+        assert playbook
+
+        assert tctx.server.tls_established
+
+        # attach the child layer
+        assert (
+            playbook
+            >> events.DataReceived(tctx.client, b"foo")
+            << layer.NextLayerHook(tutils.Placeholder())
+            >> tutils.reply_next_layer(TlsEchoLayer)
+            << commands.SendData(tctx.client, b"foo")
+        )
+
+        # Enable debug logging so the close path is fully exercised.
+        tls_layer.debug = "  "
+        playbook.logs = True
+
+        # The server now sends a fatal alert. To get a genuine one from the peer,
+        # we feed it an undecryptable record, to which OpenSSL responds with a
+        # fatal alert of its own.
+        tssl.bio_write(bytes.fromhex("1703030008") + b"junkdata")
+        with pytest.raises(ssl.SSLError, match="(?i).*alert.*|.*record.*"):
+            tssl.obj.read(16)
+        alert = tssl.bio_read()
+        assert alert
+
+        assert (
+            playbook
+            >> events.DataReceived(tctx.server, alert)
+            << commands.Log(StrMatching(">> DataReceived"), DEBUG)
+            << commands.Log(StrMatching("TLS Error: .*alert.*"), WARNING)
+            << commands.Log(StrMatching(r"\[tls\] fatal .*alert.*"), DEBUG)
+            << commands.Log(StrMatching("<< CloseConnection"), DEBUG)
+            << commands.CloseConnection(tctx.server)
+            >> events.ConnectionClosed(tctx.server)
+            << commands.Log(StrMatching(">> ConnectionClosed"), DEBUG)
+            << None
+        )
+        # the child layer has been told that the connection is gone...
+        assert not tctx.server.state & ConnectionState.CAN_READ
+        # ...and the error is surfaced for the HTTP layer to name in its 502.
+        assert tctx.server.error
+        assert "alert" in tctx.server.error
+
     def test_untrusted_cert(self, tctx):
         """If the certificate is not trusted, we should fail."""
         playbook = tutils.Playbook(tls.ServerTLSLayer(tctx))

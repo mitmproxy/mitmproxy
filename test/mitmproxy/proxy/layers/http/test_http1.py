@@ -1,8 +1,12 @@
 import pytest
 
 from mitmproxy import http
+from mitmproxy.connection import ConnectionState
+from mitmproxy.proxy.commands import CloseConnection
 from mitmproxy.proxy.commands import SendData
+from mitmproxy.proxy.events import ConnectionClosed
 from mitmproxy.proxy.events import DataReceived
+from mitmproxy.proxy.layers.http import ErrorCode
 from mitmproxy.proxy.layers.http import Http1Client
 from mitmproxy.proxy.layers.http import Http1Server
 from mitmproxy.proxy.layers.http import ReceiveHttp
@@ -12,6 +16,7 @@ from mitmproxy.proxy.layers.http import RequestHeaders
 from mitmproxy.proxy.layers.http import ResponseData
 from mitmproxy.proxy.layers.http import ResponseEndOfMessage
 from mitmproxy.proxy.layers.http import ResponseHeaders
+from mitmproxy.proxy.layers.http import ResponseProtocolError
 from test.mitmproxy.proxy.tutils import Placeholder
 from test.mitmproxy.proxy.tutils import Playbook
 
@@ -143,6 +148,34 @@ class TestClient:
             << SendData(tctx.server, b"GET / HTTP/1.1\r\ncontent-length: 0\r\n\r\n")
         )
         assert resp().response.status_code == 200
+
+    def test_server_closed_with_error(self, tctx):
+        """If the connection has a recorded error (e.g. a fatal TLS alert that arrived
+        after the handshake, see https://github.com/mitmproxy/mitmproxy/issues/8486),
+        it is surfaced in the protocol error instead of a generic message."""
+        error = (
+            "OpenSSL Error([('SSL routines', '', 'tlsv13 alert certificate required')])"
+        )
+        req = http.Request.make("GET", "http://example.com/")
+        playbook = Playbook(Http1Client(tctx))
+        assert (
+            playbook
+            >> RequestHeaders(1, req, True)
+            << SendData(tctx.server, b"GET / HTTP/1.1\r\ncontent-length: 0\r\n\r\n")
+            >> RequestEndOfMessage(1)
+        )
+        # A fatal TLS alert clears CAN_READ but not CAN_WRITE (see TLSLayer.receive_data),
+        # so this is the state the HTTP layer sees when the connection fails.
+        tctx.server.state = ConnectionState.CAN_WRITE
+        tctx.server.error = error
+        assert (
+            playbook
+            >> ConnectionClosed(tctx.server)
+            << CloseConnection(tctx.server)
+            << ReceiveHttp(
+                ResponseProtocolError(1, error, ErrorCode.GENERIC_SERVER_ERROR)
+            )
+        )
 
     def test_connect(self, tctx):
         req = http.Request.make("CONNECT", "http://example.com:443")
