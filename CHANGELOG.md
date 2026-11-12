@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix the `--set` hints printed for the deprecated `--palette-transparent`,
+  `--server-replay-use-header` and `-Z` flags, which pointed to option names that don't exist.
+  ([#8588](https://github.com/mitmproxy/mitmproxy/pull/8588), @Dio77799)
 - Fix a crash when an addon or `modify_headers` sets an HTTP/3 header name or value longer than
   65,535 bytes, which QPACK cannot encode. The client now receives a 502 error instead, or a stream
   reset if the response was already partly sent.
