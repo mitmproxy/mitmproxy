@@ -25,22 +25,17 @@ from __future__ import annotations
 import dataclasses
 import platform
 import re
-import sys
 from abc import ABCMeta
 from abc import abstractmethod
 from dataclasses import dataclass
 from functools import cache
 from typing import ClassVar
 from typing import Literal
+from typing import Self
 
 import mitmproxy_rs
 from mitmproxy.coretypes.serializable import Serializable
 from mitmproxy.net import server_spec
-
-if sys.version_info < (3, 11):
-    from typing_extensions import Self  # pragma: no cover
-else:
-    from typing import Self
 
 
 @dataclass(frozen=True)  # type: ignore

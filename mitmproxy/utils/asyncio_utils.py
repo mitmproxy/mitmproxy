@@ -1,6 +1,5 @@
 import asyncio
 import os
-import sys
 import time
 from collections.abc import Coroutine
 from collections.abc import Iterator
@@ -89,12 +88,9 @@ def install_exception_handler(handler) -> Iterator[None]:
 @contextmanager
 def set_eager_task_factory() -> Iterator[None]:
     loop = asyncio.get_running_loop()
-    if sys.version_info < (3, 12):  # pragma: no cover
+    existing = loop.get_task_factory()
+    loop.set_task_factory(asyncio.eager_task_factory)  # type: ignore
+    try:
         yield
-    else:
-        existing = loop.get_task_factory()
-        loop.set_task_factory(asyncio.eager_task_factory)  # type: ignore
-        try:
-            yield
-        finally:
-            loop.set_task_factory(existing)
+    finally:
+        loop.set_task_factory(existing)

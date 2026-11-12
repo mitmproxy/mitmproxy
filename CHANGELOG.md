@@ -9,6 +9,10 @@
 
 - mitmweb: Add a quiet zone around the WireGuard QR code so that it can be scanned in dark mode.
   ([#8585](https://github.com/mitmproxy/mitmproxy/pull/8585), @yldrmzffr)
+- Remove dead compatibility branches for Python versions below the supported
+  minimum of 3.12, including `typing_extensions` import fallbacks and a
+  duplicated branch in `Cert.has_expired`.
+  ([#8549](https://github.com/mitmproxy/mitmproxy/pull/8549), @dylanpulver)
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)
