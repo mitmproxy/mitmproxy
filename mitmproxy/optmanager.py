@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import copy
+import io
 import pprint
 import textwrap
 import weakref
@@ -621,8 +622,11 @@ def save(opts: OptManager, path: Path | str, defaults: bool = False) -> None:
     else:
         data = ""
 
-    with path.open("w", encoding="utf8") as f:
-        serialize(opts, f, data, defaults)
+    # Serialize first: opening the file for writing truncates it,
+    # and we must not lose its contents if they turn out to be corrupt.
+    out = io.StringIO()
+    serialize(opts, out, data, defaults)
+    path.write_text(out.getvalue(), encoding="utf8")
 
 
 def relative_path(script_path: Path | str, *, relative_to: Path | str) -> Path:
