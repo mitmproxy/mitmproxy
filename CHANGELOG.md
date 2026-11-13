@@ -6,6 +6,8 @@
 -->
 
 ## Unreleased: mitmproxy next
+- Preserve zero-valued fields when extracting and saving cuts.
+  ([#8533](https://github.com/mitmproxy/mitmproxy/pull/8533), @hakarrr)
 
 - Fix a crash when an addon or `modify_headers` sets an HTTP/3 header name or value longer than
   65,535 bytes, which QPACK cannot encode. The client now receives a 502 error instead, or a stream
