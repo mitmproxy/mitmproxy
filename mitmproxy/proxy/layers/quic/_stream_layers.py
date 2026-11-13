@@ -10,6 +10,7 @@ import time
 from collections.abc import Callable
 from logging import DEBUG
 from logging import ERROR
+from logging import INFO
 from logging import WARNING
 
 from aioquic.buffer import Buffer as QuicBuffer
@@ -17,12 +18,10 @@ from aioquic.h3.connection import ErrorCode as H3ErrorCode
 from aioquic.quic import events as quic_events
 from aioquic.quic.configuration import QuicConfiguration
 from aioquic.quic.connection import QuicConnection
-from aioquic.quic.connection import QuicConnectionState
 from aioquic.quic.connection import QuicErrorCode
 from aioquic.quic.packet import encode_quic_version_negotiation
 from aioquic.quic.packet import PACKET_TYPE_INITIAL
 from aioquic.quic.packet import pull_quic_header
-from cryptography import x509
 
 from ._client_hello_parser import quic_parse_client_hello_from_datagrams
 from ._commands import CloseQuicConnection
@@ -72,6 +71,7 @@ class QuicLayer(tunnel.TunnelLayer):
         self.child_layer = layer.NextLayer(self.context, ask_on_start=True)
         self._time = time or ctx.master.event_loop.time
         self._wakeup_commands: dict[commands.RequestWakeup, float] = dict()
+        self._datagram_dropped = False
         conn.tls = True
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
@@ -80,13 +80,15 @@ class QuicLayer(tunnel.TunnelLayer):
             # which TunnelLayer recognizes as belonging to our connection.
             assert self.quic
             scheduled_time = self._wakeup_commands.pop(event.command)
-            if self.quic._state is not QuicConnectionState.TERMINATED:
-                # weird quirk: asyncio sometimes returns a bit ahead of time.
-                now = max(scheduled_time, self._time())
-                self.quic.handle_timer(now)
-                yield from super()._handle_event(
-                    events.DataReceived(self.tunnel_connection, b"")
-                )
+            # asyncio can wake us up to one clock tick early (about 15ms on Windows),
+            # and aioquic's timers only fire once they are due. Use at least the
+            # scheduled time so that the timer fires instead of being rescheduled.
+            now = max(scheduled_time, self._time())
+            # this is a no-op if the connection has already terminated
+            self.quic.handle_timer(now)
+            yield from super()._handle_event(
+                events.DataReceived(self.tunnel_connection, b"")
+            )
         else:
             yield from super()._handle_event(event)
 
@@ -108,19 +110,11 @@ class QuicLayer(tunnel.TunnelLayer):
                     command.stream_id, command.data, command.end_stream
                 )
             elif isinstance(command, ResetQuicStream):
-                stream = self.quic._get_or_create_stream_for_send(command.stream_id)
-                existing_reset_error_code = stream.sender._reset_error_code
-                if existing_reset_error_code is None:
-                    self.quic.reset_stream(command.stream_id, command.error_code)
-                elif self.debug:  # pragma: no cover
-                    yield commands.Log(
-                        f"{self.debug}[quic] stream {stream.stream_id} already reset ({existing_reset_error_code=}, {command.error_code=})",
-                        DEBUG,
-                    )
+                # this is a no-op if the stream has already been reset or has finished
+                self.quic.reset_stream(command.stream_id, command.error_code)
             elif isinstance(command, StopSendingQuicStream):
-                # the stream might have already been closed, check before stopping
-                if command.stream_id in self.quic._streams:
-                    self.quic.stop_stream(command.stream_id, command.error_code)
+                # this is a no-op if the stream has finished
+                self.quic.stop_stream(command.stream_id, command.error_code)
             else:
                 raise AssertionError(f"Unexpected stream command: {command!r}")
         else:
@@ -203,19 +197,14 @@ class QuicLayer(tunnel.TunnelLayer):
                 err = event.reason_phrase or error_code_to_str(event.error_code)
                 return False, err
             elif isinstance(event, quic_events.HandshakeCompleted):
-                # concatenate all peer certificates
-                all_certs: list[x509.Certificate] = []
-                if self.quic.tls._peer_certificate:
-                    all_certs.append(self.quic.tls._peer_certificate)
-                all_certs.extend(self.quic.tls._peer_certificate_chain)
-
                 # set the connection's TLS properties
                 self.conn.timestamp_tls_setup = time.time()
                 if event.alpn_protocol:
                     self.conn.alpn = event.alpn_protocol.encode("ascii")
-                self.conn.certificate_list = [certs.Cert(cert) for cert in all_certs]
-                assert self.quic.tls.key_schedule
-                self.conn.cipher = self.quic.tls.key_schedule.cipher_suite.name
+                self.conn.certificate_list = [
+                    certs.Cert(cert) for cert in event.peer_certificates
+                ]
+                self.conn.cipher = event.cipher_suite.name
                 self.conn.tls_version = "QUICv1"
 
                 # log the result and report the success to addons
@@ -340,7 +329,29 @@ class QuicLayer(tunnel.TunnelLayer):
         # non-stream data uses datagram frames
         assert self.quic
         if data:
-            self.quic.send_datagram_frame(data)
+            capacity = self.quic.get_datagram_frame_capacity()
+            if capacity is not None and len(data) <= capacity:
+                self.quic.send_datagram_frame(data)
+            else:
+                # datagrams are unreliable, so drop those the peer cannot receive
+                if capacity is None:
+                    reason = f"{self.conn} does not accept datagrams"
+                else:
+                    reason = f"{self.conn} accepts {capacity} bytes at most"
+                if not self._datagram_dropped:
+                    # log the first drop, so that it does not go unnoticed
+                    self._datagram_dropped = True
+                    yield commands.Log(
+                        f"Dropping QUIC datagram of {len(data)} bytes, as {reason}. "
+                        f"Further drops are only logged with proxy_debug.",
+                        INFO,
+                    )
+                elif self.debug:
+                    yield commands.Log(
+                        f"{self.debug}[quic] dropping datagram of {len(data)} bytes, "
+                        f"as {reason}",
+                        DEBUG,
+                    )
         yield from self.tls_interact()
 
     def send_close(
@@ -635,4 +646,6 @@ def tls_settings_to_configuration(
         private_key=settings.certificate_private_key,
         verify_mode=settings.verify_mode,
         max_datagram_frame_size=65536,
+        # we can only send datagrams to the address we connected to
+        migrate_to_preferred_address=False,
     )

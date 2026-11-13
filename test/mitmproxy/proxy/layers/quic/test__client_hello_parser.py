@@ -1,6 +1,8 @@
 import pytest
+from aioquic.buffer import Buffer
 from aioquic.quic.connection import QuicConnection
 from aioquic.quic.connection import QuicConnectionError
+from aioquic.quic.packet import pull_quic_header
 
 from mitmproxy.proxy.layers.quic import _client_hello_parser
 from mitmproxy.proxy.layers.quic._client_hello_parser import (
@@ -46,8 +48,27 @@ class TestParseClientHello:
 
     def test_no_return(self):
         with pytest.raises(
-            ValueError, match="Invalid ClientHello packet: payload_decrypt_error"
+            ValueError, match="Invalid ClientHello packet: decryption_failure"
         ):
             quic_parse_client_hello_from_datagrams(
                 [client_hello[0:1200] + b"\x00" + client_hello[1200:]]
             )
+
+    def test_datagram_too_small(self):
+        # shorten the Initial packet, so that its datagram is below 1200 bytes
+        buf = Buffer(data=client_hello)
+        pull_quic_header(buf, 8)
+        payload_start = buf.tell()
+        length = Buffer(capacity=2)
+        length.push_uint_var(100)
+        assert len(length.data) == 2
+        datagram = (
+            client_hello[: payload_start - 2]
+            + length.data
+            + client_hello[payload_start : payload_start + 100]
+        )
+        with pytest.raises(
+            ValueError,
+            match="Invalid ClientHello packet: initial_packet_datagram_too_small",
+        ):
+            quic_parse_client_hello_from_datagrams([datagram])

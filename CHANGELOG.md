@@ -11,6 +11,10 @@
   Previously, a recorded response or the `server_replay_extra` policy replaced it, and with
   `kill` the client was disconnected while the flow still showed the script's response.
   ([#8563](https://github.com/mitmproxy/mitmproxy/pull/8563), @Thanatos9404)
+- Update aioquic to 1.8.0. HTTP/3 interim (1xx) responses are no longer mistaken for the final
+  response's trailers, QUIC connections report their cipher suite by its IANA name, and QUIC
+  datagrams which the peer cannot receive are dropped.
+  ([#8593](https://github.com/mitmproxy/mitmproxy/pull/8593), @jlaine)
 - mitmweb: Add a quiet zone around the WireGuard QR code so that it can be scanned in dark mode.
   ([#8585](https://github.com/mitmproxy/mitmproxy/pull/8585), @yldrmzffr)
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file

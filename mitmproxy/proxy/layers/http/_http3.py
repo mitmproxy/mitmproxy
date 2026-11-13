@@ -1,12 +1,13 @@
 import time
 from abc import abstractmethod
+from logging import DEBUG
 from typing import assert_never
 
 from aioquic.h3.connection import ErrorCode as H3ErrorCode
-from aioquic.h3.connection import FrameUnexpected as H3FrameUnexpected
 from aioquic.h3.events import DataReceived
+from aioquic.h3.events import GoAwayReceived
 from aioquic.h3.events import HeadersReceived
-from aioquic.h3.events import PushPromiseReceived
+from aioquic.h3.exceptions import InvalidStreamStateError
 
 from . import ErrorCode
 from . import RequestData
@@ -33,6 +34,7 @@ from ._http_h3 import TrailersReceived
 from mitmproxy import connection
 from mitmproxy import http
 from mitmproxy import version
+from mitmproxy.net.http import status_codes
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import context
 from mitmproxy.proxy import events
@@ -129,7 +131,7 @@ class Http3Connection(HttpConnection):
                 else:  # pragma: no cover
                     raise AssertionError(f"Unexpected event: {event!r}")
 
-            except H3FrameUnexpected as e:
+            except InvalidStreamStateError as e:
                 # Http2Connection also ignores HttpEvents that violate the current stream state
                 yield commands.Log(f"Received {event!r} unexpectedly: {e}")
 
@@ -173,6 +175,18 @@ class Http3Connection(HttpConnection):
                             reason_phrase=f"Invalid HTTP/3 request headers: {e}",
                         )
                     else:
+                        if (
+                            isinstance(receive_event, ResponseHeaders)
+                            and 100 <= receive_event.response.status_code < 200
+                        ):
+                            # Like for HTTP/2, we violate the spec here and don't forward
+                            # 1xx responses, see Http2Client for the rationale.
+                            status = receive_event.response.status_code
+                            reason = status_codes.RESPONSES.get(status, "")
+                            yield commands.Log(
+                                f"Swallowing HTTP/3 informational response: {status} {reason}"
+                            )
+                            continue
                         yield ReceiveHttp(receive_event)
                         if h3_event.stream_ended:
                             yield ReceiveHttp(
@@ -186,10 +200,15 @@ class Http3Connection(HttpConnection):
                     )
                     if h3_event.stream_ended:
                         yield ReceiveHttp(self.ReceiveEndOfMessage(h3_event.stream_id))
-                elif isinstance(h3_event, PushPromiseReceived):  # pragma: no cover
-                    self.h3_conn.close_connection(
-                        error_code=H3ErrorCode.H3_GENERAL_PROTOCOL_ERROR,
-                        reason_phrase=f"Received HTTP/3 push promise, even though we signalled no support.",
+                elif isinstance(h3_event, GoAwayReceived):
+                    # Unlike Http2Client, which closes the connection on GOAWAY, we keep it
+                    # open so that requests the server has started to process complete.
+                    # We lack a mechanism to stop reusing a connection, so the server will
+                    # reject any later requests.
+                    yield commands.Log(
+                        f"HTTP/3 server is shutting down, it will not process "
+                        f"stream {h3_event.stream_id} and above.",
+                        DEBUG,
                     )
                 else:  # pragma: no cover
                     raise AssertionError(f"Unexpected event: {event!r}")
