@@ -22,11 +22,11 @@ from mitmproxy.proxy.mode_specs import ProxyMode
 class MockConnectionHandler(server.SimpleConnectionHandler):
     hook_handlers: dict[str, mock.Mock | Callable]
 
-    def __init__(self):
+    def __init__(self, opts: options.Options | None = None):
         super().__init__(
             reader=mock.Mock(),
             writer=mock.Mock(),
-            options=options.Options(),
+            options=opts or options.Options(),
             mode=ProxyMode.parse("regular"),
             hook_handlers=collections.defaultdict(lambda: mock.Mock()),
         )
@@ -71,6 +71,33 @@ async def test_open_connection(result, monkeypatch):
     assert server_connect_error.called == (result != "success")
 
     assert server_disconnected.called == (result == "success")
+
+
+async def test_max_conns_defaults_to_five():
+    handler = MockConnectionHandler()
+    semaphore = handler.max_conns[("server", 1234)]
+
+    await asyncio.wait_for(
+        asyncio.gather(*(semaphore.acquire() for _ in range(5))), timeout=0.05
+    )
+    assert semaphore.locked()
+
+    with pytest.raises(asyncio.TimeoutError):
+        await asyncio.wait_for(semaphore.acquire(), timeout=0.05)
+
+
+async def test_max_conns_respects_connection_max_per_address_option():
+    opts = options.Options(connection_max_per_address=8)
+    handler = MockConnectionHandler(opts)
+    semaphore = handler.max_conns[("server", 1234)]
+
+    await asyncio.wait_for(
+        asyncio.gather(*(semaphore.acquire() for _ in range(8))), timeout=0.05
+    )
+    assert semaphore.locked()
+
+    with pytest.raises(asyncio.TimeoutError):
+        await asyncio.wait_for(semaphore.acquire(), timeout=0.05)
 
 
 async def test_no_reentrancy(capsys):
