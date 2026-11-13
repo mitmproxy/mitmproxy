@@ -85,10 +85,14 @@ def curl_command(f: flow.Flow) -> str:
 
     if request.method != "GET":
         if not request.content:
-            # curl will not calculate content-length if there is no content
-            # some server/verb combinations require content-length headers
-            # (ex. nginx and POST)
-            args += ["-H", "content-length: 0"]
+            if "transfer-encoding" in request.headers:
+                # Let curl send the terminating chunk without adding a conflicting content-length.
+                args += ["-d", ""]
+            else:
+                # curl will not calculate content-length if there is no content
+                # some server/verb combinations require content-length headers
+                # (ex. nginx and POST)
+                args += ["-H", "content-length: 0"]
 
         args += ["-X", request.method]
 
