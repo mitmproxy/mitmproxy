@@ -3,203 +3,24 @@
 exports[`FlowView 1`] = `
 <DocumentFragment>
   <div
-    class="flow-detail"
+    class="flow-detail flow-detail-split"
   >
-    <nav
-      class="nav-tabs nav-tabs-sm"
-    >
-      <button
-        class="close-button"
-        data-testid="close-button-id"
-      >
-        <svg
-          aria-hidden="true"
-          class="lucide lucide-circle-x icon icon-closeCircle"
-          fill="none"
-          height="16"
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          width="16"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
-          />
-          <path
-            d="m15 9-6 6"
-          />
-          <path
-            d="m9 9 6 6"
-          />
-        </svg>
-      </button>
-      <a
-        class="active"
-        href="#"
-      >
-        Request
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Response
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        WebSocket
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Error
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Connection
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Timing
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Comment
-      </a>
-    </nav>
-    <section
-      class="request"
+    <div
+      class="flow-detail-panels"
     >
       <div
-        class="first-line request-line"
+        class="flow-detail-panel"
       >
-        <div>
-          <span
-            class="inline-input has-success"
-            tabindex="0"
-          >
-            GET
-          </span>
-           
-          <span
-            class="inline-input has-success"
-            tabindex="0"
-          >
-            http://address:22/second
-          </span>
-           
-          <span
-            class="inline-input has-success"
-            tabindex="0"
-          >
-            HTTP/1.1
-          </span>
-        </div>
-      </div>
-      <div
-        class="kv-editor headers"
-      >
-        <div
-          class="kv-row"
+        <nav
+          class="nav-tabs nav-tabs-sm"
         >
-          <span
-            class="inline-input kv-key"
-            tabindex="0"
-          >
-            header
-          </span>
-          : 
-          <span
-            class="inline-input kv-value"
-            placeholder="empty"
-            tabindex="0"
-          >
-            qvalue
-          </span>
-        </div>
-        <div
-          class="kv-row"
-        >
-          <span
-            class="inline-input kv-key"
-            tabindex="0"
-          >
-            content-length
-          </span>
-          : 
-          <span
-            class="inline-input kv-value"
-            placeholder="empty"
-            tabindex="0"
-          >
-            7
-          </span>
-        </div>
-        <div
-          aria-label="Add"
-          class="kv-add-row"
-          role="button"
-        >
-          <svg
-            aria-hidden="true"
-            class="lucide lucide-square-plus icon icon-addSquare"
-            fill="none"
-            height="16"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            width="16"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <rect
-              height="18"
-              rx="2"
-              width="18"
-              x="3"
-              y="3"
-            />
-            <path
-              d="M8 12h8"
-            />
-            <path
-              d="M12 8v8"
-            />
-          </svg>
-        </div>
-      </div>
-      <hr />
-      <div
-        class="contentview"
-      >
-        <div
-          class="controls"
-        >
-          <h5>
-            Loading...
-          </h5>
-           
           <button
-            class="btn-xs btn btn-default"
+            class="close-button"
+            data-testid="close-button-id"
           >
             <svg
               aria-hidden="true"
-              class="lucide lucide-pencil icon icon-edit"
+              class="lucide lucide-circle-x icon icon-closeCircle"
               fill="none"
               height="16"
               stroke="currentColor"
@@ -210,59 +31,126 @@ exports[`FlowView 1`] = `
               width="16"
               xmlns="http://www.w3.org/2000/svg"
             >
-              <path
-                d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
               />
               <path
-                d="m15 5 4 4"
+                d="m15 9-6 6"
+              />
+              <path
+                d="m9 9 6 6"
               />
             </svg>
-             Edit
           </button>
-           
           <a
-            class="btn btn-default btn-xs"
+            class="active"
             href="#"
-            title="Upload a file to replace the content."
           >
-            <svg
-              aria-hidden="true"
-              class="lucide lucide-upload icon icon-upload"
-              fill="none"
-              height="16"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-              width="16"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M12 3v12"
-              />
-              <path
-                d="m17 8-5-5-5 5"
-              />
-              <path
-                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
-              />
-            </svg>
-             Replace
-            <input
-              class="hidden"
-              type="file"
-            />
+            Request
           </a>
-           
           <a
-            class="btn btn-default btn-xs"
+            class=""
             href="#"
           >
-            <span>
+            Error
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Connection
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Timing
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Comment
+          </a>
+        </nav>
+        <section
+          class="request"
+        >
+          <div
+            class="first-line request-line"
+          >
+            <div>
+              <span
+                class="inline-input has-success"
+                tabindex="0"
+              >
+                GET
+              </span>
+               
+              <span
+                class="inline-input has-success"
+                tabindex="0"
+              >
+                http://address:22/second
+              </span>
+               
+              <span
+                class="inline-input has-success"
+                tabindex="0"
+              >
+                HTTP/1.1
+              </span>
+            </div>
+          </div>
+          <div
+            class="kv-editor headers"
+          >
+            <div
+              class="kv-row"
+            >
+              <span
+                class="inline-input kv-key"
+                tabindex="0"
+              >
+                header
+              </span>
+              : 
+              <span
+                class="inline-input kv-value"
+                placeholder="empty"
+                tabindex="0"
+              >
+                qvalue
+              </span>
+            </div>
+            <div
+              class="kv-row"
+            >
+              <span
+                class="inline-input kv-key"
+                tabindex="0"
+              >
+                content-length
+              </span>
+              : 
+              <span
+                class="inline-input kv-value"
+                placeholder="empty"
+                tabindex="0"
+              >
+                7
+              </span>
+            </div>
+            <div
+              aria-label="Add"
+              class="kv-add-row"
+              role="button"
+            >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-files icon icon-files"
+                class="lucide lucide-square-plus icon icon-addSquare"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -273,29 +161,375 @@ exports[`FlowView 1`] = `
                 width="16"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <path
-                  d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"
+                <rect
+                  height="18"
+                  rx="2"
+                  width="18"
+                  x="3"
+                  y="3"
                 />
                 <path
-                  d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z"
+                  d="M8 12h8"
                 />
                 <path
-                  d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1"
+                  d="M12 8v8"
                 />
               </svg>
+            </div>
+          </div>
+          <hr />
+          <div
+            class="contentview"
+          >
+            <div
+              class="controls"
+            >
+              <h5>
+                Loading...
+              </h5>
                
-              <b>
-                View:
-              </b>
-               auto 
-              <span
-                class="caret"
-              />
-            </span>
-          </a>
-        </div>
+              <button
+                class="btn-xs btn btn-default"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-pencil icon icon-edit"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"
+                  />
+                  <path
+                    d="m15 5 4 4"
+                  />
+                </svg>
+                 Edit
+              </button>
+               
+              <a
+                class="btn btn-default btn-xs"
+                href="#"
+                title="Upload a file to replace the content."
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-upload icon icon-upload"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 3v12"
+                  />
+                  <path
+                    d="m17 8-5-5-5 5"
+                  />
+                  <path
+                    d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                  />
+                </svg>
+                 Replace
+                <input
+                  class="hidden"
+                  type="file"
+                />
+              </a>
+               
+              <a
+                class="btn btn-default btn-xs"
+                href="#"
+              >
+                <span>
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-files icon icon-files"
+                    fill="none"
+                    height="16"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="16"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"
+                    />
+                    <path
+                      d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z"
+                    />
+                    <path
+                      d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1"
+                    />
+                  </svg>
+                   
+                  <b>
+                    View:
+                  </b>
+                   auto 
+                  <span
+                    class="caret"
+                  />
+                </span>
+              </a>
+            </div>
+          </div>
+        </section>
       </div>
-    </section>
+      <div
+        class="splitter splitter-x"
+      >
+        <div />
+      </div>
+      <div
+        class="flow-detail-panel"
+      >
+        <nav
+          class="nav-tabs nav-tabs-sm"
+        >
+          <a
+            class="active"
+            href="#"
+          >
+            Response
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            WebSocket
+          </a>
+        </nav>
+        <section
+          class="response"
+        >
+          <div
+            class="first-line response-line"
+          >
+            <span
+              class="inline-input has-success"
+              tabindex="0"
+            >
+              HTTP/1.1
+            </span>
+             
+            <span
+              class="inline-input has-success"
+              tabindex="0"
+            >
+              200
+            </span>
+             
+            <span
+              class="inline-input"
+              tabindex="0"
+            >
+              OK
+            </span>
+          </div>
+          <div
+            class="kv-editor headers"
+          >
+            <div
+              class="kv-row"
+            >
+              <span
+                class="inline-input kv-key"
+                tabindex="0"
+              >
+                header-response
+              </span>
+              : 
+              <span
+                class="inline-input kv-value"
+                placeholder="empty"
+                tabindex="0"
+              >
+                svalue
+              </span>
+            </div>
+            <div
+              class="kv-row"
+            >
+              <span
+                class="inline-input kv-key"
+                tabindex="0"
+              >
+                content-length
+              </span>
+              : 
+              <span
+                class="inline-input kv-value"
+                placeholder="empty"
+                tabindex="0"
+              >
+                7
+              </span>
+            </div>
+            <div
+              aria-label="Add"
+              class="kv-add-row"
+              role="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-square-plus icon icon-addSquare"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  height="18"
+                  rx="2"
+                  width="18"
+                  x="3"
+                  y="3"
+                />
+                <path
+                  d="M8 12h8"
+                />
+                <path
+                  d="M12 8v8"
+                />
+              </svg>
+            </div>
+          </div>
+          <hr />
+          <div
+            class="contentview"
+          >
+            <div
+              class="controls"
+            >
+              <h5>
+                Loading...
+              </h5>
+               
+              <button
+                class="btn-xs btn btn-default"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-pencil icon icon-edit"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"
+                  />
+                  <path
+                    d="m15 5 4 4"
+                  />
+                </svg>
+                 Edit
+              </button>
+               
+              <a
+                class="btn btn-default btn-xs"
+                href="#"
+                title="Upload a file to replace the content."
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-upload icon icon-upload"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 3v12"
+                  />
+                  <path
+                    d="m17 8-5-5-5 5"
+                  />
+                  <path
+                    d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                  />
+                </svg>
+                 Replace
+                <input
+                  class="hidden"
+                  type="file"
+                />
+              </a>
+               
+              <a
+                class="btn btn-default btn-xs"
+                href="#"
+              >
+                <span>
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-files icon icon-files"
+                    fill="none"
+                    height="16"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="16"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"
+                    />
+                    <path
+                      d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z"
+                    />
+                    <path
+                      d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1"
+                    />
+                  </svg>
+                   
+                  <b>
+                    View:
+                  </b>
+                   auto 
+                  <span
+                    class="caret"
+                  />
+                </span>
+              </a>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
   </div>
 </DocumentFragment>
 `;
@@ -303,201 +537,24 @@ exports[`FlowView 1`] = `
 exports[`FlowView 2`] = `
 <DocumentFragment>
   <div
-    class="flow-detail"
+    class="flow-detail flow-detail-split"
   >
-    <nav
-      class="nav-tabs nav-tabs-sm"
-    >
-      <button
-        class="close-button"
-        data-testid="close-button-id"
-      >
-        <svg
-          aria-hidden="true"
-          class="lucide lucide-circle-x icon icon-closeCircle"
-          fill="none"
-          height="16"
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          width="16"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
-          />
-          <path
-            d="m15 9-6 6"
-          />
-          <path
-            d="m9 9 6 6"
-          />
-        </svg>
-      </button>
-      <a
-        class=""
-        href="#"
-      >
-        Request
-      </a>
-      <a
-        class="active"
-        href="#"
-      >
-        Response
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        WebSocket
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Error
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Connection
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Timing
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Comment
-      </a>
-    </nav>
-    <section
-      class="response"
+    <div
+      class="flow-detail-panels"
     >
       <div
-        class="first-line response-line"
+        class="flow-detail-panel"
       >
-        <span
-          class="inline-input has-success"
-          tabindex="0"
+        <nav
+          class="nav-tabs nav-tabs-sm"
         >
-          HTTP/1.1
-        </span>
-         
-        <span
-          class="inline-input has-success"
-          tabindex="0"
-        >
-          200
-        </span>
-         
-        <span
-          class="inline-input"
-          tabindex="0"
-        >
-          OK
-        </span>
-      </div>
-      <div
-        class="kv-editor headers"
-      >
-        <div
-          class="kv-row"
-        >
-          <span
-            class="inline-input kv-key"
-            tabindex="0"
-          >
-            header-response
-          </span>
-          : 
-          <span
-            class="inline-input kv-value"
-            placeholder="empty"
-            tabindex="0"
-          >
-            svalue
-          </span>
-        </div>
-        <div
-          class="kv-row"
-        >
-          <span
-            class="inline-input kv-key"
-            tabindex="0"
-          >
-            content-length
-          </span>
-          : 
-          <span
-            class="inline-input kv-value"
-            placeholder="empty"
-            tabindex="0"
-          >
-            7
-          </span>
-        </div>
-        <div
-          aria-label="Add"
-          class="kv-add-row"
-          role="button"
-        >
-          <svg
-            aria-hidden="true"
-            class="lucide lucide-square-plus icon icon-addSquare"
-            fill="none"
-            height="16"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            width="16"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <rect
-              height="18"
-              rx="2"
-              width="18"
-              x="3"
-              y="3"
-            />
-            <path
-              d="M8 12h8"
-            />
-            <path
-              d="M12 8v8"
-            />
-          </svg>
-        </div>
-      </div>
-      <hr />
-      <div
-        class="contentview"
-      >
-        <div
-          class="controls"
-        >
-          <h5>
-            Loading...
-          </h5>
-           
           <button
-            class="btn-xs btn btn-default"
+            class="close-button"
+            data-testid="close-button-id"
           >
             <svg
               aria-hidden="true"
-              class="lucide lucide-pencil icon icon-edit"
+              class="lucide lucide-circle-x icon icon-closeCircle"
               fill="none"
               height="16"
               stroke="currentColor"
@@ -508,59 +565,126 @@ exports[`FlowView 2`] = `
               width="16"
               xmlns="http://www.w3.org/2000/svg"
             >
-              <path
-                d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
               />
               <path
-                d="m15 5 4 4"
+                d="m15 9-6 6"
+              />
+              <path
+                d="m9 9 6 6"
               />
             </svg>
-             Edit
           </button>
-           
           <a
-            class="btn btn-default btn-xs"
+            class="active"
             href="#"
-            title="Upload a file to replace the content."
           >
-            <svg
-              aria-hidden="true"
-              class="lucide lucide-upload icon icon-upload"
-              fill="none"
-              height="16"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-              width="16"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M12 3v12"
-              />
-              <path
-                d="m17 8-5-5-5 5"
-              />
-              <path
-                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
-              />
-            </svg>
-             Replace
-            <input
-              class="hidden"
-              type="file"
-            />
+            Request
           </a>
-           
           <a
-            class="btn btn-default btn-xs"
+            class=""
             href="#"
           >
-            <span>
+            Error
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Connection
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Timing
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Comment
+          </a>
+        </nav>
+        <section
+          class="request"
+        >
+          <div
+            class="first-line request-line"
+          >
+            <div>
+              <span
+                class="inline-input has-success"
+                tabindex="0"
+              >
+                GET
+              </span>
+               
+              <span
+                class="inline-input has-success"
+                tabindex="0"
+              >
+                http://address:22/second
+              </span>
+               
+              <span
+                class="inline-input has-success"
+                tabindex="0"
+              >
+                HTTP/1.1
+              </span>
+            </div>
+          </div>
+          <div
+            class="kv-editor headers"
+          >
+            <div
+              class="kv-row"
+            >
+              <span
+                class="inline-input kv-key"
+                tabindex="0"
+              >
+                header
+              </span>
+              : 
+              <span
+                class="inline-input kv-value"
+                placeholder="empty"
+                tabindex="0"
+              >
+                qvalue
+              </span>
+            </div>
+            <div
+              class="kv-row"
+            >
+              <span
+                class="inline-input kv-key"
+                tabindex="0"
+              >
+                content-length
+              </span>
+              : 
+              <span
+                class="inline-input kv-value"
+                placeholder="empty"
+                tabindex="0"
+              >
+                7
+              </span>
+            </div>
+            <div
+              aria-label="Add"
+              class="kv-add-row"
+              role="button"
+            >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-files icon icon-files"
+                class="lucide lucide-square-plus icon icon-addSquare"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -571,29 +695,375 @@ exports[`FlowView 2`] = `
                 width="16"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <path
-                  d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"
+                <rect
+                  height="18"
+                  rx="2"
+                  width="18"
+                  x="3"
+                  y="3"
                 />
                 <path
-                  d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z"
+                  d="M8 12h8"
                 />
                 <path
-                  d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1"
+                  d="M12 8v8"
                 />
               </svg>
+            </div>
+          </div>
+          <hr />
+          <div
+            class="contentview"
+          >
+            <div
+              class="controls"
+            >
+              <h5>
+                Loading...
+              </h5>
                
-              <b>
-                View:
-              </b>
-               auto 
-              <span
-                class="caret"
-              />
-            </span>
-          </a>
-        </div>
+              <button
+                class="btn-xs btn btn-default"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-pencil icon icon-edit"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"
+                  />
+                  <path
+                    d="m15 5 4 4"
+                  />
+                </svg>
+                 Edit
+              </button>
+               
+              <a
+                class="btn btn-default btn-xs"
+                href="#"
+                title="Upload a file to replace the content."
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-upload icon icon-upload"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 3v12"
+                  />
+                  <path
+                    d="m17 8-5-5-5 5"
+                  />
+                  <path
+                    d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                  />
+                </svg>
+                 Replace
+                <input
+                  class="hidden"
+                  type="file"
+                />
+              </a>
+               
+              <a
+                class="btn btn-default btn-xs"
+                href="#"
+              >
+                <span>
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-files icon icon-files"
+                    fill="none"
+                    height="16"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="16"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"
+                    />
+                    <path
+                      d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z"
+                    />
+                    <path
+                      d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1"
+                    />
+                  </svg>
+                   
+                  <b>
+                    View:
+                  </b>
+                   auto 
+                  <span
+                    class="caret"
+                  />
+                </span>
+              </a>
+            </div>
+          </div>
+        </section>
       </div>
-    </section>
+      <div
+        class="splitter splitter-x"
+      >
+        <div />
+      </div>
+      <div
+        class="flow-detail-panel"
+      >
+        <nav
+          class="nav-tabs nav-tabs-sm"
+        >
+          <a
+            class="active"
+            href="#"
+          >
+            Response
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            WebSocket
+          </a>
+        </nav>
+        <section
+          class="response"
+        >
+          <div
+            class="first-line response-line"
+          >
+            <span
+              class="inline-input has-success"
+              tabindex="0"
+            >
+              HTTP/1.1
+            </span>
+             
+            <span
+              class="inline-input has-success"
+              tabindex="0"
+            >
+              200
+            </span>
+             
+            <span
+              class="inline-input"
+              tabindex="0"
+            >
+              OK
+            </span>
+          </div>
+          <div
+            class="kv-editor headers"
+          >
+            <div
+              class="kv-row"
+            >
+              <span
+                class="inline-input kv-key"
+                tabindex="0"
+              >
+                header-response
+              </span>
+              : 
+              <span
+                class="inline-input kv-value"
+                placeholder="empty"
+                tabindex="0"
+              >
+                svalue
+              </span>
+            </div>
+            <div
+              class="kv-row"
+            >
+              <span
+                class="inline-input kv-key"
+                tabindex="0"
+              >
+                content-length
+              </span>
+              : 
+              <span
+                class="inline-input kv-value"
+                placeholder="empty"
+                tabindex="0"
+              >
+                7
+              </span>
+            </div>
+            <div
+              aria-label="Add"
+              class="kv-add-row"
+              role="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-square-plus icon icon-addSquare"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  height="18"
+                  rx="2"
+                  width="18"
+                  x="3"
+                  y="3"
+                />
+                <path
+                  d="M8 12h8"
+                />
+                <path
+                  d="M12 8v8"
+                />
+              </svg>
+            </div>
+          </div>
+          <hr />
+          <div
+            class="contentview"
+          >
+            <div
+              class="controls"
+            >
+              <h5>
+                Loading...
+              </h5>
+               
+              <button
+                class="btn-xs btn btn-default"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-pencil icon icon-edit"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"
+                  />
+                  <path
+                    d="m15 5 4 4"
+                  />
+                </svg>
+                 Edit
+              </button>
+               
+              <a
+                class="btn btn-default btn-xs"
+                href="#"
+                title="Upload a file to replace the content."
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-upload icon icon-upload"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 3v12"
+                  />
+                  <path
+                    d="m17 8-5-5-5 5"
+                  />
+                  <path
+                    d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                  />
+                </svg>
+                 Replace
+                <input
+                  class="hidden"
+                  type="file"
+                />
+              </a>
+               
+              <a
+                class="btn btn-default btn-xs"
+                href="#"
+              >
+                <span>
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-files icon icon-files"
+                    fill="none"
+                    height="16"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="16"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"
+                    />
+                    <path
+                      d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z"
+                    />
+                    <path
+                      d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1"
+                    />
+                  </svg>
+                   
+                  <b>
+                    View:
+                  </b>
+                   auto 
+                  <span
+                    class="caret"
+                  />
+                </span>
+              </a>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
   </div>
 </DocumentFragment>
 `;
@@ -601,107 +1071,154 @@ exports[`FlowView 2`] = `
 exports[`FlowView 3`] = `
 <DocumentFragment>
   <div
-    class="flow-detail"
+    class="flow-detail flow-detail-split"
   >
-    <nav
-      class="nav-tabs nav-tabs-sm"
+    <div
+      class="flow-detail-panels"
     >
-      <button
-        class="close-button"
-        data-testid="close-button-id"
-      >
-        <svg
-          aria-hidden="true"
-          class="lucide lucide-circle-x icon icon-closeCircle"
-          fill="none"
-          height="16"
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          width="16"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
-          />
-          <path
-            d="m15 9-6 6"
-          />
-          <path
-            d="m9 9 6 6"
-          />
-        </svg>
-      </button>
-      <a
-        class=""
-        href="#"
-      >
-        Request
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Response
-      </a>
-      <a
-        class="active"
-        href="#"
-      >
-        WebSocket
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Error
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Connection
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Timing
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Comment
-      </a>
-    </nav>
-    <section
-      class="websocket"
-    >
-      <h4>
-        WebSocket
-      </h4>
       <div
-        class="contentview"
+        class="flow-detail-panel"
       >
-        <div
-          class="controls"
+        <nav
+          class="nav-tabs nav-tabs-sm"
         >
-          <h5>
-            3 Messages
-          </h5>
+          <button
+            class="close-button"
+            data-testid="close-button-id"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-circle-x icon icon-closeCircle"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+              />
+              <path
+                d="m15 9-6 6"
+              />
+              <path
+                d="m9 9 6 6"
+              />
+            </svg>
+          </button>
           <a
-            class="btn btn-default btn-xs"
+            class="active"
             href="#"
           >
-            <span>
+            Request
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Error
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Connection
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Timing
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Comment
+          </a>
+        </nav>
+        <section
+          class="request"
+        >
+          <div
+            class="first-line request-line"
+          >
+            <div>
+              <span
+                class="inline-input has-success"
+                tabindex="0"
+              >
+                GET
+              </span>
+               
+              <span
+                class="inline-input has-success"
+                tabindex="0"
+              >
+                http://address:22/second
+              </span>
+               
+              <span
+                class="inline-input has-success"
+                tabindex="0"
+              >
+                HTTP/1.1
+              </span>
+            </div>
+          </div>
+          <div
+            class="kv-editor headers"
+          >
+            <div
+              class="kv-row"
+            >
+              <span
+                class="inline-input kv-key"
+                tabindex="0"
+              >
+                header
+              </span>
+              : 
+              <span
+                class="inline-input kv-value"
+                placeholder="empty"
+                tabindex="0"
+              >
+                qvalue
+              </span>
+            </div>
+            <div
+              class="kv-row"
+            >
+              <span
+                class="inline-input kv-key"
+                tabindex="0"
+              >
+                content-length
+              </span>
+              : 
+              <span
+                class="inline-input kv-value"
+                placeholder="empty"
+                tabindex="0"
+              >
+                7
+              </span>
+            </div>
+            <div
+              aria-label="Add"
+              class="kv-add-row"
+              role="button"
+            >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-files icon icon-files"
+                class="lucide lucide-square-plus icon icon-addSquare"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -712,57 +1229,246 @@ exports[`FlowView 3`] = `
                 width="16"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <path
-                  d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"
+                <rect
+                  height="18"
+                  rx="2"
+                  width="18"
+                  x="3"
+                  y="3"
                 />
                 <path
-                  d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z"
+                  d="M8 12h8"
                 />
                 <path
-                  d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1"
+                  d="M12 8v8"
                 />
               </svg>
+            </div>
+          </div>
+          <hr />
+          <div
+            class="contentview"
+          >
+            <div
+              class="controls"
+            >
+              <h5>
+                Loading...
+              </h5>
                
-              <b>
-                View:
-              </b>
-               auto 
-              <span
-                class="caret"
-              />
-            </span>
+              <button
+                class="btn-xs btn btn-default"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-pencil icon icon-edit"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"
+                  />
+                  <path
+                    d="m15 5 4 4"
+                  />
+                </svg>
+                 Edit
+              </button>
+               
+              <a
+                class="btn btn-default btn-xs"
+                href="#"
+                title="Upload a file to replace the content."
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-upload icon icon-upload"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 3v12"
+                  />
+                  <path
+                    d="m17 8-5-5-5 5"
+                  />
+                  <path
+                    d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                  />
+                </svg>
+                 Replace
+                <input
+                  class="hidden"
+                  type="file"
+                />
+              </a>
+               
+              <a
+                class="btn btn-default btn-xs"
+                href="#"
+              >
+                <span>
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-files icon icon-files"
+                    fill="none"
+                    height="16"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="16"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"
+                    />
+                    <path
+                      d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z"
+                    />
+                    <path
+                      d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1"
+                    />
+                  </svg>
+                   
+                  <b>
+                    View:
+                  </b>
+                   auto 
+                  <span
+                    class="caret"
+                  />
+                </span>
+              </a>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div
+        class="splitter splitter-x"
+      >
+        <div />
+      </div>
+      <div
+        class="flow-detail-panel"
+      >
+        <nav
+          class="nav-tabs nav-tabs-sm"
+        >
+          <a
+            class=""
+            href="#"
+          >
+            Response
           </a>
-        </div>
-      </div>
-      <div>
-        <svg
-          aria-hidden="true"
-          class="lucide lucide-x icon icon-close text-muted"
-          fill="none"
-          height="16"
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          width="16"
-          xmlns="http://www.w3.org/2000/svg"
+          <a
+            class="active"
+            href="#"
+          >
+            WebSocket
+          </a>
+        </nav>
+        <section
+          class="websocket"
         >
-          <path
-            d="M18 6 6 18"
-          />
-          <path
-            d="m6 6 12 12"
-          />
-        </svg>
-          Closed by server with code 1000 (Close Reason).
-        <small
-          class="float-right"
-        >
-          1999-12-31 23:00:05.000
-        </small>
+          <h4>
+            WebSocket
+          </h4>
+          <div
+            class="contentview"
+          >
+            <div
+              class="controls"
+            >
+              <h5>
+                3 Messages
+              </h5>
+              <a
+                class="btn btn-default btn-xs"
+                href="#"
+              >
+                <span>
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-files icon icon-files"
+                    fill="none"
+                    height="16"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="16"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"
+                    />
+                    <path
+                      d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z"
+                    />
+                    <path
+                      d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1"
+                    />
+                  </svg>
+                   
+                  <b>
+                    View:
+                  </b>
+                   auto 
+                  <span
+                    class="caret"
+                  />
+                </span>
+              </a>
+            </div>
+          </div>
+          <div>
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-x icon icon-close text-muted"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M18 6 6 18"
+              />
+              <path
+                d="m6 6 12 12"
+              />
+            </svg>
+              Closed by server with code 1000 (Close Reason).
+            <small
+              class="float-right"
+            >
+              1999-12-31 23:00:05.000
+            </small>
+          </div>
+        </section>
       </div>
-    </section>
+    </div>
   </div>
 </DocumentFragment>
 `;
@@ -770,316 +1476,421 @@ exports[`FlowView 3`] = `
 exports[`FlowView 4`] = `
 <DocumentFragment>
   <div
-    class="flow-detail"
+    class="flow-detail flow-detail-split"
   >
-    <nav
-      class="nav-tabs nav-tabs-sm"
+    <div
+      class="flow-detail-panels"
     >
-      <button
-        class="close-button"
-        data-testid="close-button-id"
+      <div
+        class="flow-detail-panel"
       >
-        <svg
-          aria-hidden="true"
-          class="lucide lucide-circle-x icon icon-closeCircle"
-          fill="none"
-          height="16"
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          width="16"
-          xmlns="http://www.w3.org/2000/svg"
+        <nav
+          class="nav-tabs nav-tabs-sm"
         >
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
-          />
-          <path
-            d="m15 9-6 6"
-          />
-          <path
-            d="m9 9 6 6"
-          />
-        </svg>
-      </button>
-      <a
-        class=""
-        href="#"
+          <button
+            class="close-button"
+            data-testid="close-button-id"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-circle-x icon icon-closeCircle"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+              />
+              <path
+                d="m15 9-6 6"
+              />
+              <path
+                d="m9 9 6 6"
+              />
+            </svg>
+          </button>
+          <a
+            class=""
+            href="#"
+          >
+            Request
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Error
+          </a>
+          <a
+            class="active"
+            href="#"
+          >
+            Connection
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Timing
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Comment
+          </a>
+        </nav>
+        <section
+          class="detail"
+        >
+          <h4>
+            Client Connection
+          </h4>
+          <table
+            class="connection-table"
+          >
+            <tbody>
+              <tr>
+                <td>
+                  Address:
+                </td>
+                <td>
+                  127.0.0.1:22
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <abbr
+                    title="TLS Server Name Indication"
+                  >
+                    SNI
+                  </abbr>
+                  :
+                </td>
+                <td>
+                  address
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <abbr
+                    title="ALPN protocol negotiated"
+                  >
+                    ALPN
+                  </abbr>
+                  :
+                </td>
+                <td>
+                  http/1.1
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  TLS Version:
+                </td>
+                <td>
+                  TLSv1.2
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  TLS Cipher:
+                </td>
+                <td>
+                  cipher
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <h4>
+            Server Connection
+          </h4>
+          <table
+            class="connection-table"
+          >
+            <tbody>
+              <tr>
+                <td>
+                  Address:
+                </td>
+                <td>
+                  address:22
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Resolved address:
+                </td>
+                <td>
+                  192.168.0.1:22
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Source address:
+                </td>
+                <td>
+                  address:22
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <abbr
+                    title="TLS Server Name Indication"
+                  >
+                    SNI
+                  </abbr>
+                  :
+                </td>
+                <td>
+                  address
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  TLS Version:
+                </td>
+                <td>
+                  TLSv1.2
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <h4>
+            Server Certificate
+          </h4>
+          <table
+            class="certificate-table"
+          >
+            <tbody>
+              <tr>
+                <td>
+                  Type
+                </td>
+                <td>
+                  RSA, 2048 bits
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  SHA256 digest
+                </td>
+                <td>
+                  e5f62a1175031b6feb959bc8e6dd0f8e2546dbbf7c32da39534309d8aa92967c
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Valid from
+                </td>
+                <td>
+                  2020-11-03 07:03:27
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Valid to
+                </td>
+                <td>
+                  2040-10-29 07:03:27
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Subject Alternative Names
+                </td>
+                <td>
+                  example.mitmproxy.org
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Subject
+                </td>
+                <td>
+                  <dl
+                    class="cert-attributes"
+                  >
+                    <dt>
+                      C
+                    </dt>
+                    <dd>
+                      AU
+                    </dd>
+                    <dt>
+                      ST
+                    </dt>
+                    <dd>
+                      Some-State
+                    </dd>
+                    <dt>
+                      O
+                    </dt>
+                    <dd>
+                      Internet Widgits Pty Ltd
+                    </dd>
+                  </dl>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Issuer
+                </td>
+                <td>
+                  <dl
+                    class="cert-attributes"
+                  >
+                    <dt>
+                      C
+                    </dt>
+                    <dd>
+                      AU
+                    </dd>
+                    <dt>
+                      ST
+                    </dt>
+                    <dd>
+                      Some-State
+                    </dd>
+                    <dt>
+                      O
+                    </dt>
+                    <dd>
+                      Internet Widgits Pty Ltd
+                    </dd>
+                  </dl>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Serial
+                </td>
+                <td>
+                  247170098335718583458667965517443538258472437317
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+      <div
+        class="splitter splitter-x"
       >
-        Request
-      </a>
-      <a
-        class=""
-        href="#"
+        <div />
+      </div>
+      <div
+        class="flow-detail-panel"
       >
-        Response
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        WebSocket
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Error
-      </a>
-      <a
-        class="active"
-        href="#"
-      >
-        Connection
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Timing
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Comment
-      </a>
-    </nav>
-    <section
-      class="detail"
-    >
-      <h4>
-        Client Connection
-      </h4>
-      <table
-        class="connection-table"
-      >
-        <tbody>
-          <tr>
-            <td>
-              Address:
-            </td>
-            <td>
-              127.0.0.1:22
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <abbr
-                title="TLS Server Name Indication"
+        <nav
+          class="nav-tabs nav-tabs-sm"
+        >
+          <a
+            class=""
+            href="#"
+          >
+            Response
+          </a>
+          <a
+            class="active"
+            href="#"
+          >
+            WebSocket
+          </a>
+        </nav>
+        <section
+          class="websocket"
+        >
+          <h4>
+            WebSocket
+          </h4>
+          <div
+            class="contentview"
+          >
+            <div
+              class="controls"
+            >
+              <h5>
+                3 Messages
+              </h5>
+              <a
+                class="btn btn-default btn-xs"
+                href="#"
               >
-                SNI
-              </abbr>
-              :
-            </td>
-            <td>
-              address
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <abbr
-                title="ALPN protocol negotiated"
-              >
-                ALPN
-              </abbr>
-              :
-            </td>
-            <td>
-              http/1.1
-            </td>
-          </tr>
-          <tr>
-            <td>
-              TLS Version:
-            </td>
-            <td>
-              TLSv1.2
-            </td>
-          </tr>
-          <tr>
-            <td>
-              TLS Cipher:
-            </td>
-            <td>
-              cipher
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <h4>
-        Server Connection
-      </h4>
-      <table
-        class="connection-table"
-      >
-        <tbody>
-          <tr>
-            <td>
-              Address:
-            </td>
-            <td>
-              address:22
-            </td>
-          </tr>
-          <tr>
-            <td>
-              Resolved address:
-            </td>
-            <td>
-              192.168.0.1:22
-            </td>
-          </tr>
-          <tr>
-            <td>
-              Source address:
-            </td>
-            <td>
-              address:22
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <abbr
-                title="TLS Server Name Indication"
-              >
-                SNI
-              </abbr>
-              :
-            </td>
-            <td>
-              address
-            </td>
-          </tr>
-          <tr>
-            <td>
-              TLS Version:
-            </td>
-            <td>
-              TLSv1.2
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <h4>
-        Server Certificate
-      </h4>
-      <table
-        class="certificate-table"
-      >
-        <tbody>
-          <tr>
-            <td>
-              Type
-            </td>
-            <td>
-              RSA, 2048 bits
-            </td>
-          </tr>
-          <tr>
-            <td>
-              SHA256 digest
-            </td>
-            <td>
-              e5f62a1175031b6feb959bc8e6dd0f8e2546dbbf7c32da39534309d8aa92967c
-            </td>
-          </tr>
-          <tr>
-            <td>
-              Valid from
-            </td>
-            <td>
-              2020-11-03 07:03:27
-            </td>
-          </tr>
-          <tr>
-            <td>
-              Valid to
-            </td>
-            <td>
-              2040-10-29 07:03:27
-            </td>
-          </tr>
-          <tr>
-            <td>
-              Subject Alternative Names
-            </td>
-            <td>
-              example.mitmproxy.org
-            </td>
-          </tr>
-          <tr>
-            <td>
-              Subject
-            </td>
-            <td>
-              <dl
-                class="cert-attributes"
-              >
-                <dt>
-                  C
-                </dt>
-                <dd>
-                  AU
-                </dd>
-                <dt>
-                  ST
-                </dt>
-                <dd>
-                  Some-State
-                </dd>
-                <dt>
-                  O
-                </dt>
-                <dd>
-                  Internet Widgits Pty Ltd
-                </dd>
-              </dl>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              Issuer
-            </td>
-            <td>
-              <dl
-                class="cert-attributes"
-              >
-                <dt>
-                  C
-                </dt>
-                <dd>
-                  AU
-                </dd>
-                <dt>
-                  ST
-                </dt>
-                <dd>
-                  Some-State
-                </dd>
-                <dt>
-                  O
-                </dt>
-                <dd>
-                  Internet Widgits Pty Ltd
-                </dd>
-              </dl>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              Serial
-            </td>
-            <td>
-              247170098335718583458667965517443538258472437317
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+                <span>
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-files icon icon-files"
+                    fill="none"
+                    height="16"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="16"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"
+                    />
+                    <path
+                      d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z"
+                    />
+                    <path
+                      d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1"
+                    />
+                  </svg>
+                   
+                  <b>
+                    View:
+                  </b>
+                   auto 
+                  <span
+                    class="caret"
+                  />
+                </span>
+              </a>
+            </div>
+          </div>
+          <div>
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-x icon icon-close text-muted"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M18 6 6 18"
+              />
+              <path
+                d="m6 6 12 12"
+              />
+            </svg>
+              Closed by server with code 1000 (Close Reason).
+            <small
+              class="float-right"
+            >
+              1999-12-31 23:00:05.000
+            </small>
+          </div>
+        </section>
+      </div>
+    </div>
   </div>
 </DocumentFragment>
 `;
@@ -1087,235 +1898,340 @@ exports[`FlowView 4`] = `
 exports[`FlowView 5`] = `
 <DocumentFragment>
   <div
-    class="flow-detail"
+    class="flow-detail flow-detail-split"
   >
-    <nav
-      class="nav-tabs nav-tabs-sm"
+    <div
+      class="flow-detail-panels"
     >
-      <button
-        class="close-button"
-        data-testid="close-button-id"
+      <div
+        class="flow-detail-panel"
       >
-        <svg
-          aria-hidden="true"
-          class="lucide lucide-circle-x icon icon-closeCircle"
-          fill="none"
-          height="16"
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          width="16"
-          xmlns="http://www.w3.org/2000/svg"
+        <nav
+          class="nav-tabs nav-tabs-sm"
         >
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
-          />
-          <path
-            d="m15 9-6 6"
-          />
-          <path
-            d="m9 9 6 6"
-          />
-        </svg>
-      </button>
-      <a
-        class=""
-        href="#"
+          <button
+            class="close-button"
+            data-testid="close-button-id"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-circle-x icon icon-closeCircle"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+              />
+              <path
+                d="m15 9-6 6"
+              />
+              <path
+                d="m9 9 6 6"
+              />
+            </svg>
+          </button>
+          <a
+            class=""
+            href="#"
+          >
+            Request
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Error
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Connection
+          </a>
+          <a
+            class="active"
+            href="#"
+          >
+            Timing
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Comment
+          </a>
+        </nav>
+        <section
+          class="timing"
+        >
+          <h4>
+            Timing
+          </h4>
+          <table
+            class="timing-table"
+          >
+            <tbody>
+              <tr>
+                <td>
+                  Client conn. established:
+                </td>
+                <td>
+                  1999-12-31 23:00:00.000
+                  <span
+                    class="text-muted"
+                  >
+                    (0ms)
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  First request byte:
+                </td>
+                <td>
+                  1999-12-31 23:00:00.000
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Client conn. TLS handshake:
+                </td>
+                <td>
+                  1999-12-31 23:00:01.000
+                  <span
+                    class="text-muted"
+                  >
+                    (1s)
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Request complete:
+                </td>
+                <td>
+                  1999-12-31 23:00:01.000
+                  <span
+                    class="text-muted"
+                  >
+                    (1s)
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Server conn. initiated:
+                </td>
+                <td>
+                  1999-12-31 23:00:02.000
+                  <span
+                    class="text-muted"
+                  >
+                    (2s)
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  First response byte:
+                </td>
+                <td>
+                  1999-12-31 23:00:02.000
+                  <span
+                    class="text-muted"
+                  >
+                    (2s)
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Server conn. TCP handshake:
+                </td>
+                <td>
+                  1999-12-31 23:00:03.000
+                  <span
+                    class="text-muted"
+                  >
+                    (3s)
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Response complete:
+                </td>
+                <td>
+                  1999-12-31 23:00:03.000
+                  <span
+                    class="text-muted"
+                  >
+                    (3s)
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Server conn. TLS handshake:
+                </td>
+                <td>
+                  1999-12-31 23:00:04.000
+                  <span
+                    class="text-muted"
+                  >
+                    (4s)
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Server conn. closed:
+                </td>
+                <td>
+                  1999-12-31 23:00:05.000
+                  <span
+                    class="text-muted"
+                  >
+                    (5s)
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Client conn. closed:
+                </td>
+                <td>
+                  1999-12-31 23:00:06.000
+                  <span
+                    class="text-muted"
+                  >
+                    (6s)
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+      <div
+        class="splitter splitter-x"
       >
-        Request
-      </a>
-      <a
-        class=""
-        href="#"
+        <div />
+      </div>
+      <div
+        class="flow-detail-panel"
       >
-        Response
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        WebSocket
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Error
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Connection
-      </a>
-      <a
-        class="active"
-        href="#"
-      >
-        Timing
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Comment
-      </a>
-    </nav>
-    <section
-      class="timing"
-    >
-      <h4>
-        Timing
-      </h4>
-      <table
-        class="timing-table"
-      >
-        <tbody>
-          <tr>
-            <td>
-              Client conn. established:
-            </td>
-            <td>
-              1999-12-31 23:00:00.000
-              <span
-                class="text-muted"
+        <nav
+          class="nav-tabs nav-tabs-sm"
+        >
+          <a
+            class=""
+            href="#"
+          >
+            Response
+          </a>
+          <a
+            class="active"
+            href="#"
+          >
+            WebSocket
+          </a>
+        </nav>
+        <section
+          class="websocket"
+        >
+          <h4>
+            WebSocket
+          </h4>
+          <div
+            class="contentview"
+          >
+            <div
+              class="controls"
+            >
+              <h5>
+                3 Messages
+              </h5>
+              <a
+                class="btn btn-default btn-xs"
+                href="#"
               >
-                (0ms)
-              </span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              First request byte:
-            </td>
-            <td>
-              1999-12-31 23:00:00.000
-            </td>
-          </tr>
-          <tr>
-            <td>
-              Client conn. TLS handshake:
-            </td>
-            <td>
-              1999-12-31 23:00:01.000
-              <span
-                class="text-muted"
-              >
-                (1s)
-              </span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              Request complete:
-            </td>
-            <td>
-              1999-12-31 23:00:01.000
-              <span
-                class="text-muted"
-              >
-                (1s)
-              </span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              Server conn. initiated:
-            </td>
-            <td>
-              1999-12-31 23:00:02.000
-              <span
-                class="text-muted"
-              >
-                (2s)
-              </span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              First response byte:
-            </td>
-            <td>
-              1999-12-31 23:00:02.000
-              <span
-                class="text-muted"
-              >
-                (2s)
-              </span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              Server conn. TCP handshake:
-            </td>
-            <td>
-              1999-12-31 23:00:03.000
-              <span
-                class="text-muted"
-              >
-                (3s)
-              </span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              Response complete:
-            </td>
-            <td>
-              1999-12-31 23:00:03.000
-              <span
-                class="text-muted"
-              >
-                (3s)
-              </span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              Server conn. TLS handshake:
-            </td>
-            <td>
-              1999-12-31 23:00:04.000
-              <span
-                class="text-muted"
-              >
-                (4s)
-              </span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              Server conn. closed:
-            </td>
-            <td>
+                <span>
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-files icon icon-files"
+                    fill="none"
+                    height="16"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="16"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"
+                    />
+                    <path
+                      d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z"
+                    />
+                    <path
+                      d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1"
+                    />
+                  </svg>
+                   
+                  <b>
+                    View:
+                  </b>
+                   auto 
+                  <span
+                    class="caret"
+                  />
+                </span>
+              </a>
+            </div>
+          </div>
+          <div>
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-x icon icon-close text-muted"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M18 6 6 18"
+              />
+              <path
+                d="m6 6 12 12"
+              />
+            </svg>
+              Closed by server with code 1000 (Close Reason).
+            <small
+              class="float-right"
+            >
               1999-12-31 23:00:05.000
-              <span
-                class="text-muted"
-              >
-                (5s)
-              </span>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              Client conn. closed:
-            </td>
-            <td>
-              1999-12-31 23:00:06.000
-              <span
-                class="text-muted"
-              >
-                (6s)
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+            </small>
+          </div>
+        </section>
+      </div>
+    </div>
   </div>
 </DocumentFragment>
 `;
@@ -1323,98 +2239,203 @@ exports[`FlowView 5`] = `
 exports[`FlowView 6`] = `
 <DocumentFragment>
   <div
-    class="flow-detail"
+    class="flow-detail flow-detail-split"
   >
-    <nav
-      class="nav-tabs nav-tabs-sm"
+    <div
+      class="flow-detail-panels"
     >
-      <button
-        class="close-button"
-        data-testid="close-button-id"
+      <div
+        class="flow-detail-panel"
       >
-        <svg
-          aria-hidden="true"
-          class="lucide lucide-circle-x icon icon-closeCircle"
-          fill="none"
-          height="16"
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          width="16"
-          xmlns="http://www.w3.org/2000/svg"
+        <nav
+          class="nav-tabs nav-tabs-sm"
         >
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
-          />
-          <path
-            d="m15 9-6 6"
-          />
-          <path
-            d="m9 9 6 6"
-          />
-        </svg>
-      </button>
-      <a
-        class=""
-        href="#"
+          <button
+            class="close-button"
+            data-testid="close-button-id"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-circle-x icon icon-closeCircle"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+              />
+              <path
+                d="m15 9-6 6"
+              />
+              <path
+                d="m9 9 6 6"
+              />
+            </svg>
+          </button>
+          <a
+            class=""
+            href="#"
+          >
+            Request
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Error
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Connection
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Timing
+          </a>
+          <a
+            class="active"
+            href="#"
+          >
+            Comment
+          </a>
+        </nav>
+        <section
+          class="timing"
+        >
+          <h4>
+            Comment
+          </h4>
+          <span
+            class="inline-input kv-value"
+            placeholder="empty"
+            tabindex="0"
+          >
+            I'm a comment!
+          </span>
+        </section>
+      </div>
+      <div
+        class="splitter splitter-x"
       >
-        Request
-      </a>
-      <a
-        class=""
-        href="#"
+        <div />
+      </div>
+      <div
+        class="flow-detail-panel"
       >
-        Response
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        WebSocket
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Error
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Connection
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Timing
-      </a>
-      <a
-        class="active"
-        href="#"
-      >
-        Comment
-      </a>
-    </nav>
-    <section
-      class="timing"
-    >
-      <h4>
-        Comment
-      </h4>
-      <span
-        class="inline-input kv-value"
-        placeholder="empty"
-        tabindex="0"
-      >
-        I'm a comment!
-      </span>
-    </section>
+        <nav
+          class="nav-tabs nav-tabs-sm"
+        >
+          <a
+            class=""
+            href="#"
+          >
+            Response
+          </a>
+          <a
+            class="active"
+            href="#"
+          >
+            WebSocket
+          </a>
+        </nav>
+        <section
+          class="websocket"
+        >
+          <h4>
+            WebSocket
+          </h4>
+          <div
+            class="contentview"
+          >
+            <div
+              class="controls"
+            >
+              <h5>
+                3 Messages
+              </h5>
+              <a
+                class="btn btn-default btn-xs"
+                href="#"
+              >
+                <span>
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-files icon icon-files"
+                    fill="none"
+                    height="16"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="16"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"
+                    />
+                    <path
+                      d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z"
+                    />
+                    <path
+                      d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1"
+                    />
+                  </svg>
+                   
+                  <b>
+                    View:
+                  </b>
+                   auto 
+                  <span
+                    class="caret"
+                  />
+                </span>
+              </a>
+            </div>
+          </div>
+          <div>
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-x icon icon-close text-muted"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M18 6 6 18"
+              />
+              <path
+                d="m6 6 12 12"
+              />
+            </svg>
+              Closed by server with code 1000 (Close Reason).
+            <small
+              class="float-right"
+            >
+              1999-12-31 23:00:05.000
+            </small>
+          </div>
+        </section>
+      </div>
+    </div>
   </div>
 </DocumentFragment>
 `;
@@ -1422,98 +2443,203 @@ exports[`FlowView 6`] = `
 exports[`FlowView 7`] = `
 <DocumentFragment>
   <div
-    class="flow-detail"
+    class="flow-detail flow-detail-split"
   >
-    <nav
-      class="nav-tabs nav-tabs-sm"
-    >
-      <button
-        class="close-button"
-        data-testid="close-button-id"
-      >
-        <svg
-          aria-hidden="true"
-          class="lucide lucide-circle-x icon icon-closeCircle"
-          fill="none"
-          height="16"
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          width="16"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
-          />
-          <path
-            d="m15 9-6 6"
-          />
-          <path
-            d="m9 9 6 6"
-          />
-        </svg>
-      </button>
-      <a
-        class=""
-        href="#"
-      >
-        Request
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Response
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        WebSocket
-      </a>
-      <a
-        class="active"
-        href="#"
-      >
-        Error
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Connection
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Timing
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Comment
-      </a>
-    </nav>
-    <section
-      class="error"
+    <div
+      class="flow-detail-panels"
     >
       <div
-        class="alert alert-warning"
+        class="flow-detail-panel"
       >
-        error
-        <div>
-          <small>
-            1999-12-31 23:00:07.000
-          </small>
-        </div>
+        <nav
+          class="nav-tabs nav-tabs-sm"
+        >
+          <button
+            class="close-button"
+            data-testid="close-button-id"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-circle-x icon icon-closeCircle"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+              />
+              <path
+                d="m15 9-6 6"
+              />
+              <path
+                d="m9 9 6 6"
+              />
+            </svg>
+          </button>
+          <a
+            class=""
+            href="#"
+          >
+            Request
+          </a>
+          <a
+            class="active"
+            href="#"
+          >
+            Error
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Connection
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Timing
+          </a>
+          <a
+            class=""
+            href="#"
+          >
+            Comment
+          </a>
+        </nav>
+        <section
+          class="error"
+        >
+          <div
+            class="alert alert-warning"
+          >
+            error
+            <div>
+              <small>
+                1999-12-31 23:00:07.000
+              </small>
+            </div>
+          </div>
+        </section>
       </div>
-    </section>
+      <div
+        class="splitter splitter-x"
+      >
+        <div />
+      </div>
+      <div
+        class="flow-detail-panel"
+      >
+        <nav
+          class="nav-tabs nav-tabs-sm"
+        >
+          <a
+            class=""
+            href="#"
+          >
+            Response
+          </a>
+          <a
+            class="active"
+            href="#"
+          >
+            WebSocket
+          </a>
+        </nav>
+        <section
+          class="websocket"
+        >
+          <h4>
+            WebSocket
+          </h4>
+          <div
+            class="contentview"
+          >
+            <div
+              class="controls"
+            >
+              <h5>
+                3 Messages
+              </h5>
+              <a
+                class="btn btn-default btn-xs"
+                href="#"
+              >
+                <span>
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-files icon icon-files"
+                    fill="none"
+                    height="16"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="16"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"
+                    />
+                    <path
+                      d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z"
+                    />
+                    <path
+                      d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1"
+                    />
+                  </svg>
+                   
+                  <b>
+                    View:
+                  </b>
+                   auto 
+                  <span
+                    class="caret"
+                  />
+                </span>
+              </a>
+            </div>
+          </div>
+          <div>
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-x icon icon-close text-muted"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M18 6 6 18"
+              />
+              <path
+                d="m6 6 12 12"
+              />
+            </svg>
+              Closed by server with code 1000 (Close Reason).
+            <small
+              class="float-right"
+            >
+              1999-12-31 23:00:05.000
+            </small>
+          </div>
+        </section>
+      </div>
+    </div>
   </div>
 </DocumentFragment>
 `;
