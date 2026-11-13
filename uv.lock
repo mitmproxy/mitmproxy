@@ -1164,7 +1164,7 @@ requires-dist = [
     { name = "sortedcontainers", specifier = ">=2.3,<=2.4.0" },
     { name = "tornado", specifier = ">=6.5.0,<=6.5.10" },
     { name = "typing-extensions", marker = "python_full_version < '3.13'", specifier = ">=4.13.2,<=4.16.0" },
-    { name = "urwid", specifier = ">=2.6.14,<=4.2.5" },
+    { name = "urwid", specifier = ">=2.6.14,<=5.1.0" },
     { name = "wsproto", specifier = ">=1.0,<=1.3.2" },
 ]
 
@@ -2001,14 +2001,15 @@ wheels = [
 
 [[package]]
 name = "urwid"
-version = "3.0.3"
+version = "5.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
     { name = "wcwidth" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bb/d3/09683323e2290732a39dc92ca5031d5e5ddda56f8d236f885a400535b29a/urwid-3.0.3.tar.gz", hash = "sha256:300804dd568cda5aa1c5b204227bd0cfe7a62cef2d00987c5eb2e4e64294ed9b", size = 855817, upload-time = "2025-09-15T10:26:17.089Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/85/15/6f35c0e9d399e21f5a8ac40552ab97381bece02c61b55e2b8d34834e66f6/urwid-5.1.0.tar.gz", hash = "sha256:36c8aa321fe5ac0c47dccc913bfbbd504d96caad8644c5a7ada0ec8c522fb808", size = 528491, upload-time = "2026-11-06T13:51:01.195Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c0/50/a35894423102d76b9b9ae011ab643d8102120c6dc420e86b16caa7441117/urwid-3.0.3-py3-none-any.whl", hash = "sha256:ede36ecc99a293bbb4b5e5072c7b7bb943eb3bed17decf89b808209ed2dead15", size = 296144, upload-time = "2025-09-15T10:26:15.38Z" },
+    { url = "https://files.pythonhosted.org/packages/5b/15/f98b0cce8b514387ddf6ebe37e085599ed5ea55177b10bad3fc9b08a791b/urwid-5.1.0-py3-none-any.whl", hash = "sha256:99b48fdf865100bf246e738a60d22fc965a4aa994e8744d17c5cbff9d7ccb35a", size = 564442, upload-time = "2026-11-06T13:50:59.218Z" },
 ]
 
 [[package]]
