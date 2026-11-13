@@ -158,6 +158,22 @@ def test_binary_content():
 
 
 @pytest.mark.parametrize(
+    "body",
+    [
+        pytest.param(b"hello world " * 100, id="text"),
+        pytest.param(b"\x00\xff" * 100, id="binary"),
+    ],
+)
+def test_compressed_content_size(body: bytes):
+    response = Response.make(200, body)
+    response.encode("gzip")
+    entry = SaveHar().flow_entry(tflow.tflow(resp=response), set())["response"]
+    assert entry["bodySize"] == len(response.raw_content)
+    assert entry["content"]["size"] == len(body)
+    assert entry["content"]["compression"] == len(body) - len(response.raw_content)
+
+
+@pytest.mark.parametrize(
     "log_file", [pytest.param(x, id=x.stem) for x in test_dir.glob("data/flows/*.mitm")]
 )
 def test_savehar(log_file: Path, tmp_path: Path, monkeypatch):
