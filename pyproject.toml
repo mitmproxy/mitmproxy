@@ -64,7 +64,7 @@ dependencies = [
 dev = [
     "click==8.4.2",
     "hypothesis==6.130.6",
-    "maturin==1.15.0",
+    "maturin==1.16.0",
     "pdoc==16.0.0",
     "pyinstaller==6.22.3",
     "pyinstaller-hooks-contrib==2026.9",
