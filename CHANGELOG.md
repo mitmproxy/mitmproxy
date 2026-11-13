@@ -11,6 +11,8 @@
   Previously, a recorded response or the `server_replay_extra` policy replaced it, and with
   `kill` the client was disconnected while the flow still showed the script's response.
   ([#8563](https://github.com/mitmproxy/mitmproxy/pull/8563), @Thanatos9404)
+- Fix a crash in raw QUIC mode when a peer stops reading a stream.
+  ([#8594](https://github.com/mitmproxy/mitmproxy/pull/8594), @jlaine)
 - Update aioquic to 1.8.0. HTTP/3 interim (1xx) responses are no longer mistaken for the final
   response's trailers, QUIC connections report their cipher suite by its IANA name, and QUIC
   datagrams which the peer cannot receive are dropped.
