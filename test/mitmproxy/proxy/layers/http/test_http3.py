@@ -1,5 +1,6 @@
 from collections.abc import Callable
 from collections.abc import Iterable
+from logging import DEBUG
 
 import pylsqpack
 import pytest
@@ -13,7 +14,6 @@ from aioquic.h3.connection import Headers as H3Headers
 from aioquic.h3.connection import parse_settings
 from aioquic.h3.connection import Setting
 from aioquic.h3.connection import StreamType
-from aioquic.quic.packet import QuicErrorCode
 
 from mitmproxy import connection
 from mitmproxy import version
@@ -789,7 +789,6 @@ def test_rst_then_close(tctx):
     playbook, cff = start_h3_proxy(tctx)
     flow = tutils.Placeholder(HTTPFlow)
     server = tutils.Placeholder(connection.Server)
-    err = tutils.Placeholder(str)
 
     assert (
         playbook
@@ -802,18 +801,19 @@ def test_rst_then_close(tctx):
         >> tutils.reply()
         # request server
         << (open := commands.OpenConnection(server))
-        >> cff.receive_data(b"unexpected data frame")
+        # SETTINGS may only be sent once on the control stream
+        >> cff.receive_settings()
         << quic.CloseQuicConnection(
             tctx.client,
-            error_code=QuicErrorCode.PROTOCOL_VIOLATION.value,
+            error_code=ErrorCode.H3_FRAME_UNEXPECTED.value,
             frame_type=None,
-            reason_phrase=err,
+            reason_phrase="SETTINGS have already been received",
         )
         >> quic.QuicConnectionClosed(
             tctx.client,
-            error_code=QuicErrorCode.PROTOCOL_VIOLATION.value,
+            error_code=ErrorCode.H3_FRAME_UNEXPECTED.value,
             frame_type=None,
-            reason_phrase=err,
+            reason_phrase="SETTINGS have already been received",
         )
         >> tutils.reply("connection cancelled", to=open)
         << http.HttpErrorHook(flow)
@@ -1114,12 +1114,12 @@ class TestClient:
             >> http.RequestEndOfMessage(1)
             << commands.Log(
                 "Received RequestEndOfMessage(stream_id=0) unexpectedly: "
-                "DATA frame is not allowed in this state"
+                "Cannot send data before the headers"
             )
             >> http.RequestData(1, b"123")
             << commands.Log(
                 "Received RequestData(stream_id=0, data=b'123') unexpectedly: "
-                "DATA frame is not allowed in this state"
+                "Cannot send data before the headers"
             )
             >> http.RequestHeaders(1, req, end_stream=False)
             << frame_factory.send_headers(
@@ -1139,6 +1139,129 @@ class TestClient:
                 "initial HEADERS frame is not allowed in this state"
             )
         )
+
+    def test_informational_response(self, tctx: context.Context):
+        frame_factory = FrameFactory(tctx.server, is_client=False)
+        playbook = tutils.Playbook(Http3Client(tctx))
+        req = Request.make("GET", "http://example.com/")
+        resp = tutils.Placeholder(http.ResponseHeaders)
+        assert (
+            playbook
+            << frame_factory.send_init()
+            >> frame_factory.receive_init()
+            << frame_factory.send_encoder()
+            >> frame_factory.receive_encoder()
+            >> http.RequestHeaders(1, req, end_stream=True)
+            << frame_factory.send_headers(
+                [
+                    (b":method", b"GET"),
+                    (b":scheme", b"http"),
+                    (b":path", b"/"),
+                    (b"content-length", b"0"),
+                ],
+                end_stream=True,
+            )
+            >> frame_factory.receive_decoder()  # for send_headers
+            >> frame_factory.receive_headers(
+                [(b":status", b"103"), (b"link", b"</style.css>; rel=preload")]
+            )
+            << commands.Log("Swallowing HTTP/3 informational response: 103 Early Hints")
+            << frame_factory.send_decoder()  # for receive_headers
+            >> frame_factory.receive_headers([(b":status", b"200")], end_stream=True)
+            << http.ReceiveHttp(resp)
+            << http.ReceiveHttp(http.ResponseEndOfMessage(1))
+            << frame_factory.send_decoder()  # for receive_headers
+        )
+        assert resp().response.status_code == 200
+        assert frame_factory.is_done
+
+    def test_goaway(self, tctx: context.Context):
+        """Requests the server has started to process still complete after GOAWAY."""
+        frame_factory = FrameFactory(tctx.server, is_client=False)
+        playbook = tutils.Playbook(Http3Client(tctx))
+        req = Request.make("GET", "http://example.com/")
+        resp = tutils.Placeholder(http.ResponseHeaders)
+        assert (
+            playbook
+            << frame_factory.send_init()
+            >> frame_factory.receive_init()
+            << frame_factory.send_encoder()
+            >> frame_factory.receive_encoder()
+            >> http.RequestHeaders(1, req, end_stream=True)
+            << frame_factory.send_headers(
+                [
+                    (b":method", b"GET"),
+                    (b":scheme", b"http"),
+                    (b":path", b"/"),
+                    (b"content-length", b"0"),
+                ],
+                end_stream=True,
+            )
+            >> frame_factory.receive_decoder()  # for send_headers
+            >> quic.QuicStreamDataReceived(
+                tctx.server,
+                frame_factory.local_stream_id[StreamType.CONTROL],
+                encode_frame(FrameType.GOAWAY, encode_uint_var(4)),
+                False,
+            )
+            << commands.Log(
+                "HTTP/3 server is shutting down, it will not process stream 4 and above.",
+                DEBUG,
+            )
+            >> frame_factory.receive_headers([(b":status", b"200")], end_stream=True)
+            << http.ReceiveHttp(resp)
+            << http.ReceiveHttp(http.ResponseEndOfMessage(1))
+            << frame_factory.send_decoder()  # for receive_headers
+        )
+        assert resp().response.status_code == 200
+        assert frame_factory.is_done
+
+    def test_ignore_after_stream_ended(self, tctx: context.Context):
+        """aioquic forgets about streams once they have ended, we must not."""
+        frame_factory = FrameFactory(tctx.server, is_client=False)
+        playbook = tutils.Playbook(Http3Client(tctx))
+        req = Request.make("GET", "http://example.com/")
+        assert (
+            playbook
+            << frame_factory.send_init()
+            >> frame_factory.receive_init()
+            << frame_factory.send_encoder()
+            >> frame_factory.receive_encoder()
+            >> http.RequestHeaders(1, req, end_stream=True)
+            << frame_factory.send_headers(
+                [
+                    (b":method", b"GET"),
+                    (b":scheme", b"http"),
+                    (b":path", b"/"),
+                    (b"content-length", b"0"),
+                ],
+                end_stream=True,
+            )
+            >> frame_factory.receive_decoder()  # for send_headers
+            >> frame_factory.receive_headers([(b":status", b"200")], end_stream=True)
+            << http.ReceiveHttp(tutils.Placeholder(http.ResponseHeaders))
+            << http.ReceiveHttp(http.ResponseEndOfMessage(1))
+            << frame_factory.send_decoder()  # for receive_headers
+            >> http.RequestEndOfMessage(1)
+            << None
+            >> http.RequestHeaders(1, req, end_stream=True)
+            << commands.Log(
+                "Received RequestHeaders(stream_id=0, request=Request(GET example.com:80/),"
+                " end_stream=True, replay_flow=None) unexpectedly: "
+                "initial HEADERS frame is not allowed in this state"
+            )
+            >> http.RequestData(1, b"123")
+            << commands.Log(
+                "Received RequestData(stream_id=0, data=b'123') unexpectedly: "
+                "DATA frame is not allowed in this state"
+            )
+            >> http.RequestTrailers(1, Headers([(b"x-trailer", b"")]))
+            << commands.Log(
+                "Received RequestTrailers(stream_id=0, trailers=Headers[(b'x-trailer', b'')]) unexpectedly: "
+                "trailing HEADERS frame is not allowed in this state"
+            )
+        )
+        assert frame_factory.is_done
 
 
 def test_early_server_data(tctx: context.Context):
