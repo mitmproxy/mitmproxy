@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix a crash when an addon or `modify_headers` sets an HTTP/3 header name or value longer than
+  65,535 bytes, which QPACK cannot encode. The client now receives a 502 error instead, or a stream
+  reset if the response was already partly sent.
+  ([#8596](https://github.com/mitmproxy/mitmproxy/pull/8596), @jlaine)
 - Fix a crash in raw QUIC mode when a peer stops reading a stream.
   ([#8594](https://github.com/mitmproxy/mitmproxy/pull/8594), @jlaine)
 - Update aioquic to 1.8.0. HTTP/3 interim (1xx) responses are no longer mistaken for the final
