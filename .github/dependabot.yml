@@ -10,7 +10,7 @@ updates:
       "github actions":
         patterns:
           - "*"
-  - package-ecosystem: pip
+  - package-ecosystem: uv
     directory: "/"
     cooldown:
       default-days: 7
