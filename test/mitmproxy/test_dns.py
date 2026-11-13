@@ -287,6 +287,15 @@ class TestMessage:
             + b"\x01\x00\x00\x00/\x00\x04\xd8:\xc4\xae\x00\x00)\x02\x00\x00\x00\x00\x00\x00\x00"
         )
         assert A_record_data_contains_pointer_label.answers[0].data == b"\xd8:\xc4\xae"
+        srv_port_looks_like_pointer = dns.DNSMessage.unpack(
+            b"\x00\x01\x81\x80\x00\x01\x00\x01\x00\x00\x00\x00\x04_sip\x04_udp\x07example\x03com\x00"
+            + b"\x00\x21\x00\x01\xc0\x0c\x00\x21\x00\x01\x00\x00\x01\x2c\x00\x0c"
+            + b"\x00\x0a\x00\x3c\xc0\x0c\x03sip\xc0\x16"
+        )
+        assert (
+            srv_port_looks_like_pointer.answers[0].data
+            == b"\x00\x0a\x00\x3c\xc0\x0c\x03sip\x07example\x03com\x00"
+        )
         req = tutils.tdnsreq()
         for flag in (
             "authoritative_answer",

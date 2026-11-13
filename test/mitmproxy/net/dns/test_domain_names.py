@@ -72,6 +72,7 @@ def test_pack():
 def test_record_data_can_have_compression():
     assert domain_names.record_data_can_have_compression(types.NS)
     assert not domain_names.record_data_can_have_compression(types.HTTPS)
+    assert not domain_names.record_data_can_have_compression(types.TXT)
 
 
 def test_decompress_from_record_data():
@@ -81,7 +82,9 @@ def test_decompress_from_record_data():
         + b"\x00\x07\x08\x00\x00\x00<\x00\x00)\x02\x00\x00\x00\x00\x00\x00\x00"
     )
     assert (
-        domain_names.decompress_from_record_data(buffer, 40, 78, domain_names.cache())
+        domain_names.decompress_from_record_data(
+            buffer, 40, 78, domain_names.cache(), types.SOA
+        )
         == b"\x03ns1\x06google\x03com\x00\tdns-admin\x06google\x03com\x00&~gw\x00\x00\x03\x84\x00\x00\x03\x84\x00"
         + b"\x00\x07\x08\x00\x00\x00<"
     )
@@ -95,7 +98,59 @@ def test_record_data_contains_fake_pointer():
         + b"\x00\x07\x08\x00\x00\x00<"
     )
     assert (
-        domain_names.decompress_from_record_data(buffer, 40, 78, domain_names.cache())
+        domain_names.decompress_from_record_data(
+            buffer, 40, 78, domain_names.cache(), types.SOA
+        )
         == b"\x03ns1\x06google\x03com\x00\tdns-admin\x06google\x03com\x00&\xd2\xa2\xc2\x00\x00\x03\x84\x00\x00\x03"
         + b"\x84\x00\x00\x07\x08\x00\x00\x00<"
+    )
+
+
+def test_record_data_field_looks_like_pointer():
+    # MX example.com with a preference of 49164 (0xc00c) and the exchange mail.example.com
+    buffer = (
+        b"\x00\x01\x81\x80\x00\x01\x00\x01\x00\x00\x00\x00\x07example\x03com\x00\x00\x0f\x00\x01"
+        + b"\xc0\x0c\x00\x0f\x00\x01\x00\x00\x01\x2c\x00\x09\xc0\x0c\x04mail\xc0\x0c"
+    )
+    assert (
+        domain_names.decompress_from_record_data(
+            buffer, 41, 50, domain_names.cache(), types.MX
+        )
+        == b"\xc0\x0c\x04mail\x07example\x03com\x00"
+    )
+
+
+def test_decompress_naptr_record_data():
+    # NAPTR 100 10 "S" "SIP+D2U" "" _sip._udp.example.com
+    buffer = (
+        b"\x00\x01\x81\x80\x00\x01\x00\x01\x00\x00\x00\x00\x07example\x03com\x00\x00\x23\x00\x01"
+        + b"\xc0\x0c\x00\x23\x00\x01\x00\x00\x01\x2c\x00\x1b"
+        + b"\x00\x64\x00\x0a\x01S\x07SIP+D2U\x00\x04_sip\x04_udp\xc0\x0c"
+    )
+    assert (
+        domain_names.decompress_from_record_data(
+            buffer, 41, 68, domain_names.cache(), types.NAPTR
+        )
+        == b"\x00\x64\x00\x0a\x01S\x07SIP+D2U\x00\x04_sip\x04_udp\x07example\x03com\x00"
+    )
+
+
+def test_record_data_without_its_fields():
+    buffer = (
+        b"\x00\x01\x81\x80\x00\x01\x00\x01\x00\x00\x00\x00\x07example\x03com\x00\x00\x05\x00\x01"
+        + b"\xc0\x0c\x00\x05\x00\x01\x00\x00\x01\x2c\x00\x08\x99live\xff\xc0\x0c"
+    )
+    # 0x99 is not a label length, but the pointer at the end is still decompressed
+    assert (
+        domain_names.decompress_from_record_data(
+            buffer, 41, 49, domain_names.cache(), types.CNAME
+        )
+        == b"\x99live\xff\x07example\x03com\x00"
+    )
+    # one octet is too short for the preference of an MX record
+    assert (
+        domain_names.decompress_from_record_data(
+            buffer, 41, 42, domain_names.cache(), types.MX
+        )
+        == b"\x99"
     )
