@@ -1,6 +1,7 @@
 import time
 from abc import abstractmethod
 from logging import DEBUG
+from logging import WARNING
 from typing import assert_never
 
 from aioquic.h3.connection import ErrorCode as H3ErrorCode
@@ -74,13 +75,19 @@ class Http3Connection(HttpConnection):
                         if isinstance(event, RequestHeaders)
                         else format_h2_response_headers(self.context, event)
                     )
-                    self.h3_conn.send_headers(
-                        event.stream_id, headers, end_stream=event.end_stream
-                    )
+                    try:
+                        self.h3_conn.send_headers(
+                            event.stream_id, headers, end_stream=event.end_stream
+                        )
+                    except ValueError as e:
+                        yield from self.fail_unencodable_stream(event, e)
                 elif isinstance(event, (RequestTrailers, ResponseTrailers)):
-                    self.h3_conn.send_trailers(
-                        event.stream_id, [*event.trailers.fields]
-                    )
+                    try:
+                        self.h3_conn.send_trailers(
+                            event.stream_id, [*event.trailers.fields]
+                        )
+                    except ValueError as e:
+                        yield from self.fail_unencodable_stream(event, e)
                 elif isinstance(event, (RequestEndOfMessage, ResponseEndOfMessage)):
                     self.h3_conn.end_stream(event.stream_id)
                 elif isinstance(event, (RequestProtocolError, ResponseProtocolError)):
@@ -90,19 +97,7 @@ class Http3Connection(HttpConnection):
                         and not self.h3_conn.has_sent_headers(event.stream_id)
                         and status is not None
                     ):
-                        self.h3_conn.send_headers(
-                            event.stream_id,
-                            [
-                                (b":status", b"%d" % status),
-                                (b"server", version.MITMPROXY.encode()),
-                                (b"content-type", b"text/html"),
-                            ],
-                        )
-                        self.h3_conn.send_data(
-                            event.stream_id,
-                            format_error(status, event.message),
-                            end_stream=True,
-                        )
+                        self.send_error_response(event.stream_id, status, event.message)
                     else:
                         match event.code:
                             case ErrorCode.CANCEL | ErrorCode.CLIENT_DISCONNECTED:
@@ -228,6 +223,51 @@ class Http3Connection(HttpConnection):
 
         else:  # pragma: no cover
             raise AssertionError(f"Unexpected event: {event!r}")
+
+    def send_error_response(self, stream_id: int, status: int, message: str) -> None:
+        """Answer a request with an error page, which ends the stream."""
+        self.h3_conn.send_headers(
+            stream_id,
+            [
+                (b":status", b"%d" % status),
+                (b"server", version.MITMPROXY.encode()),
+                (b"content-type", b"text/html"),
+            ],
+        )
+        self.h3_conn.send_data(
+            stream_id, format_error(status, message), end_stream=True
+        )
+
+    def fail_unencodable_stream(
+        self,
+        event: RequestHeaders | ResponseHeaders | RequestTrailers | ResponseTrailers,
+        err: ValueError,
+    ) -> layer.CommandGenerator[None]:
+        """
+        Fail a stream whose headers or trailers QPACK cannot encode.
+
+        ls-qpack refuses a header name or value longer than 65,535 bytes.
+        HTTP/2 and HTTP/3 peers cannot send these, as both limit received headers
+        to 64 KiB, but addons, modify_headers or replayed flows can produce them.
+        Nothing has been sent for these headers, and the encoder stays usable.
+        """
+        msg = f"Cannot encode HTTP/3 headers: {err}"
+        # The flow only records an error if the response is not complete yet,
+        # so make sure that this does not go unnoticed.
+        yield commands.Log(msg, WARNING)
+        if isinstance(event, ResponseHeaders):
+            # Nothing has reached the client yet, so tell it what went wrong.
+            self.send_error_response(event.stream_id, status_codes.BAD_GATEWAY, msg)
+        else:
+            self.h3_conn.close_stream(
+                event.stream_id, H3ErrorCode.H3_INTERNAL_ERROR.value
+            )
+        yield from self.h3_conn.transmit()
+        yield ReceiveHttp(
+            self.ReceiveProtocolError(
+                event.stream_id, msg, code=self.ReceiveProtocolError.code
+            )
+        )
 
     @expect(HttpEvent, QuicStreamEvent, QuicConnectionClosed)
     def done(self, _) -> layer.CommandGenerator[None]:

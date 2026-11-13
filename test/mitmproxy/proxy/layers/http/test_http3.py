@@ -1,6 +1,7 @@
 from collections.abc import Callable
 from collections.abc import Iterable
 from logging import DEBUG
+from logging import WARNING
 
 import pylsqpack
 import pytest
@@ -1005,6 +1006,143 @@ def test_kill_stream(tctx: context.Context):
         >> sff.receive_decoder()  # for send_headers
     )
     assert cff.is_done and sff.is_done
+
+
+# ls-qpack refuses header names and values longer than 65,535 bytes.
+unencodable_value = "a" * 65536
+
+error_page_headers = [
+    (b":status", b"502"),
+    (b"server", version.MITMPROXY.encode()),
+    (b"content-type", b"text/html"),
+]
+
+
+def assert_unencodable(log_msg: str, error_page: bytes) -> None:
+    # Don't depend on pylsqpack's exact wording.
+    assert log_msg.startswith("Cannot encode HTTP/3 headers: ")
+    data = decode_frame(FrameType.DATA, error_page)
+    assert b"502 Bad Gateway" in data
+    assert b"Cannot encode HTTP/3 headers: " in data
+
+
+@pytest.mark.parametrize("where", ["headers", "trailers"])
+def test_unencodable_request_headers(tctx: context.Context, where: str):
+    """Headers that QPACK cannot encode fail the request with a 502."""
+    playbook, cff = start_h3_proxy(tctx)
+    flow = tutils.Placeholder(HTTPFlow)
+    server = tutils.Placeholder(connection.Server)
+    sff = FrameFactory(server, is_client=False)
+    log_msg = tutils.Placeholder(str)
+    err = tutils.Placeholder(bytes)
+
+    def add_huge_header(flow: HTTPFlow):
+        if where == "headers":
+            flow.request.headers["x-huge"] = unencodable_value
+        else:
+            flow.request.trailers = Headers(x_huge=unencodable_value)
+
+    (
+        playbook
+        >> cff.receive_headers(example_request_headers, end_stream=True)
+        << (request := http.HttpRequestHeadersHook(flow))
+        << cff.send_decoder()  # for receive_headers
+        >> tutils.reply(to=request)
+        << http.HttpRequestHook(flow)
+        >> tutils.reply(side_effect=add_huge_header)
+        << commands.OpenConnection(server)
+        >> tutils.reply(None, side_effect=make_h3)
+        << sff.send_init()
+    )
+    if where == "trailers":
+        playbook << sff.send_headers(example_request_headers)
+    assert (
+        playbook
+        << commands.Log(log_msg, WARNING)
+        << sff.send_reset(ErrorCode.H3_INTERNAL_ERROR)
+        << sff.send_stop(ErrorCode.H3_INTERNAL_ERROR)
+        << http.HttpErrorHook(flow)
+        >> tutils.reply()
+        << cff.send_headers(error_page_headers)
+        << quic.SendQuicStreamData(tctx.client, stream_id=0, data=err, end_stream=True)
+        >> cff.receive_decoder()  # for send_headers
+    )
+    assert cff.is_done
+    assert_unencodable(log_msg(), err())
+    assert flow().error.msg == log_msg()
+
+
+@pytest.mark.parametrize("stream", ["stream", ""])
+def test_unencodable_response_headers(tctx: context.Context, stream: str):
+    """Headers that QPACK cannot encode are replaced with a 502 for the client."""
+    playbook, cff = start_h3_proxy(tctx)
+    flow = tutils.Placeholder(HTTPFlow)
+    server = tutils.Placeholder(connection.Server)
+    sff = FrameFactory(server, is_client=False)
+    log_msg = tutils.Placeholder(str)
+    err = tutils.Placeholder(bytes)
+
+    def add_huge_header(flow: HTTPFlow):
+        flow.response.stream = stream
+        flow.response.headers["x-huge"] = unencodable_value
+
+    (
+        playbook
+        >> cff.receive_headers(example_request_headers, end_stream=True)
+        << (request := http.HttpRequestHeadersHook(flow))
+        << cff.send_decoder()  # for receive_headers
+        >> tutils.reply(to=request)
+        << http.HttpRequestHook(flow)
+        >> tutils.reply()
+        << commands.OpenConnection(server)
+        >> tutils.reply(None, side_effect=make_h3)
+        << sff.send_init()
+        << sff.send_headers(example_request_headers, end_stream=True)
+        >> sff.receive_init()
+        << sff.send_encoder()
+        >> sff.receive_encoder()
+        >> sff.receive_decoder()  # for send_headers
+        >> sff.receive_headers(example_response_headers)
+        << (response := http.HttpResponseHeadersHook(flow))
+        << sff.send_decoder()  # for receive_headers
+    )
+    if stream:
+        playbook >> tutils.reply(to=response, side_effect=add_huge_header)
+    else:
+        (
+            playbook
+            >> tutils.reply(to=response)
+            >> sff.receive_data(b"Hello, World!", end_stream=True)
+            << http.HttpResponseHook(flow)
+            >> tutils.reply(side_effect=add_huge_header)
+        )
+    (
+        playbook
+        << commands.Log(log_msg, WARNING)
+        << cff.send_headers(error_page_headers)
+        << quic.SendQuicStreamData(tctx.client, stream_id=0, data=err, end_stream=True)
+    )
+    if stream:
+        (
+            playbook
+            # The server is still sending, so we stop it.
+            << sff.send_reset(ErrorCode.H3_INTERNAL_ERROR)
+            << sff.send_stop(ErrorCode.H3_INTERNAL_ERROR)
+            << (error := http.HttpErrorHook(flow))
+            >> tutils.reply(to=error)
+            # Data that was already on its way is discarded.
+            >> sff.receive_data(b"Hello, World!", end_stream=True)
+            << None
+        )
+    assert playbook >> cff.receive_decoder()  # for send_headers
+    assert cff.is_done and sff.is_done
+    assert_unencodable(log_msg(), err())
+    if stream:
+        assert flow().error.msg == log_msg()
+    else:
+        # The response is complete, so like for a client disconnecting after the
+        # response hook, there is no error hook. The warning tells what happened.
+        assert flow().error is None
 
 
 @pytest.mark.parametrize("close_type", ["RESET_STREAM", "STOP_SENDING"])
