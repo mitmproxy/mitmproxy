@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix a crash in raw QUIC mode when a peer stops reading a stream.
 - Update aioquic to 1.8.0. HTTP/3 interim (1xx) responses are no longer mistaken for the final
   response's trailers, QUIC connections report their cipher suite by its IANA name, and QUIC
   datagrams which the peer cannot receive are dropped.
