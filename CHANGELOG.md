@@ -25,6 +25,9 @@
 - Fix filter expressions where a filter without an argument is followed by a closing bracket,
   e.g. `!(~s)` or `(~q & ~s)`, which were rejected as invalid.
   ([#8537](https://github.com/mitmproxy/mitmproxy/pull/8537), @qodelicious)
+- mitmweb: Fix "Error getting content: 404 Not Found" when selecting the Socket.IO content view, and fix
+  the `view.clear_unmarked` and `proxyserver.active_connections` commands not being reachable.
+  ([#8590](https://github.com/mitmproxy/mitmproxy/pull/8590), @Dv2Corn)
 
 ## 25 October 2026: mitmproxy 12.3.1
 
