@@ -19,6 +19,10 @@
   ([#8593](https://github.com/mitmproxy/mitmproxy/pull/8593), @jlaine)
 - mitmweb: Add a quiet zone around the WireGuard QR code so that it can be scanned in dark mode.
   ([#8585](https://github.com/mitmproxy/mitmproxy/pull/8585), @yldrmzffr)
+- Fix server replay overriding a response that a script or an earlier addon already set.
+  Previously, a recorded response or the `server_replay_extra` policy replaced it, and with
+  `kill` the client was disconnected while the flow still showed the script's response.
+  ([#8563](https://github.com/mitmproxy/mitmproxy/pull/8563), @Thanatos9404)
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)

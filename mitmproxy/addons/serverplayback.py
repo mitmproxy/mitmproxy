@@ -276,6 +276,9 @@ class ServerPlayback:
         self.load_flows(flows)
 
     def request(self, f: http.HTTPFlow) -> None:
+        if f.response or f.error or not f.live:
+            # An earlier addon, e.g. a script, has already handled this request.
+            return
         if self.flowmap:
             rflow = self.next_flow(f)
             if rflow:
