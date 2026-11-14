@@ -14,6 +14,7 @@ from mitmproxy.http import HTTPFlow
 from mitmproxy.http import Message
 from mitmproxy.http import Request
 from mitmproxy.http import Response
+from mitmproxy.net import encoding
 from mitmproxy.net.http.cookies import CookieAttrs
 from mitmproxy.test.tflow import tflow
 from mitmproxy.test.tutils import treq
@@ -1071,6 +1072,15 @@ class TestMessageContentEncoding:
         r.decode(strict=False)
         assert r.content == b"foo"
         assert "content-encoding" not in r.headers
+
+    def test_decoded_size_limit(self, monkeypatch):
+        monkeypatch.setattr(encoding, "MAX_DECODED_SIZE", 1024)
+        r = tresp()
+        r.headers["content-encoding"] = "gzip"
+        r.raw_content = encoding.encode_gzip(b"x" * 1025)
+        with pytest.raises(ValueError, match="maximum size"):
+            assert r.content
+        assert r.get_content(strict=False) == r.raw_content
 
     def test_none(self):
         r = tresp(content=None)

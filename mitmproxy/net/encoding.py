@@ -24,6 +24,15 @@ else:  # pragma: no cover
 CachedDecode = collections.namedtuple("CachedDecode", "encoded encoding errors decoded")
 _cache = CachedDecode(None, None, None, None)
 
+MAX_DECODED_SIZE: int | None = 100 * 1024 * 1024
+
+
+def _check_decoded_size(size: int) -> None:
+    if MAX_DECODED_SIZE is not None and size > MAX_DECODED_SIZE:
+        raise ValueError(
+            f"Decompressed content exceeds the maximum size of {MAX_DECODED_SIZE} bytes."
+        )
+
 
 @overload
 def decode(encoded: None, encoding: str, errors: str = "strict") -> None: ...
@@ -61,6 +70,7 @@ def decode(
         and _cache.errors == errors
     )
     if cached:
+        _check_decoded_size(len(_cache.decoded))
         return _cache.decoded
     try:
         try:
@@ -149,6 +159,17 @@ def identity(content):
     return content
 
 
+def _decode_zlib(content: bytes, wbits: int) -> bytes:
+    decompressor = zlib.decompressobj(wbits)
+    if MAX_DECODED_SIZE is None:
+        return decompressor.decompress(content) + decompressor.flush()
+    decoded = decompressor.decompress(content, MAX_DECODED_SIZE + 1)
+    _check_decoded_size(len(decoded))
+    tail = decompressor.flush()
+    _check_decoded_size(len(decoded) + len(tail))
+    return decoded + tail
+
+
 def decode_gzip(content: bytes) -> bytes:
     """Decode gzip or zlib-compressed data using zlib's auto-detection."""
     if not content:
@@ -158,8 +179,7 @@ def decode_gzip(content: bytes) -> bytes:
         # Using wbits=47 (32 + 15) tells zlib to automatically detect both gzip and zlib headers.
         # This simplifies decoding and avoids the need for a separate gzip.GzipFile fallback.
         # Reference: https://docs.python.org/3/library/zlib.html#zlib.decompress
-        decompressor = zlib.decompressobj(47)
-        return decompressor.decompress(content) + decompressor.flush()
+        return _decode_zlib(content, 47)
     except zlib.error as e:
         raise ValueError(f"Decompression failed: {e}")
 
@@ -176,7 +196,28 @@ def encode_gzip(content: bytes) -> bytes:
 def decode_brotli(content: bytes) -> bytes:
     if not content:
         return b""
-    return brotli.decompress(content)
+    if MAX_DECODED_SIZE is None:
+        return brotli.decompress(content)
+
+    decompressor = brotli.Decompressor()
+    decoded = bytearray()
+
+    def process(chunk: bytes) -> bool:
+        remaining = MAX_DECODED_SIZE - len(decoded) + 1
+        output = decompressor.process(chunk, min(remaining, 64 * 1024))
+        decoded.extend(output)
+        _check_decoded_size(len(decoded))
+        return bool(output)
+
+    for offset in range(0, len(content), 8192):
+        while not decompressor.can_accept_more_data():
+            if not process(b""):
+                raise ValueError("Incomplete brotli stream")
+        process(content[offset : offset + 8192])
+    while not decompressor.is_finished():
+        if not process(b""):
+            raise ValueError("Incomplete brotli stream")
+    return bytes(decoded)
 
 
 def encode_brotli(content: bytes) -> bytes:
@@ -187,7 +228,23 @@ def encode_brotli(content: bytes) -> bytes:
 def decode_zstd(content: bytes) -> bytes:
     if not content:
         return b""
-    return zstd.decompress(content)
+    if MAX_DECODED_SIZE is None:
+        return zstd.decompress(content)
+
+    decoded = bytearray()
+    remaining = content
+    while remaining:
+        decompressor = zstd.ZstdDecompressor()
+        decoded.extend(
+            decompressor.decompress(
+                remaining, max_length=MAX_DECODED_SIZE - len(decoded) + 1
+            )
+        )
+        _check_decoded_size(len(decoded))
+        if not decompressor.eof:
+            raise ValueError("Incomplete zstd frame")
+        remaining = decompressor.unused_data
+    return bytes(decoded)
 
 
 def encode_zstd(content: bytes) -> bytes:
@@ -207,9 +264,9 @@ def decode_deflate(content: bytes) -> bytes:
     if not content:
         return b""
     try:
-        return zlib.decompress(content)
+        return _decode_zlib(content, 15)
     except zlib.error:
-        return zlib.decompress(content, -15)
+        return _decode_zlib(content, -15)
 
 
 def encode_deflate(content: bytes) -> bytes:
