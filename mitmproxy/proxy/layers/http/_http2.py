@@ -381,7 +381,13 @@ def format_h2_request_headers(
         headers = event.request.headers
         if not event.request.authority and "host" in headers:
             headers = headers.copy()
-            pseudo_headers.append((b":authority", headers.pop(b"host")))
+            # Use the raw field values: Headers.__getitem__ returns str,
+            # but :authority must be bytes. Multiple Host fields are folded.
+            authority = b", ".join(
+                value for name, value in headers.fields if name.lower() == b"host"
+            )
+            headers.pop(b"host")
+            pseudo_headers.append((b":authority", authority))
         hdrs = normalize_h1_headers(list(headers.fields), True)
 
     return pseudo_headers + hdrs

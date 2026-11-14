@@ -14,6 +14,8 @@ from mitmproxy.proxy.layers.http import HTTPMode
 from test.mitmproxy.proxy.layers.http.hyper_h2_test_helpers import FrameFactory
 from test.mitmproxy.proxy.layers.http.test_http2 import example_response_headers
 from test.mitmproxy.proxy.layers.http.test_http2 import make_h2
+from test.mitmproxy.proxy.layers.http.test_http3 import FrameFactory as QuicFrameFactory
+from test.mitmproxy.proxy.layers.http.test_http3 import make_h3
 from test.mitmproxy.proxy.tutils import Placeholder
 from test.mitmproxy.proxy.tutils import Playbook
 from test.mitmproxy.proxy.tutils import reply
@@ -155,3 +157,42 @@ def test_h1_to_h2(tctx):
         << CloseConnection(tctx.client)
     )
     assert settings_ack() == b"\x00\x00\x00\x04\x01\x00\x00\x00\x00"
+
+
+def test_h1_to_h3(tctx):
+    """Test HTTP/1 -> HTTP/3 request translation"""
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    tctx.server.transport_protocol = "udp"
+
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+    sff = QuicFrameFactory(server, is_client=False)
+
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n",
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply(None, side_effect=make_h3)
+        << sff.send_init()
+        << sff.send_headers(
+            [
+                (b":method", b"GET"),
+                (b":scheme", b"http"),
+                (b":path", b"/"),
+                (b":authority", b"example.com"),
+            ],
+            end_stream=True,
+        )
+        >> sff.receive_init()
+        << sff.send_encoder()
+        >> sff.receive_encoder()
+        >> sff.receive_decoder()  # for send_headers
+    )
+    assert flow().request.url == "http://example.com/"
