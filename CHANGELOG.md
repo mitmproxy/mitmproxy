@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Speed up addon event dispatch by skipping addons that don't implement the event.
+  This saves work on every flow and makes plain HTTP proxying noticeably faster.
+  ([#8577](https://github.com/mitmproxy/mitmproxy/pull/8577), @b84330808)
 - Fix a crash when an addon or `modify_headers` sets an HTTP/3 header name or value longer than
   65,535 bytes, which QPACK cannot encode. The client now receives a 502 error instead, or a stream
   reset if the response was already partly sent.
