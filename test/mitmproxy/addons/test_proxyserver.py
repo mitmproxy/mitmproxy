@@ -15,8 +15,8 @@ import pytest
 from aioquic.asyncio.protocol import QuicConnectionProtocol
 from aioquic.asyncio.server import QuicServer
 from aioquic.h3 import events as h3_events
-from aioquic.h3.connection import FrameUnexpected
 from aioquic.h3.connection import H3Connection
+from aioquic.h3.exceptions import InvalidStreamStateError
 from aioquic.quic import events as quic_events
 from aioquic.quic.configuration import QuicConfiguration
 from aioquic.quic.connection import QuicConnection
@@ -410,7 +410,6 @@ class H3EchoServer(QuicConnectionProtocol):
         self.http: H3Connection | None = None
 
     def http_headers_received(self, event: h3_events.HeadersReceived) -> None:
-        assert event.push_id is None
         headers: dict[bytes, bytes] = {}
         for name, value in event.headers:
             headers[name] = value
@@ -428,7 +427,6 @@ class H3EchoServer(QuicConnectionProtocol):
         self.transmit()
 
     def http_data_received(self, event: h3_events.DataReceived) -> None:
-        assert event.push_id is None
         assert event.stream_id in self._seen_headers
         try:
             self.http.send_data(
@@ -436,7 +434,7 @@ class H3EchoServer(QuicConnectionProtocol):
                 data=event.data,
                 end_stream=event.stream_ended,
             )
-        except FrameUnexpected:
+        except InvalidStreamStateError:
             if event.data or not event.stream_ended:
                 raise
             self._quic.send_stream_data(
@@ -573,7 +571,6 @@ class H3Client(QuicClient):
         self.http = H3Connection(self._quic)
 
     def http_headers_received(self, event: h3_events.HeadersReceived) -> None:
-        assert event.push_id is None
         response = self._responses[event.stream_id]
         if response.waiter.done():
             return
@@ -589,7 +586,6 @@ class H3Client(QuicClient):
             response.waiter.set_exception(Exception("Headers after trailers received."))
 
     def http_data_received(self, event: h3_events.DataReceived) -> None:
-        assert event.push_id is None
         response = self._responses[event.stream_id]
         if response.waiter.done():
             return
