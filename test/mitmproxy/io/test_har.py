@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from mitmproxy import exceptions
+from mitmproxy.io import read_flows_from_paths
 from mitmproxy.io.har import fix_headers
 from mitmproxy.io.har import request_to_flow
 from mitmproxy.tools.web.app import flow_to_json
@@ -52,6 +53,18 @@ def test_har_to_flow(har_file: Path):
         actual = json.loads(json.dumps(actual))
 
         assert actual == expected
+
+
+def test_unsupported_content_encoding_file():
+    """
+    Entries with a content-encoding we cannot apply must not make the whole file unreadable.
+    HAR files contain the decoded body, so that body is kept and the header is dropped.
+    """
+    flows = read_flows_from_paths([data_dir / "har_files/invalid-content-encoding.har"])
+    assert len(flows) == 2
+    for f in flows:
+        assert f.response.content == b"hello"
+        assert "content-encoding" not in f.response.headers
 
 
 if __name__ == "__main__":

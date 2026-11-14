@@ -108,9 +108,14 @@ def request_to_flow(request_json: dict) -> http.HTTPFlow:
             )
 
     # Then encode the content, as in `Response.set_content`
-    response_content = http.encoding.encode(
-        response_content, response_headers.get("content-encoding") or "identity"
-    )
+    try:
+        response_content = http.encoding.encode(
+            response_content, response_headers.get("content-encoding") or "identity"
+        )
+    except (ValueError, TypeError):
+        # We cannot apply this content-encoding. HAR files contain the decoded body,
+        # so we keep it as-is and remove the header.
+        del response_headers["content-encoding"]
 
     new_flow.response = http.Response(
         b"HTTP/1.1",
