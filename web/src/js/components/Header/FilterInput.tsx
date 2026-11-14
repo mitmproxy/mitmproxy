@@ -93,6 +93,10 @@ export default class FilterInput extends Component<
             // we already display. Only replace the draft if the new value came
             // from somewhere else.
             if (nextProps.value !== this.state.value) {
+                // Don't overwrite the field while the user is editing it.
+                if (this.state.focus) {
+                    return;
+                }
                 this.cancelValidation();
                 this.setState({
                     value: nextProps.value,

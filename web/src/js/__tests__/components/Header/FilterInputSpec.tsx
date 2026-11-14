@@ -106,6 +106,43 @@ describe("FilterInput Component", () => {
         expect(input.value).toBe("~foo bar");
     });
 
+    it("keeps the focused input when an external value arrives", () => {
+        // A focused field must not be overwritten by an external value change.
+        const props = {
+            icon: FilterIcon.INTERCEPT,
+            color: "red",
+            placeholder: "Intercept",
+            value: "~u foo",
+            onChange: jest.fn(),
+        };
+        const ref = React.createRef<FilterInput>();
+        const { rerender } = render(<FilterInput {...props} ref={ref} />);
+        const filterInput = ref.current!;
+
+        // Validated edit, still focused.
+        act(() =>
+            filterInput.setState({
+                focus: true,
+                value: "~u foobar",
+                validation: { status: "valid", description: "" },
+            }),
+        );
+        rerender(<FilterInput {...props} value="~u other" ref={ref} />);
+        expect(filterInput.state.value).toEqual("~u foobar");
+        expect(filterInput.state.validation.status).toEqual("valid");
+
+        // Mid-validation.
+        act(() =>
+            filterInput.setState({
+                value: "~u foobarbaz",
+                validation: { status: "pending" },
+            }),
+        );
+        rerender(<FilterInput {...props} value="~u another" ref={ref} />);
+        expect(filterInput.state.value).toEqual("~u foobarbaz");
+        expect(filterInput.state.validation.status).toEqual("pending");
+    });
+
     it("should show filter docs, descriptions, and validation errors", () => {
         const filterInput = dummyInput();
 
