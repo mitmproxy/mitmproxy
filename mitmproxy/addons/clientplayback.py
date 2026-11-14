@@ -122,7 +122,7 @@ class ReplayHandler(server.ConnectionHandler):
         | None = None,
     ) -> None:
         assert isinstance(level, int)
-        logger.log(level=level, msg=f"[replay] {message}")
+        logger.log(level=level, msg=f"[replay] {message}", exc_info=exc_info)
 
     async def handle_hook(self, hook: commands.StartHook) -> None:
         (data,) = hook.args()
