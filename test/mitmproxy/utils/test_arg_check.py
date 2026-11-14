@@ -25,6 +25,24 @@ from mitmproxy.utils import arg_check
             "To show all options and their default values use --options",
         ),
         (
+            ["--palette-transparent"],
+            "--palette-transparent is deprecated.\n"
+            "Please use `--set console_palette_transparent=value` instead.\n"
+            "To show all options and their default values use --options",
+        ),
+        (
+            ["--server-replay-use-header"],
+            "--server-replay-use-header is deprecated.\n"
+            "Please use `--set server_replay_use_headers=value` instead.\n"
+            "To show all options and their default values use --options",
+        ),
+        (
+            ["-Z"],
+            "-Z is deprecated.\n"
+            "Please use `--set body_size_limit=value` instead.\n"
+            "To show all options and their default values use --options",
+        ),
+        (
             ["--wfile"],
             "--wfile is deprecated.\nPlease use `--save-stream-file` instead.",
         ),
