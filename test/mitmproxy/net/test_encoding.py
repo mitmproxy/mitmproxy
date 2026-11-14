@@ -191,3 +191,31 @@ def test_decoded_size_limit_high_ratio_brotli(monkeypatch):
     compressed = encoding.encode_brotli(b"b" * (2 * 1024 * 1024))
     with pytest.raises(ValueError, match="maximum size"):
         encoding.decode_brotli(compressed)
+
+
+@pytest.mark.parametrize("encoder", ["gzip", "br", "zstd"])
+def test_unlimited_decoding(monkeypatch, encoder):
+    monkeypatch.setattr(encoding, "MAX_DECODED_SIZE", None)
+    content = b"unlimited" * 128
+    compressed = encoding.custom_encode[encoder](content)
+    assert encoding.custom_decode[encoder](compressed) == content
+
+
+@pytest.mark.parametrize("encoder", ["br", "zstd"])
+def test_incomplete_decoding(encoder):
+    compressed = encoding.custom_encode[encoder](b"incomplete" * 16)
+    with pytest.raises(ValueError, match="Incomplete"):
+        encoding.custom_decode[encoder](compressed[:-1])
+
+
+def test_stalled_brotli_decoder(monkeypatch):
+    class StalledDecompressor:
+        def can_accept_more_data(self):
+            return False
+
+        def process(self, data, output_buffer_limit):
+            return b""
+
+    monkeypatch.setattr(encoding.brotli, "Decompressor", StalledDecompressor)
+    with pytest.raises(ValueError, match="Incomplete brotli stream"):
+        encoding.decode_brotli(b"compressed")

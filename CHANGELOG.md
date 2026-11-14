@@ -13,6 +13,7 @@
   ([#8614](https://github.com/mitmproxy/mitmproxy/pull/8614), @Giardi77)
 - Limit decompressed HTTP bodies during decoding, including cached content, with a configurable
   `max_decoded_size` option.
+  ([#8609](https://github.com/mitmproxy/mitmproxy/pull/8609), @adilalperenciftci)
 
 - Speed up addon event dispatch by skipping addons that don't implement the event.
   This saves work on every flow and makes plain HTTP proxying noticeably faster.
