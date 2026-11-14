@@ -59,8 +59,59 @@ def test_ascii_check():
     assert port == 443
     assert (
         full_path
-        == b"/?flag%3DselectCourse%26lc_id%3D42825%26lc_name%3D%E8%8C%85%E8%8E%BD%E8%8E"
-        b"%BD%E7%8C%AB%E6%B0%93%E7%8C%AB%E6%B0%93"
+        == b"/?flag=selectCourse&lc_id=42825&lc_name=%E8%8C%85%E8%8E%BD%E8%8E%BD%E7%8C"
+        b"%AB%E6%B0%93%E7%8C%AB%E6%B0%93"
+    )
+
+
+def test_parse_non_ascii():
+    # Non-ASCII characters in the path are percent-encoded, the URL is accepted.
+    assert url.parse(b"http://foo.com/h\xc3\xa4llo") == (
+        b"http",
+        b"foo.com",
+        80,
+        b"/h%C3%A4llo",
+    )
+    # Query delimiters are preserved, non-ASCII characters are percent-encoded.
+    assert url.parse(b"http://foo.com/bar?q=h\xc3\xa4llo&x=1") == (
+        b"http",
+        b"foo.com",
+        80,
+        b"/bar?q=h%C3%A4llo&x=1",
+    )
+    # Existing percent escapes are preserved instead of being double-encoded.
+    assert url.parse(b"http://foo.com/a%2Fb/h\xc3\xa4llo") == (
+        b"http",
+        b"foo.com",
+        80,
+        b"/a%2Fb/h%C3%A4llo",
+    )
+    assert url.parse(b"http://foo.com/bar?q=%2Fh\xc3\xa4llo&x=%E8%8C%85") == (
+        b"http",
+        b"foo.com",
+        80,
+        b"/bar?q=%2Fh%C3%A4llo&x=%E8%8C%85",
+    )
+    # RFC 3986 path delimiters are preserved: sub-delims, ":" and "@" are pchar, so
+    # "/users;v=1" must not become "/users%3Bv%3D1" while the query is quoted.
+    assert url.parse(b"http://foo.com/users;v=1?q=h\xc3\xa4") == (
+        b"http",
+        b"foo.com",
+        80,
+        b"/users;v=1?q=h%C3%A4",
+    )
+    assert url.parse(b"http://foo.com/a,b;c=d:e@f/h\xc3\xa4llo") == (
+        b"http",
+        b"foo.com",
+        80,
+        b"/a,b;c=d:e@f/h%C3%A4llo",
+    )
+    # A bare space or a "\" is still not a path character and stays escaped.
+    assert url.parse(b"http://foo.com/a b\\c/h\xc3\xa4llo") == (
+        b"http",
+        b"foo.com",
+        80,
+        b"/a%20b%5Cc/h%C3%A4llo",
     )
 
 
