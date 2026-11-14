@@ -165,8 +165,6 @@ def _decode_zlib(content: bytes, wbits: int) -> bytes:
         return decompressor.decompress(content) + decompressor.flush()
     decoded = decompressor.decompress(content, MAX_DECODED_SIZE + 1)
     _check_decoded_size(len(decoded))
-    if decompressor.unconsumed_tail:
-        raise ValueError("Decompressed content exceeds the maximum size.")
     tail = decompressor.flush()
     _check_decoded_size(len(decoded) + len(tail))
     return decoded + tail
