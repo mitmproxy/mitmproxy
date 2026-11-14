@@ -660,6 +660,17 @@ class TestResponseUtils:
         r.refresh(946681202)
         assert r.headers["date"] == pre
 
+    def test_refresh_far_future_dates(self):
+        # Year 9999 + delta does not fit in a datetime: keep the original values.
+        far_future = "Fri, 31 Dec 9999 23:59:59 GMT"
+        r = tresp()
+        r.timestamp_start = 946681200
+        r.headers["expires"] = far_future
+        r.headers["set-cookie"] = f"id=1; Expires={far_future}; Path=/"
+        r.refresh(946681260)
+        assert r.headers["expires"] == far_future
+        assert r.headers["set-cookie"] == f"id=1; Expires={far_future}; Path=/"
+
 
 class TestHTTPFlow:
     def test_copy(self):
