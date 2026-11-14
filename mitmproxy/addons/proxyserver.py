@@ -25,6 +25,7 @@ from mitmproxy import udp
 from mitmproxy import websocket
 from mitmproxy.connection import Address
 from mitmproxy.flow import Flow
+from mitmproxy.net import encoding
 from mitmproxy.proxy import events
 from mitmproxy.proxy import mode_specs
 from mitmproxy.proxy import server_hooks
@@ -182,6 +183,12 @@ class Proxyserver(ServerManager):
             """,
         )
         loader.add_option(
+            "max_decoded_size",
+            Optional[str],
+            "100m",
+            "Maximum size of a decompressed HTTP body. Understands k/m/g suffixes.",
+        )
+        loader.add_option(
             "keep_host_header",
             bool,
             False,
@@ -242,6 +249,17 @@ class Proxyserver(ServerManager):
                     f"Invalid body_size_limit specification: "
                     f"{ctx.options.body_size_limit}"
                 )
+        if "max_decoded_size" in updated:
+            try:
+                limit = human.parse_size(ctx.options.max_decoded_size)
+                if limit is not None and limit < 0:
+                    raise ValueError("negative decoded size")
+            except ValueError:
+                raise exceptions.OptionsError(
+                    f"Invalid max_decoded_size specification: "
+                    f"{ctx.options.max_decoded_size}"
+                )
+            encoding.MAX_DECODED_SIZE = limit
         if "connect_addr" in updated:
             try:
                 if ctx.options.connect_addr:
