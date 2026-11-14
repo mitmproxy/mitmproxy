@@ -755,6 +755,18 @@ class HttpStream(layer.Layer):
         yield DropStream(self.stream_id)
 
     def make_server_connection(self) -> layer.CommandGenerator[bool]:
+        if (
+            self.mode is HTTPMode.regular
+            and self.flow.server_conn.via
+            and self.flow.request.scheme == "http"
+        ):
+            # Plaintext requests to an upstream proxy are sent in absolute-form instead of using CONNECT.
+            host = self.flow.request.host
+            if ":" in host:  # IPv6 literal
+                host = f"[{host}]"
+            self.flow.request.authority = url.hostport(
+                "http", host, self.flow.request.port
+            )
         connection, err = yield GetHttpConnection(
             (self.flow.request.host, self.flow.request.port),
             self.flow.request.scheme == "https",
@@ -1124,8 +1136,8 @@ class HttpLayer(layer.Layer):
 
             if event.via:
                 context.server.via = event.via
-                # We always send a CONNECT request, *except* for plaintext absolute-form HTTP requests in upstream mode.
-                send_connect = event.tls or self.mode != HTTPMode.upstream
+                # We always send a CONNECT request, *except* for plaintext absolute-form HTTP requests in regular and upstream mode.
+                send_connect = event.tls or self.mode == HTTPMode.transparent
                 stack /= _upstream_proxy.HttpUpstreamProxy.make(context, send_connect)
             if event.tls:
                 # Assume that we are in transparent mode and lazily did not open a connection yet.
