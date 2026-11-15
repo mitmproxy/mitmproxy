@@ -561,6 +561,49 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             self.assertEqual(ws_client.close_code, 1011)
             self.assertEqual(ws_client.close_reason, "Internal server error.")
 
+    @tornado.testing.gen_test
+    def test_websocket_invalid_filter_keeps_connection_open(self):
+        ws_req = httpclient.HTTPRequest(
+            f"ws://localhost:{self.get_http_port()}/updates",
+            headers={"Cookie": self.auth_cookie},
+        )
+        ws_client = yield tornado.websocket.websocket_connect(ws_req)
+
+        # Invalid filter expression (e.g. unmatched quote while typing) should not close the WebSocket.
+        invalid_msg = json.dumps(
+            {
+                "type": "flows/updateFilter",
+                "payload": {
+                    "name": "search",
+                    "expr": "~u Content-Type'",
+                },
+            }
+        ).encode()
+        yield ws_client.write_message(invalid_msg)
+
+        # Sending a valid filter afterwards must still succeed on the same connection.
+        valid_msg = json.dumps(
+            {
+                "type": "flows/updateFilter",
+                "payload": {
+                    "name": "search",
+                    "expr": "~u 42",
+                },
+            }
+        ).encode()
+        yield ws_client.write_message(valid_msg)
+
+        response = yield ws_client.read_message()
+        response = json.loads(response)
+        assert response == {
+            "type": "flows/filterUpdate",
+            "payload": {
+                "name": "search",
+                "matching_flow_ids": [],
+            },
+        }
+        ws_client.close()
+
     def test_process_list(self):
         try:
             mitmproxy_rs.process_info.active_executables()
