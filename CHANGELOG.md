@@ -10,6 +10,7 @@
 - Fix a crash when OpenSSL refuses to accept outgoing TLS data, e.g. during TLS
   renegotiation. The write is now buffered and retried once the peer sends more data,
   instead of leaking the connection, which could eventually exhaust mitmproxy's sockets.
+  ([#8618](https://github.com/mitmproxy/mitmproxy/pull/8618), @laasyapriya2007)
 - Speed up addon event dispatch by skipping addons that don't implement the event.
   This saves work on every flow and makes plain HTTP proxying noticeably faster.
   ([#8577](https://github.com/mitmproxy/mitmproxy/pull/8577), @b84330808)
