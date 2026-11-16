@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix server replay failing to refresh responses with far future dates, such as cookies that expire
+  in the year 9999. The original value is now kept.
+  ([#8611](https://github.com/mitmproxy/mitmproxy/pull/8611), @Dio77799)
 - Speed up addon event dispatch by skipping addons that don't implement the event.
   This saves work on every flow and makes plain HTTP proxying noticeably faster.
   ([#8577](https://github.com/mitmproxy/mitmproxy/pull/8577), @b84330808)
