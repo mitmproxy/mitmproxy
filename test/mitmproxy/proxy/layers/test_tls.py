@@ -831,6 +831,131 @@ class TestClientTLS:
         )
         assert tls_hook_data().conn.error
 
+    def test_want_read_error_while_sending(self, tctx: context.Context):
+        """Test that an outgoing write that OpenSSL refuses is buffered and retried."""
+        playbook, client_layer, tssl_client = make_client_tls_layer(tctx)
+
+        data = tutils.Placeholder(bytes)
+        assert (
+            playbook
+            >> events.DataReceived(tctx.client, tssl_client.bio_read())
+            << tls.TlsClienthelloHook(tutils.Placeholder())
+            >> tutils.reply()
+            << tls.TlsStartClientHook(tutils.Placeholder())
+            >> reply_tls_start_client()
+            << commands.SendData(tctx.client, data)
+        )
+        tssl_client.bio_write(data())
+        tssl_client.do_handshake()
+        finish_handshake(playbook, tctx.client, tssl_client)
+        assert tctx.client.tls_established
+
+        # OpenSSL refuses to accept outgoing application data, e.g. because a TLS
+        # renegotiation needs to process peer data first.
+        def refused_send(*args, **kwargs) -> int:
+            raise SSL.WantReadError()
+
+        tssl_client.obj.write(b"Hello World")
+        client_layer.tls.send = refused_send
+        assert (
+            playbook
+            >> events.DataReceived(tctx.client, tssl_client.bio_read())
+            << None  # nothing to send yet, but the echo is buffered instead of crashing.
+        )
+        assert client_layer.send_buffer == b"hello world"
+        del client_layer.tls.send
+
+        # Once the peer has sent more data, the buffered write is retried and goes out.
+        tssl_client.obj.write(b"!")
+        data = tutils.Placeholder(bytes)
+        assert (
+            playbook
+            >> events.DataReceived(tctx.client, tssl_client.bio_read())
+            << commands.SendData(tctx.client, data)
+        )
+        tssl_client.bio_write(data())
+        received = b""
+        while True:
+            try:
+                received += tssl_client.obj.read(4096)
+            except ssl.SSLWantReadError:
+                break
+        assert received == b"hello world!"
+        assert not client_layer.send_buffer
+
+    def test_want_write_error_while_receiving(self, tctx: context.Context):
+        """Test that a WantWriteError during a read is handled by flushing the write buffer."""
+        playbook, client_layer, tssl_client = make_client_tls_layer(tctx)
+
+        data = tutils.Placeholder(bytes)
+        assert (
+            playbook
+            >> events.DataReceived(tctx.client, tssl_client.bio_read())
+            << tls.TlsClienthelloHook(tutils.Placeholder())
+            >> tutils.reply()
+            << tls.TlsStartClientHook(tutils.Placeholder())
+            >> reply_tls_start_client()
+            << commands.SendData(tctx.client, data)
+        )
+        tssl_client.bio_write(data())
+        tssl_client.do_handshake()
+        finish_handshake(playbook, tctx.client, tssl_client)
+        assert tctx.client.tls_established
+
+        real_recv = client_layer.tls.recv
+        want_write_error_raised = False
+
+        def flaky_recv(*args, **kwargs):
+            nonlocal want_write_error_raised
+            if not want_write_error_raised:
+                want_write_error_raised = True
+                raise SSL.WantWriteError()
+            return real_recv(*args, **kwargs)
+
+        tssl_client.obj.write(b"Hello World")
+        client_layer.tls.recv = flaky_recv
+        data = tutils.Placeholder(bytes)
+        assert (
+            playbook
+            >> events.DataReceived(tctx.client, tssl_client.bio_read())
+            << commands.SendData(tctx.client, data)
+        )
+        tssl_client.bio_write(data())
+        assert tssl_client.obj.read(4096) == b"hello world"
+
+    def test_fatal_error_while_sending(self, tctx: context.Context):
+        """Test that a fatal error while sending closes the connection instead of leaking it."""
+        playbook, client_layer, tssl_client = make_client_tls_layer(tctx)
+
+        data = tutils.Placeholder(bytes)
+        assert (
+            playbook
+            >> events.DataReceived(tctx.client, tssl_client.bio_read())
+            << tls.TlsClienthelloHook(tutils.Placeholder())
+            >> tutils.reply()
+            << tls.TlsStartClientHook(tutils.Placeholder())
+            >> reply_tls_start_client()
+            << commands.SendData(tctx.client, data)
+        )
+        tssl_client.bio_write(data())
+        tssl_client.do_handshake()
+        finish_handshake(playbook, tctx.client, tssl_client)
+        assert tctx.client.tls_established
+
+        def broken_send(*args, **kwargs) -> int:
+            raise SSL.Error([("SSL routines", "", "internal error")])
+
+        tssl_client.obj.write(b"Hello World")
+        client_layer.tls.send = broken_send
+        assert (
+            playbook
+            >> events.DataReceived(tctx.client, tssl_client.bio_read())
+            << commands.Log(tutils.StrMatching("TLS Error.*internal error"), WARNING)
+            << commands.CloseConnection(tctx.client)
+        )
+        assert not client_layer.send_buffer
+        assert tctx.client.state is ConnectionState.CLOSED
+
 
 def test_dtls_record_contents():
     data = bytes.fromhex("16fefd00000000000000000002beef16fefd00000000000000000001ff")
