@@ -242,6 +242,11 @@ class TlsFailedServerHook(StartHook):
 class TLSLayer(tunnel.TunnelLayer):
     tls: SSL.Connection = None  # type: ignore
     """The OpenSSL connection object"""
+    send_buffer: bytearray
+    """
+    Plaintext data that OpenSSL has refused to encrypt so far, e.g. because the TLS
+    state machine needs to process peer data first. Retried once the peer sends more data.
+    """
 
     def __init__(self, context: context.Context, conn: connection.Connection):
         super().__init__(
@@ -250,6 +255,7 @@ class TLSLayer(tunnel.TunnelLayer):
             conn=conn,
         )
 
+        self.send_buffer = bytearray()
         conn.tls = True
 
     def __repr__(self):
@@ -416,6 +422,9 @@ class TLSLayer(tunnel.TunnelLayer):
                 plaintext.extend(self.tls.recv(65535))
             except SSL.WantReadError:
                 break
+            except SSL.WantWriteError:
+                # OpenSSL wants us to flush the write buffer before it can read more data.
+                yield from self.tls_interact()
             except SSL.ZeroReturnError:
                 close = True
                 break
@@ -431,7 +440,8 @@ class TLSLayer(tunnel.TunnelLayer):
         # Can we send something?
         # Note that this must happen after `recv()`, which may have advanced the state machine.
         # https://github.com/mitmproxy/mitmproxy/discussions/7550
-        yield from self.tls_interact()
+        # This also retries buffered writes, which OpenSSL may accept now.
+        yield from self.flush_send_buffer()
 
         if plaintext:
             yield from self.event_to_child(
@@ -450,11 +460,39 @@ class TLSLayer(tunnel.TunnelLayer):
             yield from super().receive_close()
 
     def send_data(self, data: bytes) -> layer.CommandGenerator[None]:
-        try:
-            self.tls.sendall(data)
-        except (SSL.ZeroReturnError, SSL.SysCallError):
-            # The other peer may still be trying to send data over, which we discard here.
-            pass
+        self.send_buffer.extend(data)
+        yield from self.flush_send_buffer()
+
+    def flush_send_buffer(self) -> layer.CommandGenerator[None]:
+        """
+        Encrypt and send all buffered plaintext data.
+
+        OpenSSL may refuse to accept application data until the TLS state machine has
+        processed peer input, e.g. during renegotiation or TLS 1.3 post-handshake
+        exchanges. Refused data remains in the send buffer and is retried in
+        `receive_data()` once the peer has sent more data.
+        """
+        while self.send_buffer:
+            try:
+                sent = self.tls.send(bytes(self.send_buffer))
+            except (SSL.WantReadError, SSL.WantWriteError):
+                # Postpone the write: with WantReadError we need to process peer data first,
+                # with WantWriteError the write buffer needs to be flushed, which
+                # `tls_interact()` below takes care of.
+                break
+            except (SSL.ZeroReturnError, SSL.SysCallError):
+                # The other peer may still be trying to send data over, which we discard here.
+                self.send_buffer.clear()
+                break
+            except SSL.Error as e:
+                # We cannot recover from a fatal error and retrying would leak the
+                # connection, so we close it here instead.
+                self.send_buffer.clear()
+                yield commands.Log(f"TLS Error: {e}", WARNING)
+                yield commands.CloseConnection(self.conn)
+                break
+            else:
+                del self.send_buffer[:sent]
         yield from self.tls_interact()
 
     def send_close(
