@@ -118,7 +118,7 @@ class ReplayHandler(server.ConnectionHandler):
         message: str,
         level: int = logging.INFO,
         exc_info: Literal[True]
-        | tuple[type[BaseException] | None, BaseException | None, TracebackType | None]
+        | tuple[type[BaseException], BaseException, TracebackType | None]
         | None = None,
     ) -> None:
         assert isinstance(level, int)
