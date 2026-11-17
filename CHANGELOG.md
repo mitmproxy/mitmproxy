@@ -11,6 +11,7 @@
   ([#8626](https://github.com/mitmproxy/mitmproxy/pull/8626), @Anto1368)
 - Show the traceback when client replay crashes.
   ([#8614](https://github.com/mitmproxy/mitmproxy/pull/8614), @Giardi77)
+- Speed up reading and writing flow files. The file format is unchanged.
 - Speed up addon event dispatch by skipping addons that don't implement the event.
   This saves work on every flow and makes plain HTTP proxying noticeably faster.
   ([#8577](https://github.com/mitmproxy/mitmproxy/pull/8577), @b84330808)
