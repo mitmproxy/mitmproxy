@@ -49,6 +49,7 @@ export default class FilterInput extends Component<
         this.onMouseEnter = this.onMouseEnter.bind(this);
         this.onMouseLeave = this.onMouseLeave.bind(this);
         this.selectFilter = this.selectFilter.bind(this);
+        this.clearFilter = this.clearFilter.bind(this);
     }
 
     UNSAFE_componentWillReceiveProps(nextProps: FilterInputProps) {
@@ -128,6 +129,12 @@ export default class FilterInput extends Component<
         }
     }
 
+    clearFilter() {
+        this.setState({ value: "" });
+        this.props.onChange("");
+        this.inputRef.current?.focus();
+    }
+
     blur() {
         this.inputRef.current?.blur();
     }
@@ -161,6 +168,18 @@ export default class FilterInput extends Component<
                     onBlur={this.onBlur}
                     onKeyDown={this.onKeyDown}
                 />
+                {value && (
+                    <button
+                        type="button"
+                        className="filter-input-clear"
+                        aria-label="Clear filter"
+                        title="Clear filter"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={this.clearFilter}
+                    >
+                        <Icon name="close" size={14} />
+                    </button>
+                )}
                 {(focus || mousefocus) && (
                     <div
                         className="popover bottom"
