@@ -202,11 +202,24 @@ def hexdump(s):
         yield (offset, x, part_repr)
 
 
+# Control characters in special areas are moved to U+E000 + ord(char).
+# The input may already contain characters from that range (icon fonts use them, for example).
+# To tell them apart, we prefix these with U+E000 and move them out of the range.
+# U+E000 itself is never the result of moving a control character as we require ord(char) > 0.
+_PRIVATE_CODE_PLANE_ESCAPE = "\ue000"
+
+
 def _move_to_private_code_plane(matchobj):
     return chr(ord(matchobj.group(0)) + 0xE000)
 
 
+def _escape_private_code_plane(matchobj):
+    return _PRIVATE_CODE_PLANE_ESCAPE + chr(ord(matchobj.group(0)) + 0x100)
+
+
 def _restore_from_private_code_plane(matchobj):
+    if escaped := matchobj.group(1):
+        return chr(ord(escaped) - 0x100)
     return chr(ord(matchobj.group(0)) - 0xE000)
 
 
@@ -262,6 +275,7 @@ def escape_special_areas(
         console.log('{}'); }
     """
     buf = io.StringIO()
+    data = re.sub(r"[\ue000-\ue0ff]", _escape_private_code_plane, data)
     parts = split_special_areas(data, area_delimiter)
     rex = re.compile(rf"[{control_characters}]")
     for i, x in enumerate(parts):
@@ -277,7 +291,11 @@ def unescape_special_areas(data: str):
 
     x == unescape_special_areas(escape_special_areas(x)) always holds true.
     """
-    return re.sub(r"[\ue000-\ue0ff]", _restore_from_private_code_plane, data)
+    return re.sub(
+        r"\ue000([\ue100-\ue1ff])|[\ue001-\ue0ff]",
+        _restore_from_private_code_plane,
+        data,
+    )
 
 
 def cut_after_n_lines(content: str, n: int) -> str:

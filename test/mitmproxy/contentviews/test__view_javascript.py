@@ -12,6 +12,11 @@ def test_view_javascript():
         "function(a) {\n  [1, 2, 3]\n}\n"
     )
     assert javascript.prettify(b"\xfe", Metadata())  # invalid utf-8
+    # private use characters must not be modified
+    assert (
+        javascript.prettify('var a="\ue03b\ue001";'.encode(), Metadata())
+        == 'var a="\ue03b\ue001";\n'
+    )
 
 
 @pytest.mark.parametrize(
