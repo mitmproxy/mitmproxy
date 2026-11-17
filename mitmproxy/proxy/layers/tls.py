@@ -388,11 +388,11 @@ class TLSLayer(tunnel.TunnelLayer):
                 )
             if self.conn == self.context.client:
                 yield TlsEstablishedClientHook(
-                    TlsData(self.conn, self.context, self.tls)
+                    TlsData(self.conn, self.context, self.tls, is_dtls=self.is_dtls)
                 )
             else:
                 yield TlsEstablishedServerHook(
-                    TlsData(self.conn, self.context, self.tls)
+                    TlsData(self.conn, self.context, self.tls, is_dtls=self.is_dtls)
                 )
             yield from self.receive_data(b"")
             return True, None
@@ -400,9 +400,13 @@ class TLSLayer(tunnel.TunnelLayer):
     def on_handshake_error(self, err: str) -> layer.CommandGenerator[None]:
         self.conn.error = err
         if self.conn == self.context.client:
-            yield TlsFailedClientHook(TlsData(self.conn, self.context, self.tls))
+            yield TlsFailedClientHook(
+                TlsData(self.conn, self.context, self.tls, is_dtls=self.is_dtls)
+            )
         else:
-            yield TlsFailedServerHook(TlsData(self.conn, self.context, self.tls))
+            yield TlsFailedServerHook(
+                TlsData(self.conn, self.context, self.tls, is_dtls=self.is_dtls)
+            )
         yield from super().on_handshake_error(err)
 
     def receive_data(self, data: bytes) -> layer.CommandGenerator[None]:
@@ -508,7 +512,9 @@ class ServerTLSLayer(TLSLayer):
             yield from super().event_to_child(event)
 
     def on_handshake_error(self, err: str) -> layer.CommandGenerator[None]:
-        yield commands.Log(f"Server TLS handshake failed. {err}", level=WARNING)
+        yield commands.Log(
+            f"Server {self.proto_name} handshake failed. {err}", level=WARNING
+        )
         yield from super().on_handshake_error(err)
 
 
@@ -670,7 +676,9 @@ class ClientTLSLayer(TLSLayer):
         else:
             err = f"The client may not trust the proxy's certificate for {dest} ({err})"
         if err != "connection closed early":
-            yield commands.Log(f"Client TLS handshake failed. {err}", level=level)
+            yield commands.Log(
+                f"Client {self.proto_name} handshake failed. {err}", level=level
+            )
         yield from super().on_handshake_error(err)
         self.event_to_child = self.errored  # type: ignore
 
