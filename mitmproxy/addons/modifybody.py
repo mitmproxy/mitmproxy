@@ -63,6 +63,10 @@ class ModifyBody:
         self.run(flow)
 
     def run(self, flow):
+        message = flow.response or flow.request
+        if message.raw_content is None:
+            # There is no body to modify, for example because it has been streamed.
+            return
         for spec in self.replacements:
             if spec.matches(flow):
                 try:

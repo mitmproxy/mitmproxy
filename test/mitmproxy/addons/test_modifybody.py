@@ -61,6 +61,21 @@ class TestModifyBody:
             mb.response(f)
             assert (f.response.content == b"bar") ^ take
 
+    def test_missing_content(self):
+        """Streamed bodies are not stored, so there is nothing to modify."""
+        mb = modifybody.ModifyBody()
+        with taddons.context(mb) as tctx:
+            tctx.configure(mb, modify_body=["/foo/bar"])
+            f = tflow.tflow()
+            f.request.content = None
+            mb.request(f)
+            assert f.request.content is None
+
+            f = tflow.tflow(resp=True)
+            f.response.content = None
+            mb.response(f)
+            assert f.response.content is None
+
     def test_order(self):
         mb = modifybody.ModifyBody()
         with taddons.context(mb) as tctx:
