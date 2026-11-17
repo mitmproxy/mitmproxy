@@ -17,6 +17,7 @@
 - Fix the GraphQL content view logging an error for JSON bodies with a non-string `query` value,
   such as `{"query": null}`, and taking precedence over the JSON view for lists
   that merely start with a GraphQL operation.
+  ([#8624](https://github.com/mitmproxy/mitmproxy/pull/8624), @MrCyberDuck)
 - Fix a crash in raw QUIC mode when a peer stops reading a stream.
   ([#8594](https://github.com/mitmproxy/mitmproxy/pull/8594), @jlaine)
 - Update aioquic to 1.8.0. HTTP/3 interim (1xx) responses are no longer mistaken for the final
