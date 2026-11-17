@@ -26,6 +26,26 @@ def test_render_priority():
     assert 0 == graphql.render_priority(b"}", Metadata(content_type="application/json"))
 
 
+@pytest.mark.parametrize(
+    "data",
+    [
+        # "query" is not a GraphQL document
+        b'{"query": null}',
+        b'{"query": 42}',
+        b'{"query": {"match": "a\\nb"}}',
+        b'[{"query": null}]',
+        # not all list items are GraphQL operations
+        b'[{"query": "query P { \\n }"}, {"id": 1}]',
+        b'[{"query": "query P { \\n }"}, 42]',
+    ],
+)
+def test_not_graphql(data):
+    metadata = Metadata(content_type="application/json")
+    assert 0 == graphql.render_priority(data, metadata)
+    with pytest.raises(ValueError, match="Not a GraphQL message"):
+        graphql.prettify(data, metadata)
+
+
 def test_format_graphql():
     assert format_graphql({"query": "query P { \\n }"})
 

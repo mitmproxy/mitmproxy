@@ -24,16 +24,19 @@ def format_query_list(data: list[Any]):
     return result
 
 
+def is_graphql_operation(data):
+    return isinstance(data, dict) and isinstance(data.get("query"), str)
+
+
 def is_graphql_query(data):
-    return isinstance(data, dict) and "query" in data and "\n" in data["query"]
+    return is_graphql_operation(data) and "\n" in data["query"]
 
 
 def is_graphql_batch_query(data):
     return (
         isinstance(data, list)
         and len(data) > 0
-        and isinstance(data[0], dict)
-        and "query" in data[0]
+        and all(is_graphql_operation(op) for op in data)
     )
 
 
