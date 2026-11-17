@@ -11,6 +11,7 @@
   `tls_failed_client` and `tls_failed_server` hooks. Addons can now tell DTLS from TLS in these hooks,
   as they already could in `tls_start_client` and `tls_start_server`.
   Failed DTLS handshakes are now logged as "DTLS handshake failed" instead of "TLS handshake failed".
+  ([#8622](https://github.com/mitmproxy/mitmproxy/pull/8622), @katalyst666)
 - Speed up addon event dispatch by skipping addons that don't implement the event.
   This saves work on every flow and makes plain HTTP proxying noticeably faster.
   ([#8577](https://github.com/mitmproxy/mitmproxy/pull/8577), @b84330808)
