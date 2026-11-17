@@ -60,7 +60,7 @@ def parse(url: str | bytes) -> tuple[bytes, bytes, int, bytes]:
     parsed_b: urllib.parse.ParseResultBytes = parsed.encode("ascii")  # type: ignore
 
     port = parsed_b.port
-    if not port:
+    if port is None:
         port = 443 if parsed_b.scheme == b"https" else 80
 
     full_path: bytes = urllib.parse.urlunparse(
