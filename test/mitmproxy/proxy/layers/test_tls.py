@@ -894,3 +894,149 @@ def test_dtls_parse_client_hello():
             dtls_client_hello_with_extensions[:-16]
             + b"\x00\x0e\x00\x00\x20\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
         )
+
+
+def make_dtls_conn(server_side: bool, trust_ca: bool = True) -> SSL.Connection:
+    """
+    A pyOpenSSL DTLS endpoint. Python's builtin ssl module has no DTLS support.
+
+    trust_ca only applies to the client side: if False, the client does not load the
+    CA of the test certificates, so certificate verification fails.
+    """
+    if server_side:
+        ctx = SSL.Context(SSL.DTLS_SERVER_METHOD)
+        ctx.use_privatekey_file(
+            tlsdata.path("../../net/data/verificationcerts/trusted-leaf.key")
+        )
+        ctx.use_certificate_chain_file(
+            tlsdata.path("../../net/data/verificationcerts/trusted-leaf.crt")
+        )
+        conn = SSL.Connection(ctx)
+        conn.set_accept_state()
+    else:
+        ctx = SSL.Context(SSL.DTLS_CLIENT_METHOD)
+        if trust_ca:
+            ctx.load_verify_locations(
+                cafile=tlsdata.path("../../net/data/verificationcerts/trusted-root.crt")
+            )
+        ctx.set_verify(SSL.VERIFY_PEER)
+        conn = SSL.Connection(ctx)
+        conn.set_connect_state()
+        conn.set_tlsext_host_name(b"example.mitmproxy.org")
+    return conn
+
+
+@pytest.mark.parametrize("trusted", [True, False])
+def test_dtls_server_hooks_is_dtls(tctx: context.Context, trusted: bool):
+    """tls_established_server and tls_failed_server report is_dtls."""
+    tctx.server.transport_protocol = "udp"
+    tctx.server.state = ConnectionState.OPEN
+    tctx.server.sni = "example.mitmproxy.org"
+    playbook = tutils.Playbook(tls.ServerTLSLayer(tctx))
+    server = make_dtls_conn(server_side=True)
+
+    def make_server_conn(tls_start: TlsData) -> None:
+        tls_start.ssl_conn = make_dtls_conn(server_side=False, trust_ca=trusted)
+
+    # send ClientHello
+    data = tutils.Placeholder(bytes)
+    assert (
+        playbook
+        << tls.TlsStartServerHook(tutils.Placeholder())
+        >> tutils.reply(side_effect=make_server_conn)
+        << commands.SendData(tctx.server, data)
+    )
+    server.bio_write(data())
+    with pytest.raises(SSL.WantReadError):
+        server.do_handshake()
+
+    tls_hook_data = tutils.Placeholder(TlsData)
+    if trusted:
+        # receive ServerHello, send ClientKeyExchange
+        data = tutils.Placeholder(bytes)
+        assert (
+            playbook
+            >> events.DataReceived(tctx.server, server.bio_read(65535))
+            << commands.SendData(tctx.server, data)
+        )
+        server.bio_write(data())
+        server.do_handshake()
+        # receive Finished
+        assert (
+            playbook
+            >> events.DataReceived(tctx.server, server.bio_read(65535))
+            << tls.TlsEstablishedServerHook(tls_hook_data)
+            >> tutils.reply()
+        )
+    else:
+        # receive ServerHello, the certificate fails verification
+        assert (
+            playbook
+            >> events.DataReceived(tctx.server, server.bio_read(65535))
+            << commands.Log(
+                StrMatching("Server DTLS handshake failed. Certificate verify failed"),
+                WARNING,
+            )
+            << tls.TlsFailedServerHook(tls_hook_data)
+            >> tutils.reply()
+            << commands.CloseConnection(tctx.server)
+        )
+    assert tls_hook_data().is_dtls
+
+
+@pytest.mark.parametrize("trusted", [True, False])
+def test_dtls_client_hooks_is_dtls(tctx: context.Context, trusted: bool):
+    """tls_established_client and tls_failed_client report is_dtls."""
+    tctx.client.transport_protocol = "udp"
+    playbook, _, _ = make_client_tls_layer(tctx)
+    client = make_dtls_conn(server_side=False, trust_ca=trusted)
+
+    def make_client_conn(tls_start: TlsData) -> None:
+        tls_start.ssl_conn = make_dtls_conn(server_side=True)
+
+    with pytest.raises(SSL.WantReadError):
+        client.do_handshake()
+    client_hello = client.bio_read(65535)
+    # OpenSSL sends its first ClientHello with the DTLS 1.0 record version (fe ff).
+    # Use the DTLS 1.2 record version (fe fd) instead. The record header is not part
+    # of the handshake transcript, so the handshake still completes.
+    client_hello = client_hello[:1] + b"\xfe\xfd" + client_hello[3:]
+
+    # send ClientHello, receive ServerHello
+    data = tutils.Placeholder(bytes)
+    assert (
+        playbook
+        >> events.DataReceived(tctx.client, client_hello)
+        << tls.TlsClienthelloHook(tutils.Placeholder())
+        >> tutils.reply()
+        << tls.TlsStartClientHook(tutils.Placeholder())
+        >> tutils.reply(side_effect=make_client_conn)
+        << commands.SendData(tctx.client, data)
+    )
+    client.bio_write(data())
+
+    tls_hook_data = tutils.Placeholder(TlsData)
+    if trusted:
+        with pytest.raises(SSL.WantReadError):
+            client.do_handshake()
+        # finish handshake
+        assert (
+            playbook
+            >> events.DataReceived(tctx.client, client.bio_read(65535))
+            << tls.TlsEstablishedClientHook(tls_hook_data)
+            >> tutils.reply()
+            << commands.SendData(tctx.client, tutils.Placeholder(bytes))
+        )
+    else:
+        # the client does not trust the proxy's certificate and sends an alert
+        with pytest.raises(SSL.Error):
+            client.do_handshake()
+        assert (
+            playbook
+            >> events.DataReceived(tctx.client, client.bio_read(65535))
+            << commands.Log(StrMatching("Client DTLS handshake failed."), WARNING)
+            << tls.TlsFailedClientHook(tls_hook_data)
+            >> tutils.reply()
+            << commands.CloseConnection(tctx.client)
+        )
+    assert tls_hook_data().is_dtls
