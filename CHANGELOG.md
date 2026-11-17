@@ -9,6 +9,7 @@
 
 - Fix `modify_body` raising an addon error for every message whose body is missing,
   for example because it has been streamed with `stream_large_bodies`. Such messages are now skipped.
+  ([#8623](https://github.com/mitmproxy/mitmproxy/pull/8623), @MrCyberDuck)
 - Speed up addon event dispatch by skipping addons that don't implement the event.
   This saves work on every flow and makes plain HTTP proxying noticeably faster.
   ([#8577](https://github.com/mitmproxy/mitmproxy/pull/8577), @b84330808)
