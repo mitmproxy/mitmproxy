@@ -1,5 +1,6 @@
 import abc
 from collections.abc import Callable
+from logging import DEBUG
 from typing import Union
 
 import h11
@@ -17,10 +18,12 @@ from ._events import RequestData
 from ._events import RequestEndOfMessage
 from ._events import RequestHeaders
 from ._events import RequestProtocolError
+from ._events import RequestTrailers
 from ._events import ResponseData
 from ._events import ResponseEndOfMessage
 from ._events import ResponseHeaders
 from ._events import ResponseProtocolError
+from ._events import ResponseTrailers
 from mitmproxy import http
 from mitmproxy import version
 from mitmproxy.connection import Connection
@@ -256,6 +259,10 @@ class Http1Server(Http1Connection):
                 raw = event.data
             if raw:
                 yield commands.SendData(self.conn, raw)
+        elif isinstance(event, ResponseTrailers):
+            # Trailers from an HTTP/2 or HTTP/3 peer cannot be conveyed to an
+            # HTTP/1 peer, so we drop them instead of crashing the stream.
+            yield commands.Log(f"Dropping response trailers: {event.trailers!r}", DEBUG)
         elif isinstance(event, ResponseEndOfMessage):
             assert self.request
             assert self.response
@@ -384,6 +391,10 @@ class Http1Client(Http1Connection):
                 raw = event.data
             if raw:
                 yield commands.SendData(self.conn, raw)
+        elif isinstance(event, RequestTrailers):
+            # Trailers from an HTTP/2 or HTTP/3 peer cannot be conveyed to an
+            # HTTP/1 peer, so we drop them instead of crashing the stream.
+            yield commands.Log(f"Dropping request trailers: {event.trailers!r}", DEBUG)
         elif isinstance(event, RequestEndOfMessage):
             assert self.request
             if "chunked" in self.request.headers.get("transfer-encoding", "").lower():
