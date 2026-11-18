@@ -9,6 +9,7 @@
 
 - Fix a crash when HTTP/2 or HTTP/3 trailers are forwarded to an HTTP/1 peer. Trailers are
   now logged and dropped, as HTTP/1.x cannot convey them.
+  ([#8627](https://github.com/mitmproxy/mitmproxy/pull/8627), @laasyapriya2007)
 - Speed up addon event dispatch by skipping addons that don't implement the event.
   This saves work on every flow and makes plain HTTP proxying noticeably faster.
   ([#8577](https://github.com/mitmproxy/mitmproxy/pull/8577), @b84330808)
