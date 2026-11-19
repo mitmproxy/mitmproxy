@@ -132,6 +132,7 @@ export default class FilterInput extends Component<
     clearFilter() {
         this.selectFilter("");
     }
+
     blur() {
         this.inputRef.current?.blur();
     }
