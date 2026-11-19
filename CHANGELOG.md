@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- mitmweb: Add a search input to the Options modal to filter options by name and description.
 - mitmweb: Add a clear button to the filter inputs (`Search`, `Highlight`, `Intercept`).
   ([#8626](https://github.com/mitmproxy/mitmproxy/pull/8626), @Anto1368)
 - Show the traceback when client replay crashes.

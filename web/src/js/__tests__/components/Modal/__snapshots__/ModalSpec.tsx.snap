@@ -59,6 +59,43 @@ exports[`Modal Component 2`] = `
                   Options
                 </h4>
               </div>
+              <div
+                class="option-modal-search input-group"
+              >
+                <span
+                  class="input-group-addon"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-search icon icon-search"
+                    fill="none"
+                    height="14"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="14"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="m21 21-4.34-4.34"
+                    />
+                    <circle
+                      cx="11"
+                      cy="11"
+                      r="8"
+                    />
+                  </svg>
+                </span>
+                <input
+                  aria-label="Search options"
+                  class="input"
+                  placeholder="Search options..."
+                  type="text"
+                  value=""
+                />
+              </div>
             </div>
             <div
               class="modal-body"

@@ -10,7 +10,7 @@
 }
 
 .modal-body {
-    max-height: calc(100vh - 200px);
+    max-height: calc(100vh - 230px);
     overflow-y: auto;
 }
 
@@ -70,6 +70,29 @@
 .modal-title {
     margin: 0;
     line-height: 1.42857143;
+
+    h4 {
+        margin: 0;
+    }
+}
+
+.option-modal-search {
+    clear: both;
+    margin-top: 12px;
+    width: 100%;
+
+    .input {
+        padding-right: 26px;
+    }
+
+    .option-modal-search-clear {
+        .input-clear-button();
+    }
+}
+
+.option-modal-empty {
+    text-align: center;
+    padding: 20px 0;
 }
 
 .modal-body {
