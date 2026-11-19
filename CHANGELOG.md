@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- mitmweb: Add a clear button to the filter inputs (`Search`, `Highlight`, `Intercept`).
+  ([#8626](https://github.com/mitmproxy/mitmproxy/pull/8626), @Anto1368)
 - Show the traceback when client replay crashes.
   ([#8614](https://github.com/mitmproxy/mitmproxy/pull/8614), @Giardi77)
 - Speed up addon event dispatch by skipping addons that don't implement the event.
