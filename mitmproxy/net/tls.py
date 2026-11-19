@@ -156,6 +156,7 @@ def _create_ssl_context(
     max_version: Version,
     cipher_list: Iterable[str] | None,
     ecdh_curve: EllipticCurve | None,
+    tls13_ciphersuites: Iterable[str] | None,
 ) -> SSL.Context:
     context = SSL.Context(method.value)
 
@@ -184,6 +185,15 @@ def _create_ssl_context(
         except SSL.Error as e:
             raise RuntimeError(f"SSL cipher specification error: {e}") from e
 
+    # TLS 1.3 Ciphersuites
+    if tls13_ciphersuites is not None:
+        try:
+            context.set_tls13_ciphersuites(
+                b":".join(x.encode() for x in tls13_ciphersuites)
+            )
+        except SSL.Error as e:
+            raise RuntimeError(f"TLS 1.3 ciphersuite specification error: {e}") from e
+
     # SSLKEYLOGFILE
     if log_master_secret:
         context.set_keylog_callback(log_master_secret)
@@ -204,6 +214,7 @@ def create_proxy_server_context(
     ca_pemfile: str | None,
     client_cert: str | None,
     legacy_server_connect: bool,
+    tls13_ciphersuites: tuple[str, ...] | None,
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
         method=method,
@@ -211,6 +222,7 @@ def create_proxy_server_context(
         max_version=max_version,
         cipher_list=cipher_list,
         ecdh_curve=ecdh_curve,
+        tls13_ciphersuites=tls13_ciphersuites,
     )
     context.set_verify(verify.value, None)
 
@@ -253,6 +265,7 @@ def create_client_proxy_context(
     request_client_cert: bool,
     extra_chain_certs: tuple[certs.Cert, ...],
     dhparams: certs.DHParams,
+    tls13_ciphersuites: tuple[str, ...] | None,
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
         method=method,
@@ -260,6 +273,7 @@ def create_client_proxy_context(
         max_version=max_version,
         cipher_list=cipher_list,
         ecdh_curve=ecdh_curve,
+        tls13_ciphersuites=tls13_ciphersuites,
     )
 
     if chain_file is not None:
