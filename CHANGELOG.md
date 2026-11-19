@@ -26,6 +26,9 @@
   ([#8593](https://github.com/mitmproxy/mitmproxy/pull/8593), @jlaine)
 - mitmweb: Add a quiet zone around the WireGuard QR code so that it can be scanned in dark mode.
   ([#8585](https://github.com/mitmproxy/mitmproxy/pull/8585), @yldrmzffr)
+- Fix a crash when HTTP/2 or HTTP/3 trailers are forwarded to an HTTP/1 peer.
+  Trailers are now sent with the last chunk of a chunked body, and dropped otherwise.
+  ([#8579](https://github.com/mitmproxy/mitmproxy/pull/8579), @1AbdullahButt)
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)
