@@ -130,11 +130,8 @@ export default class FilterInput extends Component<
     }
 
     clearFilter() {
-        this.setState({ value: "" });
-        this.props.onChange("");
-        this.inputRef.current?.focus();
+        this.selectFilter("");
     }
-
     blur() {
         this.inputRef.current?.blur();
     }
