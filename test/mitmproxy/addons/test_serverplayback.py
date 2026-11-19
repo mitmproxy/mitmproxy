@@ -419,6 +419,67 @@ async def test_server_playback_404(option, status):
         assert f.response.status_code == status
 
 
+@pytest.mark.parametrize("option", ["kill", "204", "404"])
+def test_server_playback_keeps_response_from_other_addon(option):
+    """
+    A response that an earlier addon (e.g. a script) has already set must not be
+    killed or replaced by the server_replay_extra policy, see
+    https://github.com/mitmproxy/mitmproxy/issues/6113
+    """
+    s = serverplayback.ServerPlayback()
+    with taddons.context(s) as tctx:
+        tctx.configure(s, server_replay_extra=option)
+
+        f = tflow.tflow()
+        f.response = mitmproxy.test.tutils.tresp(content=f.request.content)
+        s.load_flows([f])
+
+        f = tflow.tflow()
+        f.request.host = "nonexistent"
+        f.response = mitmproxy.test.tutils.tresp(status_code=201)
+        s.request(f)
+        assert f.error is None
+        assert f.response.status_code == 201
+        assert f.is_replay is None
+
+
+def test_server_playback_keeps_response_from_other_addon_on_match():
+    s = serverplayback.ServerPlayback()
+    with taddons.context(s) as tctx:
+        tctx.configure(s)
+        s.load_flows([tflow.tflow(resp=True)])
+
+        f = tflow.tflow()
+        f.response = mitmproxy.test.tutils.tresp(status_code=201)
+        s.request(f)
+        assert f.response.status_code == 201
+        assert f.is_replay is None
+
+        # The recorded flow is still there for the next request.
+        f = tflow.tflow()
+        s.request(f)
+        assert f.response.status_code == 200
+        assert f.is_replay == "response"
+
+
+@pytest.mark.parametrize("option", ["kill", "404"])
+def test_server_playback_skips_killed_flow(option):
+    s = serverplayback.ServerPlayback()
+    with taddons.context(s) as tctx:
+        tctx.configure(s, server_replay_extra=option)
+
+        f = tflow.tflow()
+        f.response = mitmproxy.test.tutils.tresp(content=f.request.content)
+        s.load_flows([f])
+
+        f = tflow.tflow()
+        f.request.host = "nonexistent"
+        f.kill()
+        s.request(f)
+        assert f.response is None
+        assert f.is_replay is None
+
+
 def test_server_playback_response_deleted():
     """
     The server playback addon holds references to flows that can be modified by the user in the meantime.
