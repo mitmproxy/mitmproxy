@@ -101,7 +101,7 @@ def unpack(data: bytes) -> HTTPSRecord:
     offset = 0
 
     # Priority (2 bytes)
-    priority = struct.unpack("!h", data[offset : offset + 2])[0]
+    priority = struct.unpack("!H", data[offset : offset + 2])[0]
     offset += 2
 
     # TargetName (variable length)
@@ -128,7 +128,7 @@ def _pack_params(params: dict[int, bytes]) -> bytes:
 def pack(record: HTTPSRecord) -> bytes:
     """Packs the HTTPS record into its bytes form."""
     buffer = bytearray()
-    buffer.extend(struct.pack("!h", record.priority))
+    buffer.extend(struct.pack("!H", record.priority))
     buffer.extend(domain_names.pack(record.target_name))
     buffer.extend(_pack_params(record.params))
     return bytes(buffer)
