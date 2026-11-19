@@ -76,6 +76,28 @@ async def test_last_exception_and_running(monkeypatch):
         assert not inst1.is_running
 
 
+async def test_stop_after_failed_start(monkeypatch):
+    """Stopping an instance whose start() failed must be a no-op, not an assert."""
+    manager = MagicMock()
+    err = ValueError("something else")
+
+    async def _raise_async(*_):
+        raise err
+
+    with taddons.context():
+        monkeypatch.setattr(asyncio, "start_server", _raise_async)
+        inst = ServerInstance.make("regular@127.0.0.1:0", manager)
+        with pytest.raises(type(err), match=str(err)):
+            await inst.start()
+        assert inst.last_exception is err
+        assert not inst.is_running
+        # _start() raised before it could assign _servers, so stop() has nothing
+        # to close. It used to assert, which surfaced to the user as a blank
+        # error line because AssertionError() stringifies to "".
+        await inst.stop()
+        assert not inst.is_running
+
+
 async def test_tcp_start_stop(caplog_async):
     caplog_async.set_level("INFO")
     manager = MagicMock()
