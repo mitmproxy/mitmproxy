@@ -2,6 +2,7 @@ import ssl
 import time
 from logging import DEBUG
 from logging import ERROR
+from logging import INFO
 from logging import WARNING
 from typing import Literal
 from typing import TypeVar
@@ -230,10 +231,17 @@ def test_secrets_logger(value: str):
     logger.assert_called_once_with(None, b"s1 s2")
 
 
+def test_tls_settings_to_configuration():
+    # our server connections can only send datagrams to the address they connected to
+    config = tls_settings_to_configuration(QuicTlsSettings(), is_client=True)
+    assert not config.migrate_to_preferred_address
+
+
 class MockQuic(QuicConnection):
-    def __init__(self, event) -> None:
+    def __init__(self, event, datagram_frame_capacity: int | None = 1000) -> None:
         super().__init__(configuration=QuicConfiguration(is_client=True))
         self.event = event
+        self.datagram_frame_capacity = datagram_frame_capacity
 
     def next_event(self):
         event = self.event
@@ -243,6 +251,9 @@ class MockQuic(QuicConnection):
     def datagrams_to_send(self, now: float):
         return []
 
+    def get_datagram_frame_capacity(self) -> int | None:
+        return self.datagram_frame_capacity
+
     def get_timer(self):
         return None
 
@@ -251,11 +262,12 @@ def make_mock_quic(
     tctx: context.Context,
     event: quic_events.QuicEvent | None = None,
     established: bool = True,
+    datagram_frame_capacity: int | None = 1000,
 ) -> tuple[tutils.Playbook, MockQuic]:
     tctx.client.state = connection.ConnectionState.CLOSED
     quic_layer = QuicLayer(tctx, tctx.client, time=lambda: 0)
     quic_layer.child_layer = TlsEchoLayer(tctx)
-    mock = MockQuic(event)
+    mock = MockQuic(event, datagram_frame_capacity)
     quic_layer.quic = mock
     quic_layer.tunnel_state = (
         tls.tunnel.TunnelState.OPEN
@@ -318,6 +330,41 @@ class TestQuicLayer:
         assert playbook >> events.DataReceived(tctx.client, b"")
         assert len(conn._datagrams_pending) == 1
         assert conn._datagrams_pending[0] == b"packet"
+
+    @pytest.mark.parametrize(
+        "capacity,reason",
+        [
+            (None, "{} does not accept datagrams"),
+            (5, "{} accepts 5 bytes at most"),
+        ],
+    )
+    def test_datagram_dropped(
+        self, tctx: context.Context, capacity: int | None, reason: str
+    ):
+        playbook, conn = make_mock_quic(
+            tctx,
+            quic_events.DatagramFrameReceived(b"packet"),
+            datagram_frame_capacity=capacity,
+        )
+        reason = reason.format(tctx.client)
+        # the first drop is always logged
+        assert (
+            playbook
+            >> events.DataReceived(tctx.client, b"")
+            << commands.Log(
+                f"Dropping QUIC datagram of 6 bytes, as {reason}. "
+                f"Further drops are only logged with proxy_debug.",
+                INFO,
+            )
+        )
+        # further drops only with proxy_debug
+        conn.event = quic_events.DatagramFrameReceived(b"packet")
+        playbook.layer.debug = "  "
+        assert playbook >> events.DataReceived(tctx.client, b"")
+        assert f"  [quic] dropping datagram of 6 bytes, as {reason}" in [
+            cmd.message for cmd in playbook.actual if isinstance(cmd, commands.Log)
+        ]
+        assert not conn._datagrams_pending
 
     def test_stream_data(self, tctx: context.Context):
         playbook, conn = make_mock_quic(
@@ -1072,7 +1119,7 @@ class TestClientQuic:
             playbook
             >> events.DataReceived(tctx.client, data)
             << commands.Log(
-                f"Client QUIC handshake failed. Cannot parse ClientHello: Invalid ClientHello packet: payload_decrypt_error ({data.hex()})",
+                f"Client QUIC handshake failed. Cannot parse ClientHello: Invalid ClientHello packet: decryption_failure ({data.hex()})",
                 WARNING,
             )
             << tls.TlsFailedClientHook(tutils.Placeholder())
@@ -1096,7 +1143,7 @@ class TestClientQuic:
             >> events.DataReceived(tctx.client, fragmented_client_hello1)
             >> events.DataReceived(tctx.client, invalid_frag2)
             << commands.Log(
-                f"Client QUIC handshake failed. Cannot parse ClientHello: Invalid ClientHello packet: payload_decrypt_error ({data.hex()})",
+                f"Client QUIC handshake failed. Cannot parse ClientHello: Invalid ClientHello packet: decryption_failure ({data.hex()})",
                 WARNING,
             )
             << tls.TlsFailedClientHook(tutils.Placeholder())

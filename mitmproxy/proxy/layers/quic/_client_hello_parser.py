@@ -54,23 +54,19 @@ def quic_parse_client_hello_from_datagrams(
         raise ValueError("Packet is not initial one.")
 
     # patch aioquic to intercept the client hello
+    quic_logger = QuicLogger()
     quic = QuicConnection(
         configuration=QuicConfiguration(
             is_client=False,
             certificate="",
             private_key="",
-            quic_logger=QuicLogger(),
+            quic_logger=quic_logger,
         ),
         original_destination_connection_id=header.destination_cid,
     )
     _initialize = quic._initialize
 
-    def server_handle_hello_replacement(
-        input_buf: QuicBuffer,
-        initial_buf: QuicBuffer,
-        handshake_buf: QuicBuffer,
-        onertt_buf: QuicBuffer,
-    ) -> None:
+    def server_handle_hello_replacement(input_buf: QuicBuffer, *_) -> None:
         assert input_buf.pull_uint8() == HandshakeType.CLIENT_HELLO
         length = 0
         for b in input_buf.pull_bytes(3):
@@ -96,16 +92,15 @@ def quic_parse_client_hello_from_datagrams(
     except QuicConnectionError as e:
         raise ValueError(e.reason_phrase) from e
 
-    quic_logger = quic._configuration.quic_logger
-    assert isinstance(quic_logger, QuicLogger)
     traces = quic_logger.to_dict().get("traces")
     assert isinstance(traces, list)
     for trace in traces:
         quic_events = trace.get("events")
         for event in quic_events:
-            if event["name"] == "transport:packet_dropped":
-                raise ValueError(
-                    f"Invalid ClientHello packet: {event['data']['trigger']}"
-                )
+            if event["name"] == "quic:packet_dropped":
+                # the trigger is a category, the details give the precise reason
+                data = event["data"]
+                reason = data.get("details", {}).get("reason", data["trigger"])
+                raise ValueError(f"Invalid ClientHello packet: {reason}")
 
     return None  # pragma: no cover  # FIXME: this should have test coverage

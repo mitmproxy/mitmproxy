@@ -118,11 +118,11 @@ class ReplayHandler(server.ConnectionHandler):
         message: str,
         level: int = logging.INFO,
         exc_info: Literal[True]
-        | tuple[type[BaseException] | None, BaseException | None, TracebackType | None]
+        | tuple[type[BaseException], BaseException, TracebackType | None]
         | None = None,
     ) -> None:
         assert isinstance(level, int)
-        logger.log(level=level, msg=f"[replay] {message}")
+        logger.log(level=level, msg=f"[replay] {message}", exc_info=exc_info)
 
     async def handle_hook(self, hook: commands.StartHook) -> None:
         (data,) = hook.args()

@@ -19,6 +19,7 @@ from ._events import QuicConnectionClosed
 from ._events import QuicStreamDataReceived
 from ._events import QuicStreamEvent
 from ._events import QuicStreamReset
+from ._events import QuicStreamStopSending
 from mitmproxy import connection
 from mitmproxy.connection import Connection
 from mitmproxy.proxy import commands
@@ -66,6 +67,10 @@ class QuicStreamLayer(layer.Layer):
     """Virtual server connection for this stream. Use this in QuicRawLayer instead of `context.server`."""
     child_layer: layer.Layer
     """The stream's child layer."""
+    sent_on: set[bool]
+    """The streams we have sent on, by whether they are the client's."""
+    held_stop_sending: dict[bool, int]
+    """STOP_SENDING error codes to send once QUIC knows the stream, by whether it is the client's."""
 
     def __init__(
         self, context: context.Context, force_raw: bool, stream_id: int
@@ -90,6 +95,8 @@ class QuicStreamLayer(layer.Layer):
             transport_protocol="tcp",
         )
         self._server_stream_id: int | None = None
+        self.sent_on = set()
+        self.held_stop_sending = {}
 
         super().__init__(context)
         self.child_layer = (
@@ -284,6 +291,14 @@ class RawQuicLayer(layer.Layer):
                         )
                     else:
                         yield command
+            elif isinstance(event, QuicStreamStopSending):
+                # The peer no longer reads this stream, and QUIC has already reset our
+                # sending side of it. Stop writing to it, and ask the other peer to stop
+                # sending.
+                conn.state &= ~connection.ConnectionState.CAN_WRITE
+                yield from self.stop_sending(
+                    stream_layer, not from_client, event.error_code
+                )
             else:
                 raise AssertionError(f"Unexpected stream event: {event!r}")
 
@@ -320,6 +335,12 @@ class RawQuicLayer(layer.Layer):
                 ):
                     conn.state &= ~connection.ConnectionState.CAN_WRITE
                     for command in self.close_stream_layer(child_layer, from_client):
+                        # Both connections are closing, so there is no point in asking
+                        # a peer to stop sending. QUIC may not even know the stream, if
+                        # the empty stream end was the first thing we would have sent
+                        # on it.
+                        if isinstance(command, StopSendingQuicStream):
+                            continue
                         if not isinstance(command, SendQuicStreamData) or command.data:
                             yield command
 
@@ -367,6 +388,7 @@ class RawQuicLayer(layer.Layer):
                     assert stream_id is not None
                     if command.connection.state & connection.ConnectionState.CAN_WRITE:
                         yield SendQuicStreamData(quic_conn, stream_id, command.data)
+                        yield from self.after_send(child_layer, to_client)
 
                 # send a FIN and optionally also a STOP frame
                 elif isinstance(command, commands.CloseConnection):
@@ -378,6 +400,7 @@ class RawQuicLayer(layer.Layer):
                         yield SendQuicStreamData(
                             quic_conn, stream_id, b"", end_stream=True
                         )
+                        yield from self.after_send(child_layer, to_client)
                     # XXX: Use `command.connection.state & connection.ConnectionState.CAN_READ` instead?
                     only_close_our_half = (
                         isinstance(command, commands.CloseTcpConnection)
@@ -420,6 +443,41 @@ class RawQuicLayer(layer.Layer):
                 if isinstance(command, commands.OpenConnection):
                     self.connections[command.connection] = child_layer
                 yield command
+
+    def stop_sending(
+        self, stream_layer: QuicStreamLayer, client: bool, error_code: int
+    ) -> layer.CommandGenerator[None]:
+        """
+        Asks the client or the server to stop sending on its side of the stream.
+
+        If QUIC does not know our side of the stream yet, as it is not open or we have
+        only reserved its ID, the request is held until we send on it.
+        """
+        stream_id = stream_layer.stream_id(client)
+        # QUIC knows the stream once the peer has opened it, or we have sent on it.
+        if stream_id is not None and (
+            stream_is_client_initiated(stream_id) == client
+            or client in stream_layer.sent_on
+        ):
+            yield StopSendingQuicStream(
+                self.context.client if client else self.context.server,
+                stream_id,
+                error_code,
+            )
+        else:
+            stream_layer.held_stop_sending[client] = error_code
+
+    def after_send(
+        self, stream_layer: QuicStreamLayer, client: bool
+    ) -> layer.CommandGenerator[None]:
+        """
+        Called after we have sent on a stream. Records it, as QUIC now knows the
+        stream, and sends the STOP_SENDING held for it, if any.
+        """
+        stream_layer.sent_on.add(client)
+        error_code = stream_layer.held_stop_sending.pop(client, None)
+        if error_code is not None:
+            yield from self.stop_sending(stream_layer, client, error_code)
 
     def get_next_available_stream_id(
         self, is_client: bool, is_unidirectional: bool = False
