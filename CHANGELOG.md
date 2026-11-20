@@ -26,6 +26,9 @@
   ([#8593](https://github.com/mitmproxy/mitmproxy/pull/8593), @jlaine)
 - mitmweb: Add a quiet zone around the WireGuard QR code so that it can be scanned in dark mode.
   ([#8585](https://github.com/mitmproxy/mitmproxy/pull/8585), @yldrmzffr)
+- Fix the MQTT contentview failing on PUBLISH packets with an empty payload
+  (e.g. clearing a retained message) and on packets whose remaining length uses all four bytes.
+  ([#8571](https://github.com/mitmproxy/mitmproxy/pull/8571), @qodelicious)
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)
