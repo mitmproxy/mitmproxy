@@ -1,6 +1,6 @@
 # Mitmproxy Documentation
 
-This directory houses the mitmproxy documentation available at <https://docs.mitmproxy.org/>.
+This directory houses the mitmproxy documentation available at <https://docs.mitmproxy.org/stable/>.
 
 ## Prerequisites
 

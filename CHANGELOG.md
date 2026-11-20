@@ -9,6 +9,25 @@
 
 - Fix options-editor help showing the wrong key bindings and closing the editor.
   ([#8428](https://github.com/mitmproxy/mitmproxy/pull/8428), @twelfthlabor)
+- mitmweb: Add a clear button to the filter inputs (`Search`, `Highlight`, `Intercept`).
+  ([#8626](https://github.com/mitmproxy/mitmproxy/pull/8626), @Anto1368)
+- Show the traceback when client replay crashes.
+  ([#8614](https://github.com/mitmproxy/mitmproxy/pull/8614), @Giardi77)
+- Speed up addon event dispatch by skipping addons that don't implement the event.
+  This saves work on every flow and makes plain HTTP proxying noticeably faster.
+  ([#8577](https://github.com/mitmproxy/mitmproxy/pull/8577), @b84330808)
+- Fix a crash when an addon or `modify_headers` sets an HTTP/3 header name or value longer than
+  65,535 bytes, which QPACK cannot encode. The client now receives a 502 error instead, or a stream
+  reset if the response was already partly sent.
+  ([#8596](https://github.com/mitmproxy/mitmproxy/pull/8596), @jlaine)
+- Fix a crash in raw QUIC mode when a peer stops reading a stream.
+  ([#8594](https://github.com/mitmproxy/mitmproxy/pull/8594), @jlaine)
+- Update aioquic to 1.8.0. HTTP/3 interim (1xx) responses are no longer mistaken for the final
+  response's trailers, QUIC connections report their cipher suite by its IANA name, and QUIC
+  datagrams which the peer cannot receive are dropped.
+  ([#8593](https://github.com/mitmproxy/mitmproxy/pull/8593), @jlaine)
+- mitmweb: Add a quiet zone around the WireGuard QR code so that it can be scanned in dark mode.
+  ([#8585](https://github.com/mitmproxy/mitmproxy/pull/8585), @yldrmzffr)
 - Expand `~` in the `hardump` option, like other file path options. Previously, the HAR file
   could not be written on exit and the collected flows were lost.
   ([#8541](https://github.com/mitmproxy/mitmproxy/pull/8541), @memx13)

@@ -1,5 +1,7 @@
 from collections.abc import Callable
 from collections.abc import Iterable
+from logging import DEBUG
+from logging import WARNING
 
 import pylsqpack
 import pytest
@@ -13,7 +15,6 @@ from aioquic.h3.connection import Headers as H3Headers
 from aioquic.h3.connection import parse_settings
 from aioquic.h3.connection import Setting
 from aioquic.h3.connection import StreamType
-from aioquic.quic.packet import QuicErrorCode
 
 from mitmproxy import connection
 from mitmproxy import version
@@ -789,7 +790,6 @@ def test_rst_then_close(tctx):
     playbook, cff = start_h3_proxy(tctx)
     flow = tutils.Placeholder(HTTPFlow)
     server = tutils.Placeholder(connection.Server)
-    err = tutils.Placeholder(str)
 
     assert (
         playbook
@@ -802,18 +802,19 @@ def test_rst_then_close(tctx):
         >> tutils.reply()
         # request server
         << (open := commands.OpenConnection(server))
-        >> cff.receive_data(b"unexpected data frame")
+        # SETTINGS may only be sent once on the control stream
+        >> cff.receive_settings()
         << quic.CloseQuicConnection(
             tctx.client,
-            error_code=QuicErrorCode.PROTOCOL_VIOLATION.value,
+            error_code=ErrorCode.H3_FRAME_UNEXPECTED.value,
             frame_type=None,
-            reason_phrase=err,
+            reason_phrase="SETTINGS have already been received",
         )
         >> quic.QuicConnectionClosed(
             tctx.client,
-            error_code=QuicErrorCode.PROTOCOL_VIOLATION.value,
+            error_code=ErrorCode.H3_FRAME_UNEXPECTED.value,
             frame_type=None,
-            reason_phrase=err,
+            reason_phrase="SETTINGS have already been received",
         )
         >> tutils.reply("connection cancelled", to=open)
         << http.HttpErrorHook(flow)
@@ -1007,6 +1008,143 @@ def test_kill_stream(tctx: context.Context):
     assert cff.is_done and sff.is_done
 
 
+# ls-qpack refuses header names and values longer than 65,535 bytes.
+unencodable_value = "a" * 65536
+
+error_page_headers = [
+    (b":status", b"502"),
+    (b"server", version.MITMPROXY.encode()),
+    (b"content-type", b"text/html"),
+]
+
+
+def assert_unencodable(log_msg: str, error_page: bytes) -> None:
+    # Don't depend on pylsqpack's exact wording.
+    assert log_msg.startswith("Cannot encode HTTP/3 headers: ")
+    data = decode_frame(FrameType.DATA, error_page)
+    assert b"502 Bad Gateway" in data
+    assert b"Cannot encode HTTP/3 headers: " in data
+
+
+@pytest.mark.parametrize("where", ["headers", "trailers"])
+def test_unencodable_request_headers(tctx: context.Context, where: str):
+    """Headers that QPACK cannot encode fail the request with a 502."""
+    playbook, cff = start_h3_proxy(tctx)
+    flow = tutils.Placeholder(HTTPFlow)
+    server = tutils.Placeholder(connection.Server)
+    sff = FrameFactory(server, is_client=False)
+    log_msg = tutils.Placeholder(str)
+    err = tutils.Placeholder(bytes)
+
+    def add_huge_header(flow: HTTPFlow):
+        if where == "headers":
+            flow.request.headers["x-huge"] = unencodable_value
+        else:
+            flow.request.trailers = Headers(x_huge=unencodable_value)
+
+    (
+        playbook
+        >> cff.receive_headers(example_request_headers, end_stream=True)
+        << (request := http.HttpRequestHeadersHook(flow))
+        << cff.send_decoder()  # for receive_headers
+        >> tutils.reply(to=request)
+        << http.HttpRequestHook(flow)
+        >> tutils.reply(side_effect=add_huge_header)
+        << commands.OpenConnection(server)
+        >> tutils.reply(None, side_effect=make_h3)
+        << sff.send_init()
+    )
+    if where == "trailers":
+        playbook << sff.send_headers(example_request_headers)
+    assert (
+        playbook
+        << commands.Log(log_msg, WARNING)
+        << sff.send_reset(ErrorCode.H3_INTERNAL_ERROR)
+        << sff.send_stop(ErrorCode.H3_INTERNAL_ERROR)
+        << http.HttpErrorHook(flow)
+        >> tutils.reply()
+        << cff.send_headers(error_page_headers)
+        << quic.SendQuicStreamData(tctx.client, stream_id=0, data=err, end_stream=True)
+        >> cff.receive_decoder()  # for send_headers
+    )
+    assert cff.is_done
+    assert_unencodable(log_msg(), err())
+    assert flow().error.msg == log_msg()
+
+
+@pytest.mark.parametrize("stream", ["stream", ""])
+def test_unencodable_response_headers(tctx: context.Context, stream: str):
+    """Headers that QPACK cannot encode are replaced with a 502 for the client."""
+    playbook, cff = start_h3_proxy(tctx)
+    flow = tutils.Placeholder(HTTPFlow)
+    server = tutils.Placeholder(connection.Server)
+    sff = FrameFactory(server, is_client=False)
+    log_msg = tutils.Placeholder(str)
+    err = tutils.Placeholder(bytes)
+
+    def add_huge_header(flow: HTTPFlow):
+        flow.response.stream = stream
+        flow.response.headers["x-huge"] = unencodable_value
+
+    (
+        playbook
+        >> cff.receive_headers(example_request_headers, end_stream=True)
+        << (request := http.HttpRequestHeadersHook(flow))
+        << cff.send_decoder()  # for receive_headers
+        >> tutils.reply(to=request)
+        << http.HttpRequestHook(flow)
+        >> tutils.reply()
+        << commands.OpenConnection(server)
+        >> tutils.reply(None, side_effect=make_h3)
+        << sff.send_init()
+        << sff.send_headers(example_request_headers, end_stream=True)
+        >> sff.receive_init()
+        << sff.send_encoder()
+        >> sff.receive_encoder()
+        >> sff.receive_decoder()  # for send_headers
+        >> sff.receive_headers(example_response_headers)
+        << (response := http.HttpResponseHeadersHook(flow))
+        << sff.send_decoder()  # for receive_headers
+    )
+    if stream:
+        playbook >> tutils.reply(to=response, side_effect=add_huge_header)
+    else:
+        (
+            playbook
+            >> tutils.reply(to=response)
+            >> sff.receive_data(b"Hello, World!", end_stream=True)
+            << http.HttpResponseHook(flow)
+            >> tutils.reply(side_effect=add_huge_header)
+        )
+    (
+        playbook
+        << commands.Log(log_msg, WARNING)
+        << cff.send_headers(error_page_headers)
+        << quic.SendQuicStreamData(tctx.client, stream_id=0, data=err, end_stream=True)
+    )
+    if stream:
+        (
+            playbook
+            # The server is still sending, so we stop it.
+            << sff.send_reset(ErrorCode.H3_INTERNAL_ERROR)
+            << sff.send_stop(ErrorCode.H3_INTERNAL_ERROR)
+            << (error := http.HttpErrorHook(flow))
+            >> tutils.reply(to=error)
+            # Data that was already on its way is discarded.
+            >> sff.receive_data(b"Hello, World!", end_stream=True)
+            << None
+        )
+    assert playbook >> cff.receive_decoder()  # for send_headers
+    assert cff.is_done and sff.is_done
+    assert_unencodable(log_msg(), err())
+    if stream:
+        assert flow().error.msg == log_msg()
+    else:
+        # The response is complete, so like for a client disconnecting after the
+        # response hook, there is no error hook. The warning tells what happened.
+        assert flow().error is None
+
+
 @pytest.mark.parametrize("close_type", ["RESET_STREAM", "STOP_SENDING"])
 def test_receive_stop_sending(tctx: context.Context, close_type: str):
     playbook, cff = start_h3_proxy(tctx)
@@ -1114,12 +1252,12 @@ class TestClient:
             >> http.RequestEndOfMessage(1)
             << commands.Log(
                 "Received RequestEndOfMessage(stream_id=0) unexpectedly: "
-                "DATA frame is not allowed in this state"
+                "Cannot send data before the headers"
             )
             >> http.RequestData(1, b"123")
             << commands.Log(
                 "Received RequestData(stream_id=0, data=b'123') unexpectedly: "
-                "DATA frame is not allowed in this state"
+                "Cannot send data before the headers"
             )
             >> http.RequestHeaders(1, req, end_stream=False)
             << frame_factory.send_headers(
@@ -1139,6 +1277,129 @@ class TestClient:
                 "initial HEADERS frame is not allowed in this state"
             )
         )
+
+    def test_informational_response(self, tctx: context.Context):
+        frame_factory = FrameFactory(tctx.server, is_client=False)
+        playbook = tutils.Playbook(Http3Client(tctx))
+        req = Request.make("GET", "http://example.com/")
+        resp = tutils.Placeholder(http.ResponseHeaders)
+        assert (
+            playbook
+            << frame_factory.send_init()
+            >> frame_factory.receive_init()
+            << frame_factory.send_encoder()
+            >> frame_factory.receive_encoder()
+            >> http.RequestHeaders(1, req, end_stream=True)
+            << frame_factory.send_headers(
+                [
+                    (b":method", b"GET"),
+                    (b":scheme", b"http"),
+                    (b":path", b"/"),
+                    (b"content-length", b"0"),
+                ],
+                end_stream=True,
+            )
+            >> frame_factory.receive_decoder()  # for send_headers
+            >> frame_factory.receive_headers(
+                [(b":status", b"103"), (b"link", b"</style.css>; rel=preload")]
+            )
+            << commands.Log("Swallowing HTTP/3 informational response: 103 Early Hints")
+            << frame_factory.send_decoder()  # for receive_headers
+            >> frame_factory.receive_headers([(b":status", b"200")], end_stream=True)
+            << http.ReceiveHttp(resp)
+            << http.ReceiveHttp(http.ResponseEndOfMessage(1))
+            << frame_factory.send_decoder()  # for receive_headers
+        )
+        assert resp().response.status_code == 200
+        assert frame_factory.is_done
+
+    def test_goaway(self, tctx: context.Context):
+        """Requests the server has started to process still complete after GOAWAY."""
+        frame_factory = FrameFactory(tctx.server, is_client=False)
+        playbook = tutils.Playbook(Http3Client(tctx))
+        req = Request.make("GET", "http://example.com/")
+        resp = tutils.Placeholder(http.ResponseHeaders)
+        assert (
+            playbook
+            << frame_factory.send_init()
+            >> frame_factory.receive_init()
+            << frame_factory.send_encoder()
+            >> frame_factory.receive_encoder()
+            >> http.RequestHeaders(1, req, end_stream=True)
+            << frame_factory.send_headers(
+                [
+                    (b":method", b"GET"),
+                    (b":scheme", b"http"),
+                    (b":path", b"/"),
+                    (b"content-length", b"0"),
+                ],
+                end_stream=True,
+            )
+            >> frame_factory.receive_decoder()  # for send_headers
+            >> quic.QuicStreamDataReceived(
+                tctx.server,
+                frame_factory.local_stream_id[StreamType.CONTROL],
+                encode_frame(FrameType.GOAWAY, encode_uint_var(4)),
+                False,
+            )
+            << commands.Log(
+                "HTTP/3 server is shutting down, it will not process stream 4 and above.",
+                DEBUG,
+            )
+            >> frame_factory.receive_headers([(b":status", b"200")], end_stream=True)
+            << http.ReceiveHttp(resp)
+            << http.ReceiveHttp(http.ResponseEndOfMessage(1))
+            << frame_factory.send_decoder()  # for receive_headers
+        )
+        assert resp().response.status_code == 200
+        assert frame_factory.is_done
+
+    def test_ignore_after_stream_ended(self, tctx: context.Context):
+        """aioquic forgets about streams once they have ended, we must not."""
+        frame_factory = FrameFactory(tctx.server, is_client=False)
+        playbook = tutils.Playbook(Http3Client(tctx))
+        req = Request.make("GET", "http://example.com/")
+        assert (
+            playbook
+            << frame_factory.send_init()
+            >> frame_factory.receive_init()
+            << frame_factory.send_encoder()
+            >> frame_factory.receive_encoder()
+            >> http.RequestHeaders(1, req, end_stream=True)
+            << frame_factory.send_headers(
+                [
+                    (b":method", b"GET"),
+                    (b":scheme", b"http"),
+                    (b":path", b"/"),
+                    (b"content-length", b"0"),
+                ],
+                end_stream=True,
+            )
+            >> frame_factory.receive_decoder()  # for send_headers
+            >> frame_factory.receive_headers([(b":status", b"200")], end_stream=True)
+            << http.ReceiveHttp(tutils.Placeholder(http.ResponseHeaders))
+            << http.ReceiveHttp(http.ResponseEndOfMessage(1))
+            << frame_factory.send_decoder()  # for receive_headers
+            >> http.RequestEndOfMessage(1)
+            << None
+            >> http.RequestHeaders(1, req, end_stream=True)
+            << commands.Log(
+                "Received RequestHeaders(stream_id=0, request=Request(GET example.com:80/),"
+                " end_stream=True, replay_flow=None) unexpectedly: "
+                "initial HEADERS frame is not allowed in this state"
+            )
+            >> http.RequestData(1, b"123")
+            << commands.Log(
+                "Received RequestData(stream_id=0, data=b'123') unexpectedly: "
+                "DATA frame is not allowed in this state"
+            )
+            >> http.RequestTrailers(1, Headers([(b"x-trailer", b"")]))
+            << commands.Log(
+                "Received RequestTrailers(stream_id=0, trailers=Headers[(b'x-trailer', b'')]) unexpectedly: "
+                "trailing HEADERS frame is not allowed in this state"
+            )
+        )
+        assert frame_factory.is_done
 
 
 def test_early_server_data(tctx: context.Context):

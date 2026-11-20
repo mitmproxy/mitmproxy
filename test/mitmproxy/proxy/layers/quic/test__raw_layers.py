@@ -17,6 +17,7 @@ from mitmproxy.proxy.layers.quic._events import QuicConnectionClosed
 from mitmproxy.proxy.layers.quic._events import QuicStreamDataReceived
 from mitmproxy.proxy.layers.quic._events import QuicStreamEvent
 from mitmproxy.proxy.layers.quic._events import QuicStreamReset
+from mitmproxy.proxy.layers.quic._events import QuicStreamStopSending
 from mitmproxy.proxy.layers.quic._raw_layers import QuicStreamLayer
 from mitmproxy.proxy.layers.quic._raw_layers import RawQuicLayer
 from mitmproxy.tcp import TCPFlow
@@ -93,6 +94,117 @@ class TestRawQuicLayer:
             << None
         )
         assert quic_layer._handle_event == quic_layer.done
+
+    def test_stop_sending_unidirectional(self, tctx: context.Context):
+        quic_layer = RawQuicLayer(tctx, force_raw=True)
+        assert (
+            tutils.Playbook(quic_layer, hooks=False)
+            << commands.OpenConnection(tctx.server)
+            >> tutils.reply(None)
+            # The server opens a unidirectional stream, which we open to the client.
+            >> QuicStreamDataReceived(tctx.server, 15, b"msg1", end_stream=False)
+            << SendQuicStreamData(tctx.client, 3, b"msg1", end_stream=False)
+            # The client does not want it, so we ask the server to stop sending.
+            >> QuicStreamStopSending(tctx.client, 3, 42)
+            << StopSendingQuicStream(tctx.server, 15, 42)
+            # Data still in flight is not sent to the client.
+            >> QuicStreamDataReceived(tctx.server, 15, b"msg2", end_stream=False)
+            << None
+            # Nor is the end of the stream, once the server resets it.
+            >> QuicStreamReset(tctx.server, 15, 42)
+            << None
+        )
+
+    def test_stop_sending_bidirectional(self, tctx: context.Context):
+        quic_layer = RawQuicLayer(tctx, force_raw=True)
+        assert (
+            tutils.Playbook(quic_layer, hooks=False)
+            << commands.OpenConnection(tctx.server)
+            >> tutils.reply(None)
+            >> QuicStreamDataReceived(tctx.client, 0, b"msg1", end_stream=False)
+            << SendQuicStreamData(tctx.server, 0, b"msg1", end_stream=False)
+            >> QuicStreamStopSending(tctx.client, 0, 42)
+            << StopSendingQuicStream(tctx.server, 0, 42)
+            # Only data towards the client is no longer sent.
+            >> QuicStreamDataReceived(tctx.server, 0, b"msg2", end_stream=False)
+            << None
+            # The server resets its side in response, as the client's side already is.
+            >> QuicStreamReset(tctx.server, 0, 42)
+            << None
+            # The client can still send. Closing the stream then asks the server to
+            # stop sending again, which is redundant but harmless.
+            >> QuicStreamDataReceived(tctx.client, 0, b"msg3", end_stream=True)
+            << SendQuicStreamData(tctx.server, 0, b"msg3", end_stream=False)
+            << SendQuicStreamData(tctx.server, 0, b"", end_stream=True)
+            << StopSendingQuicStream(tctx.server, 0, 0)
+        )
+
+    def test_stop_sending_before_server_stream(self, tctx: context.Context):
+        """
+        The server stream is only opened once the next layer is known, so STOP_SENDING
+        is held, but we stop writing to the client right away.
+        """
+        quic_layer = RawQuicLayer(tctx)
+        assert (
+            tutils.Playbook(quic_layer, hooks=False)
+            << commands.OpenConnection(tctx.server)
+            >> tutils.reply(None)
+            >> QuicStreamStopSending(tctx.client, 0, 42)
+            << None
+        )
+        stream_layer = quic_layer.client_stream_ids[0]
+        assert stream_layer.stream_id(client=False) is None
+        assert stream_layer.held_stop_sending == {False: 42}
+        assert stream_layer.client.state == connection.ConnectionState.CAN_READ
+
+    def test_stop_sending_before_server_stream_used(self, tctx: context.Context):
+        """
+        The server stream is opened once tcp_start has been answered, but QUIC only
+        knows it once we send on it, after tcp_message has been answered.
+        """
+        flow = tutils.Placeholder(TCPFlow)
+        assert (
+            tutils.Playbook(RawQuicLayer(tctx, force_raw=True))
+            << commands.OpenConnection(tctx.server)
+            >> tutils.reply(None)
+            << udp.UdpStartHook(tutils.Placeholder(UDPFlow))
+            >> tutils.reply()
+            >> QuicStreamDataReceived(tctx.client, 0, b"msg1", end_stream=False)
+            << tcp.TcpStartHook(flow)
+            >> tutils.reply()
+            << (message := tcp.TcpMessageHook(flow))
+            # The server stream is open, but QUIC does not know it yet.
+            >> QuicStreamStopSending(tctx.client, 0, 42)
+            << None
+            # So we only ask the server to stop sending once we have sent on it.
+            >> tutils.reply(to=message)
+            << SendQuicStreamData(tctx.server, 0, b"msg1", end_stream=False)
+            << StopSendingQuicStream(tctx.server, 0, 42)
+        )
+
+    def test_stop_sending_then_close(self, tctx: context.Context):
+        """
+        The server stream is open, but we have not sent on it. Once the client
+        closes, we do not send STOP_SENDING on it, as QUIC does not know it.
+        """
+        quic_layer = RawQuicLayer(tctx, force_raw=True)
+        playbook = tutils.Playbook(quic_layer, hooks=False)
+        assert (
+            playbook
+            << commands.OpenConnection(tctx.server)
+            >> tutils.reply(None)
+            >> QuicStreamStopSending(tctx.client, 0, 42)
+            << None
+        )
+        stream_layer = quic_layer.client_stream_ids[0]
+        assert stream_layer.stream_id(client=False) is not None
+        assert stream_layer.held_stop_sending == {False: 42}
+        assert (
+            playbook
+            >> QuicConnectionClosed(tctx.client, 0, None, "closed")
+            << CloseQuicConnection(tctx.server, 0, None, "closed")
+            << None
+        )
 
     def test_msg_inject(self, tctx: context.Context):
         udpflow = tutils.Placeholder(UDPFlow)
