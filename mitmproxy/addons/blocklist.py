@@ -21,6 +21,8 @@ def parse_spec(option: str) -> BlockSpec:
         /flow-filter/status
 
     """
+    if not option:
+        raise ValueError("Invalid number of parameters (2 are expected)")
     sep, rem = option[0], option[1:]
 
     parts = rem.split(sep, 2)
