@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix escaped byte strings losing backslashes when several backslashes come right before a
+  single quote, so that editing a value such as `it\\'s` in the console no longer changes it.
+  ([#8567](https://github.com/mitmproxy/mitmproxy/pull/8567), @waw666waw666)
 - mitmweb: Add a clear button to the filter inputs (`Search`, `Highlight`, `Intercept`).
   ([#8626](https://github.com/mitmproxy/mitmproxy/pull/8626), @Anto1368)
 - Show the traceback when client replay crashes.

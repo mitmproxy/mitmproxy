@@ -100,11 +100,11 @@ def bytes_to_escaped_str(
     # https://stackoverflow.com/questions/29019340/why-does-python-use-different-quotes-for-representing-strings-depending-on-their
     ret = repr(b'"' + data).lstrip("b")[2:-1]
     if not escape_single_quotes:
-        ret = re.sub(r"(?<!\\)(\\\\)*\\'", lambda m: (m.group(1) or "") + "'", ret)
+        ret = re.sub(r"(?<!\\)((?:\\\\)*)\\'", lambda m: m.group(1) + "'", ret)
     if keep_spacing:
         ret = re.sub(
-            r"(?<!\\)(\\\\)*\\([nrt])",
-            lambda m: (m.group(1) or "") + dict(n="\n", r="\r", t="\t")[m.group(2)],
+            r"(?<!\\)((?:\\\\)*)\\([nrt])",
+            lambda m: m.group(1) + dict(n="\n", r="\r", t="\t")[m.group(2)],
             ret,
         )
     return ret
