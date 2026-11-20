@@ -11,6 +11,11 @@
   QUIC. Cancelling an HTTP/3 request no longer cuts off a complete response the client has not
   acknowledged yet, and requests to an HTTP/3 server which sent GOAWAY fail straight away.
   ([#8642](https://github.com/mitmproxy/mitmproxy/pull/8642), @jlaine)
+- Fix `proxyauth` breaking transparently intercepted traffic: requests in
+  transparent, local and WireGuard modes no longer get a 401, and the origin
+  server's `Authorization` header is left untouched. Proxy authentication is
+  still enforced for regular, upstream, reverse and SOCKS5 modes.
+  ([#8631](https://github.com/mitmproxy/mitmproxy/issues/8631), @ToniAdreal)
 - mitmweb: Add a clear button to the filter inputs (`Search`, `Highlight`, `Intercept`).
   ([#8626](https://github.com/mitmproxy/mitmproxy/pull/8626), @Anto1368)
 - Show the traceback when client replay crashes.
