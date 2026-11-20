@@ -70,6 +70,11 @@ def test_parse_port_range():
         url.parse("http://foo:999999")
 
 
+def test_parse_port_zero():
+    assert url.parse("http://foo:0")[2] == 0
+    assert url.parse("https://foo:0")[2] == 0
+
+
 def test_unparse():
     assert url.unparse("http", "foo.com", 99, "") == "http://foo.com:99"
     assert url.unparse("http", "foo.com", 80, "/bar") == "http://foo.com/bar"
