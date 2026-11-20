@@ -39,6 +39,14 @@ def test_simple():
     )
 
 
+def test_private_use_characters():
+    # Icon fonts use private use characters, which must not be modified.
+    assert (
+        css.prettify('a:before{content:"\ue07b\ue001"}'.encode(), Metadata())
+        == 'a:before {\n    content: "\ue07b\ue001"\n}\n'
+    )
+
+
 def test_render_priority():
     assert css.render_priority(b"data", Metadata(content_type="text/css"))
     assert not css.render_priority(b"data", Metadata(content_type="text/plain"))
