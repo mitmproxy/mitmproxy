@@ -256,6 +256,52 @@ class TestProxyAuth:
             up.requestheaders(f3)
             assert not f2.response
 
+    @pytest.mark.parametrize(
+        "mode",
+        ["transparent", "local", "wireguard"],
+    )
+    def test_requestheaders_skips_intercepted_modes(self, mode):
+        """Transparently intercepted traffic never carries proxy credentials.
+
+        With proxyauth enabled, a request in transparent, local or WireGuard
+        mode must pass through untouched: no 401 for missing credentials, and
+        the origin server's Authorization header must survive.
+        """
+        up = proxyauth.ProxyAuth()
+        with taddons.context(up, loadcore=False) as ctx:
+            ctx.configure(up, proxyauth="foo:bar")
+
+            f = tflow.tflow()
+            f.client_conn.proxy_mode = ProxyMode.parse(mode)
+            assert not f.response
+            up.requestheaders(f)
+            assert not f.response
+
+            f = tflow.tflow()
+            f.client_conn.proxy_mode = ProxyMode.parse(mode)
+            f.request.headers["Authorization"] = proxyauth.mkauth("user", "pass")
+            up.requestheaders(f)
+            assert not f.response
+            assert f.request.headers["Authorization"] == proxyauth.mkauth(
+                "user", "pass"
+            )
+
+    @pytest.mark.parametrize(
+        "mode",
+        ["transparent", "local", "wireguard"],
+    )
+    def test_http_connect_skips_intercepted_modes(self, mode):
+        up = proxyauth.ProxyAuth()
+        with taddons.context(up, loadcore=False) as ctx:
+            ctx.configure(up, proxyauth="foo:bar")
+
+            f = tflow.tflow()
+            f.request.method = "CONNECT"
+            f.client_conn.proxy_mode = ProxyMode.parse(mode)
+            assert not f.response
+            up.http_connect(f)
+            assert not f.response
+
 
 @pytest.mark.parametrize(
     "spec",
