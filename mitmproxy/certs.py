@@ -224,8 +224,6 @@ class Cert(serializable.Serializable):
             return self._cert.not_valid_after.replace(tzinfo=datetime.UTC)
 
     def has_expired(self) -> bool:
-        if sys.version_info < (3, 11):  # pragma: no cover
-            return datetime.datetime.now(datetime.UTC) > self.notafter
         return datetime.datetime.now(datetime.UTC) > self.notafter
 
     @property

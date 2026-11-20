@@ -19,10 +19,10 @@ from __future__ import annotations
 
 import logging
 import re
-import sys
 from collections.abc import Iterable
 from collections.abc import Sequence
 from typing import Any
+from typing import assert_never
 from typing import cast
 
 from mitmproxy import ctx
@@ -51,11 +51,6 @@ from mitmproxy.proxy.layers.tls import dtls_parse_client_hello
 from mitmproxy.proxy.layers.tls import HTTP_ALPNS
 from mitmproxy.proxy.layers.tls import parse_client_hello
 from mitmproxy.tls import ClientHello
-
-if sys.version_info < (3, 11):
-    from typing_extensions import assert_never
-else:
-    from typing import assert_never
 
 logger = logging.getLogger(__name__)
 
