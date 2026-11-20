@@ -96,7 +96,7 @@ def curl_command(f: flow.Flow) -> str:
 
     command = " ".join(shlex.quote(arg) for arg in args)
     if request.content:
-        command += f" -d {request_content_for_console(request)}"
+        command += f" --data-raw {request_content_for_console(request)}"
     return command
 
 
