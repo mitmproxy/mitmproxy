@@ -822,12 +822,17 @@ def load_pem_private_key(
     data: bytes, password: bytes | None
 ) -> rsa.RSAPrivateKey | ec.EllipticCurvePrivateKey:
     """
-    like cryptography's load_pem_private_key, but silently falls back to not using a password
+    like cryptography's load_pem_private_key, but falls back to not using a password
     if the private key is unencrypted.
     """
     try:
         return serialization.load_pem_private_key(data, password)  # type: ignore
     except TypeError:
         if password is not None:
-            return load_pem_private_key(data, None)
+            key = load_pem_private_key(data, None)
+            logger.warning(
+                "A password was specified, but the provided private key did not require a "
+                "password."
+            )
+            return key
         raise
