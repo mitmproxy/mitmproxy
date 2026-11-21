@@ -2,8 +2,23 @@ import logging
 
 import pytest
 
+from mitmproxy.addons.errorcheck import _resolve_color_override
 from mitmproxy.addons.errorcheck import ErrorCheck
 from mitmproxy.tools import main
+
+
+@pytest.mark.parametrize(
+    "raw,expected",
+    [
+        ("always", "always"),
+        ("never", "never"),
+        ("auto", "auto"),
+        ("unexpected", "auto"),
+        (None, "auto"),
+    ],
+)
+def test_resolve_color_override(raw, expected):
+    assert _resolve_color_override(raw) == expected
 
 
 @pytest.mark.parametrize("run_main", [main.mitmdump, main.mitmproxy])
