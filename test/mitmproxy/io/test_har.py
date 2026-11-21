@@ -4,8 +4,10 @@ from pathlib import Path
 import pytest
 
 from mitmproxy import exceptions
+from mitmproxy.addons.savehar import SaveHar
 from mitmproxy.io.har import fix_headers
 from mitmproxy.io.har import request_to_flow
+from mitmproxy.test import tflow
 from mitmproxy.tools.web.app import flow_to_json
 
 data_dir = Path(__file__).parent.parent / "data"
@@ -52,6 +54,17 @@ def test_har_to_flow(har_file: Path):
         actual = json.loads(json.dumps(actual))
 
         assert actual == expected
+
+
+@pytest.mark.parametrize("http_version", ["http/2.0", "HTTP/2", "HTTP/2.0"])
+def test_http2_version(http_version: str):
+    entry = SaveHar().make_har([tflow.tflow(resp=True)])["log"]["entries"][0]
+    entry["request"]["httpVersion"] = http_version
+    entry["response"]["httpVersion"] = http_version
+
+    f = request_to_flow(entry)
+    assert f.request.is_http2
+    assert f.response.is_http2
 
 
 if __name__ == "__main__":
