@@ -56,6 +56,12 @@ from mitmproxy.tls import ClientHelloData
 
 SUPPORTED_QUIC_VERSIONS_SERVER = QuicConfiguration(is_client=False).supported_versions
 
+MAX_CLIENT_HELLO_DATAGRAM_BYTES = 64 * 1024
+"""
+The maximum number of bytes of Initial datagrams we buffer while waiting for a complete ClientHello.
+Each new datagram causes all buffered ones to be re-parsed, so this bounds the work per handshake.
+"""
+
 
 class QuicLayer(tunnel.TunnelLayer):
     quic: QuicConnection | None = None
@@ -490,6 +496,14 @@ class ClientQuicLayer(QuicLayer):
             )
 
         self.handshake_datagram_buf.append(data)
+        buffered = sum(len(d) for d in self.handshake_datagram_buf)
+        if buffered > MAX_CLIENT_HELLO_DATAGRAM_BYTES:
+            self.handshake_datagram_buf.clear()
+            return (
+                False,
+                f"Cannot parse ClientHello: Incomplete after {buffered} bytes "
+                f"(limit: {MAX_CLIENT_HELLO_DATAGRAM_BYTES} bytes).",
+            )
         # extract the client hello
         try:
             client_hello = quic_parse_client_hello_from_datagrams(
