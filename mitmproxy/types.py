@@ -266,6 +266,28 @@ class _StrSeqType(_BaseType):
         return True
 
 
+class _IntSeqType(_BaseType):
+    typ = Sequence[int]
+    display = "int[]"
+
+    def completion(self, manager: "CommandManager", t: type, s: str) -> Sequence[str]:
+        return []
+
+    def parse(self, manager: "CommandManager", t: type, s: str) -> Sequence[int]:
+        return [int(x.strip()) for x in s.split(",")]
+
+    def is_valid(self, manager: "CommandManager", typ: Any, val: Any) -> bool:
+        if isinstance(val, int) or isinstance(val, bytes):
+            return False
+        try:
+            for v in val:
+                if not isinstance(v, int):
+                    return False
+        except TypeError:
+            return False
+        return True
+
+
 class _CutSpecType(_BaseType):
     typ = CutSpec
     display = "cut[]"
@@ -489,6 +511,7 @@ CommandTypes = TypeManager(
     _FlowType,
     _FlowsType,
     _IntType,
+    _IntSeqType,
     _MarkerType,
     _PathType,
     _StrType,
