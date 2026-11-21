@@ -11,6 +11,8 @@ from mitmproxy.addons.tlsconfig import TlsConfig
 from mitmproxy.connection import Address
 from mitmproxy.exceptions import CommandError
 from mitmproxy.exceptions import OptionsError
+from mitmproxy.options import Options
+from mitmproxy.proxy import events
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 
@@ -166,6 +168,19 @@ async def test_playback_crash(monkeypatch, caplog_async):
         assert "oops" in caplog_async.caplog.text
         assert cp.count() == 0
         await cp.done()
+
+
+async def test_replay_log_traceback(monkeypatch, caplog_async):
+    """If the proxy core crashes during replay, we log the traceback."""
+
+    def raise_err(*_, **__):
+        raise ValueError("oops")
+
+    handler = ReplayHandler(tflow.tflow(live=False), Options())
+    monkeypatch.setattr(handler.layer, "handle_event", raise_err)
+    await handler.server_event(events.Start())
+    await caplog_async.await_log("mitmproxy has crashed!")
+    assert "ValueError: oops" in caplog_async.caplog.text
 
 
 def test_check():

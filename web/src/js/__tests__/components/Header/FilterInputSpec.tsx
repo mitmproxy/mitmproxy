@@ -171,6 +171,26 @@ describe("FilterInput Component", () => {
         expect(filterInput.props.onChange).toBeCalledWith("bar");
     });
 
+    it("should handle clearFilter", () => {
+        const filterInput = dummyInput();
+        const input = filterInput.inputRef.current!;
+        input.focus = jest.fn();
+        const clearBtn = document.querySelector(
+            ".filter-input-clear",
+        ) as HTMLButtonElement;
+        expect(clearBtn).toBeInTheDocument();
+        act(() => {
+            fireEvent.mouseDown(clearBtn);
+            fireEvent.click(clearBtn);
+        });
+        expect(filterInput.state.value).toEqual("");
+        expect(input.focus).toBeCalled();
+        expect(filterInput.props.onChange).toBeCalledWith("");
+        expect(
+            document.querySelector(".filter-input-clear"),
+        ).not.toBeInTheDocument();
+    });
+
     it("should handle select", () => {
         const filterInput = dummyInput();
         const input = filterInput.inputRef.current!;
