@@ -1,5 +1,7 @@
 import flowReducer, {
     selectTab,
+    selectRequestTab,
+    selectResponseTab,
     setContentViewFor,
     defaultState,
 } from "../../../ducks/ui/flow";
@@ -13,6 +15,17 @@ describe("option reducer", () => {
         expect(flowReducer(undefined, selectTab("response")).tab).toEqual(
             "response",
         );
+    });
+
+    it("sets the request and response panel tabs independently", () => {
+        let state = flowReducer(defaultState, selectRequestTab("timing"));
+        expect(state.tabRequest).toEqual("timing");
+        expect(state.tabResponse).toEqual("response");
+
+        state = flowReducer(state, selectResponseTab("websocket"));
+        expect(state.tabResponse).toEqual("websocket");
+        expect(state.tabRequest).toEqual("timing");
+        expect(state.tab).toEqual(defaultState.tab);
     });
 
     it("should handle set content view", () => {

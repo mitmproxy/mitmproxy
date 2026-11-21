@@ -102,6 +102,11 @@ export default function OptionMenu() {
                 <div className="menu-content">
                     <EventlogToggle />
                     <CommandBarToggle />
+                    <HideInStatic>
+                        <OptionsToggle name="web_split_flowview">
+                            Split request/response view
+                        </OptionsToggle>
+                    </HideInStatic>
                 </div>
                 <div className="menu-legend">View Options</div>
             </div>
