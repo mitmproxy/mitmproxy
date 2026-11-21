@@ -452,7 +452,10 @@ class Http1Client(Http1Connection):
                     yield ReceiveHttp(
                         ResponseProtocolError(
                             self.stream_id,
-                            "server closed connection",
+                            # If the transport layer recorded why the connection died
+                            # (e.g. a fatal TLS alert), surface that instead of the
+                            # generic message.
+                            self.conn.error or "server closed connection",
                             ErrorCode.GENERIC_SERVER_ERROR,
                         )
                     )

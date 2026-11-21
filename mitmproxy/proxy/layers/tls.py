@@ -411,6 +411,7 @@ class TLSLayer(tunnel.TunnelLayer):
 
         plaintext = bytearray()
         close = False
+        close_reason = "close_notify"
         while True:
             try:
                 plaintext.extend(self.tls.recv(65535))
@@ -425,7 +426,15 @@ class TLSLayer(tunnel.TunnelLayer):
                 # which upon mistrusting a certificate still completes the handshake
                 # and then sends an alert in the next packet. At this point we have unfortunately
                 # already fired out `tls_established_client` hook.
+                # A fatal alert is terminal for the connection, so we must not leave the
+                # child layer waiting for data that will never arrive. This is particularly
+                # relevant for TLS 1.3 servers, which reject a client certificate only after
+                # the handshake has already completed.
+                # https://github.com/mitmproxy/mitmproxy/issues/8486
                 yield commands.Log(f"TLS Error: {e}", WARNING)
+                self.conn.error = f"OpenSSL {e!r}"
+                close = True
+                close_reason = f"fatal {self.proto_name} alert: {e}"
                 break
 
         # Can we send something?
@@ -440,7 +449,9 @@ class TLSLayer(tunnel.TunnelLayer):
         if close:
             self.conn.state &= ~connection.ConnectionState.CAN_READ
             if self.debug:
-                yield commands.Log(f"{self.debug}[tls] close_notify {self.conn}", DEBUG)
+                yield commands.Log(
+                    f"{self.debug}[tls] {close_reason} {self.conn}", DEBUG
+                )
             yield from self.event_to_child(events.ConnectionClosed(self.conn))
 
     def receive_close(self) -> layer.CommandGenerator[None]:
