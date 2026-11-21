@@ -83,6 +83,51 @@ class TestExportCurlCommand:
         )
         assert export_curl(get_request) == result
 
+    def test_get_with_body_gets_explicit_method(self, get_request):
+        # curl switches to POST as soon as -d is present, so a GET with a body
+        # needs an explicit -X GET to stay a GET.
+        get_request.request.content = b"query=value"
+        e = export.Export()
+        with taddons.context() as tctx:
+            tctx.configure(e)
+            command = e.export_str("curl", get_request)
+        assert (
+            command
+            == """curl -H 'header: qvalue' -X GET 'http://address:22/path?a=foo&a=bar&b=baz' -d query=value"""
+        )
+        assert shlex.split(command)[-2:] == ["-d", "query=value"]
+
+    def test_get_without_body_keeps_implicit_method(self, get_request):
+        get_request.request.content = None
+        e = export.Export()
+        with taddons.context() as tctx:
+            tctx.configure(e)
+            command = e.export_str("curl", get_request)
+        assert "-X" not in shlex.split(command)
+        assert (
+            command
+            == """curl -H 'header: qvalue' 'http://address:22/path?a=foo&a=bar&b=baz'"""
+        )
+
+    def test_post_control_still_explicit(self, post_request):
+        post_request.request.content = b"nobinarysupport"
+        e = export.Export()
+        with taddons.context() as tctx:
+            tctx.configure(e)
+            command = e.export_str("curl", post_request)
+        assert command.startswith("curl -X POST http")
+        assert shlex.split(command)[-2:] == ["-d", "nobinarysupport"]
+
+    def test_patch_control_still_explicit(self, patch_request):
+        e = export.Export()
+        with taddons.context() as tctx:
+            tctx.configure(e)
+            command = e.export_str("curl", patch_request)
+        assert (
+            command
+            == """curl -H 'header: qvalue' -X PATCH 'http://address:22/path?query=param' -d content"""
+        )
+
     def test_post(self, export_curl, post_request):
         post_request.request.content = b"nobinarysupport"
         result = "curl -X POST http://address:22/path -d nobinarysupport"
