@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+- mitmweb: Add a clear button to the filter inputs (`Search`, `Highlight`, `Intercept`).
+  ([#8626](https://github.com/mitmproxy/mitmproxy/pull/8626), @Anto1368)
+- Show the traceback when client replay crashes.
+  ([#8614](https://github.com/mitmproxy/mitmproxy/pull/8614), @Giardi77)
 - Fix the `--set` hints printed for the deprecated `--palette-transparent`,
   `--server-replay-use-header` and `-Z` flags, which pointed to option names that don't exist.
   ([#8588](https://github.com/mitmproxy/mitmproxy/pull/8588), @Dio77799)
