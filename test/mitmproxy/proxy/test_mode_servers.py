@@ -45,6 +45,34 @@ def test_make():
         WireGuardServerInstance.make("regular", manager)
 
 
+def test_should_rebind():
+    manager = Mock()
+    with taddons.context() as tctx:
+        assert LocalRedirectorInstance.make("local", manager).should_rebind() is False
+        assert TunInstance.make("tun", manager).should_rebind() is False
+
+        tctx.options.listen_host = "127.0.0.1"
+        tctx.options.listen_port = 0
+        inst = ServerInstance.make("regular", manager)
+        assert inst.should_rebind() is False
+
+
+async def test_should_rebind_when_listen_options_change():
+    manager = MagicMock()
+    with taddons.context() as tctx:
+        tctx.options.listen_host = "127.0.0.1"
+        tctx.options.listen_port = 0
+        inst = ServerInstance.make("regular", manager)
+        await inst.start()
+        try:
+            assert inst.should_rebind() is False
+            tctx.options.listen_port = 12345
+            assert inst.should_rebind() is True
+        finally:
+            await inst.stop()
+        assert inst.should_rebind() is False
+
+
 async def test_last_exception_and_running(monkeypatch):
     manager = MagicMock()
     err = ValueError("something else")
