@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import ssl
 from collections.abc import AsyncGenerator
 from collections.abc import Callable
@@ -53,6 +54,28 @@ class HelperAddon:
 
     def tcp_start(self, f):
         self.flows.append(f)
+
+
+async def test_server_status_command() -> None:
+    ps = Proxyserver()
+
+    with taddons.context(ps) as tctx:
+        tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
+        assert json.loads(ps.status()) == []
+
+        assert await ps.setup_servers()
+        ps.running()
+        status = json.loads(ps.status())
+        assert len(status) == 1
+        assert status[0]["full_spec"] == "regular"
+        assert status[0]["is_running"] is True
+        assert status[0]["last_exception"] is None
+        assert len(status[0]["listen_addrs"]) == 1
+        assert status[0]["listen_addrs"][0][0] == "127.0.0.1"
+        assert status[0]["listen_addrs"][0][1] > 0
+
+        tctx.configure(ps, server=False)
+        assert json.loads(ps.status()) == []
 
 
 async def test_start_stop(caplog_async):

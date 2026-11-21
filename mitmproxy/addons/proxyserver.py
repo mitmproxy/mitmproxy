@@ -7,6 +7,7 @@ from __future__ import annotations
 import asyncio
 import collections
 import ipaddress
+import json
 import logging
 from collections.abc import Iterable
 from collections.abc import Iterator
@@ -132,6 +133,17 @@ class Proxyserver(ServerManager):
     @command.command("proxyserver.active_connections")
     def active_connections(self) -> int:
         return len(self.connections)
+
+    @command.command("proxyserver.status")
+    def status(self) -> str:
+        """
+        Return the state of all proxy server instances as JSON.
+
+        Each entry is the instance's `to_json()` dict: the requested mode
+        spec, whether the listener is running, the bound address when a
+        port was assigned dynamically, and the full bind error if it failed.
+        """
+        return json.dumps([s.to_json() for s in self.servers])
 
     @contextmanager
     def register_connection(
