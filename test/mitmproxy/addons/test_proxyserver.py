@@ -240,6 +240,29 @@ def test_options():
         tctx.configure(ps, mode=["regular", "local"], server=False)
 
 
+def test_register_connection_reused_id_does_not_raise():
+    # Regression test for #6405: if connection_id is reused (e.g. a client
+    # address/port pair reconnecting quickly) before an earlier handler's
+    # register_connection() context manager has unwound, a plain
+    # `del self.connections[connection_id]` in the finally block raises
+    # KeyError once the *newer* registration's cleanup runs and removes the
+    # entry the older one still thinks is its own.
+    ps = Proxyserver()
+    connection_id = ("tcp", ("127.0.0.1", 51356), ("127.0.0.1", 8080))
+    old_handler = Mock()
+    new_handler = Mock()
+
+    with ps.register_connection(connection_id, old_handler):
+        assert ps.connections[connection_id] is old_handler
+        with ps.register_connection(connection_id, new_handler):
+            assert ps.connections[connection_id] is new_handler
+        # inner cleanup must not remove the outer (different) registration
+        assert connection_id not in ps.connections
+
+    # outer cleanup must not raise even though its entry is already gone
+    assert connection_id not in ps.connections
+
+
 async def test_startup_err(monkeypatch, caplog) -> None:
     async def _raise(*_):
         raise OSError("cannot bind")
