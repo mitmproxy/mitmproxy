@@ -266,7 +266,11 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
             raise OSError(e.errno, message, e.filename) from e
 
     async def _stop(self) -> None:
-        assert self._servers
+        # _start() releases its exception before assigning _servers, so a failed
+        # instance reaches stop() with an empty list. Stopping it is a no-op
+        # rather than an assertion failure.
+        if not self._servers:
+            return
         try:
             for s in self._servers:
                 s.close()
