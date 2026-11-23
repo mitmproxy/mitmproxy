@@ -10,6 +10,10 @@
 - Fix cURL exports of request bodies that start with `@`. curl treats `-d @name` as a file to read,
   so the export now uses `--data-raw` and sends the body literally.
   ([#8639](https://github.com/mitmproxy/mitmproxy/pull/8639), @Dukotah)
+- Update aioquic to 1.9.0, which adds post-quantum key exchange and HelloRetryRequest support to
+  QUIC. Cancelling an HTTP/3 request no longer cuts off a complete response the client has not
+  acknowledged yet, and requests to an HTTP/3 server which sent GOAWAY fail straight away.
+  ([#8642](https://github.com/mitmproxy/mitmproxy/pull/8642), @jlaine)
 - mitmweb: Add a clear button to the filter inputs (`Search`, `Highlight`, `Intercept`).
   ([#8626](https://github.com/mitmproxy/mitmproxy/pull/8626), @Anto1368)
 - Show the traceback when client replay crashes.

@@ -4,11 +4,13 @@ from dataclasses import dataclass
 from aioquic.h3.connection import H3Connection
 from aioquic.h3.connection import H3Event
 from aioquic.h3.connection import Headers
-from aioquic.h3.events import HeadersReceived
 from aioquic.h3.exceptions import InvalidStreamStateError
 from aioquic.quic.configuration import QuicConfiguration
+from aioquic.quic.connection import stream_is_client_initiated
 from aioquic.quic.connection import stream_is_unidirectional
+from aioquic.quic.events import StopSendingReceived
 from aioquic.quic.events import StreamDataReceived
+from aioquic.quic.events import StreamReset
 from aioquic.quic.packet import QuicErrorCode
 
 from mitmproxy import connection
@@ -23,22 +25,6 @@ from mitmproxy.proxy.layers.quic import QuicStreamStopSending
 from mitmproxy.proxy.layers.quic import ResetQuicStream
 from mitmproxy.proxy.layers.quic import SendQuicStreamData
 from mitmproxy.proxy.layers.quic import StopSendingQuicStream
-
-
-@dataclass
-class TrailersReceived(H3Event):
-    """
-    The TrailersReceived event is fired whenever trailers are received.
-    """
-
-    trailers: Headers
-    "The trailers."
-
-    stream_id: int
-    "The ID of the stream the trailers were received for."
-
-    stream_ended: bool
-    "Whether the STREAM frame had the FIN bit set."
 
 
 @dataclass
@@ -57,21 +43,31 @@ class StreamClosed(H3Event):
 
 class MockQuic:
     """
-    aioquic intermingles QUIC and HTTP/3. This is something we don't want to do because that makes testing much harder.
-    Instead, we mock our QUIC connection object here and then take out the wire data to be sent.
+    H3Connection sends by calling methods of a QuicConnection. In mitmproxy, the QuicConnection
+    belongs to the QUIC layer, so this class stands in for it and turns those calls into commands
+    for that layer.
+
+    Its public methods are the ones of `QuicConnection` which H3Connection uses, with the same
+    semantics. Its only other public member is `pending_commands`, which holds what it sends.
+    Anything else mitmproxy needs belongs in `LayeredH3Connection`.
     """
 
     def __init__(self, conn: connection.Connection, is_client: bool) -> None:
-        self.conn = conn
         self.pending_commands: list[commands.Command] = []
-        self._next_stream_id: list[int] = [0, 1, 2, 3]
+        """The commands for the QUIC layer, in place of what QuicConnection would send."""
+        self._closed = False
+        self._conn = conn
         self._is_client = is_client
-        self.closed = False
-        """Whether close() was called, by H3Connection or by us."""
+        self._next_stream_id: list[int] = [0, 1, 2, 3]
+        """Per stream type, the first stream ID nothing was sent on yet."""
 
         # the following fields are accessed by H3Connection
         self.configuration = QuicConfiguration(is_client=is_client)
         self._quic_logger = None
+
+    def can_send_stream_data(self, stream_id: int) -> bool:
+        # LayeredH3Connection checks the stream state itself before sending
+        return True
 
     def close(
         self,
@@ -83,39 +79,53 @@ class MockQuic:
         # we note the error on the connection and yield a CloseConnection
         # this will then call `QuicConnection.close` with the proper values
         # once the `Http3Connection` receives `ConnectionClosed`, it will send out `ProtocolError`
-        self.closed = True
+        self._closed = True
         self.pending_commands.append(
-            CloseQuicConnection(self.conn, error_code, frame_type, reason_phrase)
+            CloseQuicConnection(self._conn, error_code, frame_type, reason_phrase)
         )
 
     def get_next_available_stream_id(self, is_unidirectional: bool = False) -> int:
-        # since we always reserve the ID, we have to "find" the next ID like `QuicConnection` does
-        index = (int(is_unidirectional) << 1) | int(not self._is_client)
-        stream_id = self._next_stream_id[index]
-        self._next_stream_id[index] = stream_id + 4
-        return stream_id
+        # like `QuicConnection`, a stream ID is only used once something is sent on it
+        return self._next_stream_id[self._stream_type(is_unidirectional)]
+
+    def is_closing(self) -> bool:
+        return self._closed
 
     def reset_stream(self, stream_id: int, error_code: int) -> None:
-        self.pending_commands.append(ResetQuicStream(self.conn, stream_id, error_code))
-
-    def stop_send(self, stream_id: int, error_code: int) -> None:
-        self.pending_commands.append(
-            StopSendingQuicStream(self.conn, stream_id, error_code)
-        )
+        self._use_stream(stream_id)
+        self.pending_commands.append(ResetQuicStream(self._conn, stream_id, error_code))
 
     def send_stream_data(
         self, stream_id: int, data: bytes, end_stream: bool = False
     ) -> None:
+        self._use_stream(stream_id)
         self.pending_commands.append(
-            SendQuicStreamData(self.conn, stream_id, data, end_stream)
+            SendQuicStreamData(self._conn, stream_id, data, end_stream)
         )
+
+    def stop_stream(self, stream_id: int, error_code: int) -> None:
+        self._use_stream(stream_id)
+        self.pending_commands.append(
+            StopSendingQuicStream(self._conn, stream_id, error_code)
+        )
+
+    def _stream_type(self, is_unidirectional: bool) -> int:
+        """Returns the index of our streams of the given direction."""
+        return (int(is_unidirectional) << 1) | int(not self._is_client)
+
+    def _use_stream(self, stream_id: int) -> None:
+        """Like `QuicConnection`, sending on one of our streams also opens those before it."""
+        if stream_is_client_initiated(stream_id) == self._is_client:
+            index = self._stream_type(stream_is_unidirectional(stream_id))
+            self._next_stream_id[index] = max(
+                self._next_stream_id[index], stream_id + 4
+            )
 
 
 @dataclass
 class _StreamState:
     """The state of a request stream, as seen by mitmproxy."""
 
-    headers_received: bool = False
     headers_sent: bool = False
     send_ended: bool = False
     recv_ended: bool = False
@@ -131,11 +141,8 @@ class LayeredH3Connection(H3Connection):
         self._mock = MockQuic(conn, is_client)
         self._connection_closed = False
         """Whether the QUIC layer reported that the connection was closed."""
-        self._closed_streams: set[int] = set()
-        """
-        We keep track of all stream IDs for which we have requested
-        STOP_SENDING to silently discard incoming data.
-        """
+        self._next_reserved_stream_id = self._mock.get_next_available_stream_id()
+        """The first request stream ID `reserve_stream_id` has not returned yet."""
         self._streams: dict[int, _StreamState] = {}
         """
         aioquic forgets about streams once they have ended,
@@ -143,7 +150,7 @@ class LayeredH3Connection(H3Connection):
 
         Unlike aioquic, we never forget a stream, as we need its state to reject
         sends after it ended. This grows with the number of requests made on the
-        connection, like `_closed_streams`.
+        connection.
         """
         super().__init__(self._mock)  # type: ignore
 
@@ -151,7 +158,7 @@ class LayeredH3Connection(H3Connection):
     def _closed(self) -> bool:
         """Whether either side closed the connection, so incoming events are ignored."""
         # H3Connection closes the connection itself on protocol errors
-        return self._connection_closed or self._mock.closed
+        return self._connection_closed or self._mock.is_closing()
 
     def _stream_state(self, stream_id: int) -> _StreamState:
         try:
@@ -159,24 +166,6 @@ class LayeredH3Connection(H3Connection):
         except KeyError:
             state = self._streams[stream_id] = _StreamState()
             return state
-
-    def _report_trailers(self, events: list[H3Event]) -> list[H3Event]:
-        """Turns HeadersReceived into TrailersReceived for trailers."""
-
-        for index, event in enumerate(events):
-            if isinstance(event, HeadersReceived):
-                state = self._stream_state(event.stream_id)
-                if state.headers_received:
-                    events[index] = TrailersReceived(
-                        event.headers, event.stream_id, event.stream_ended
-                    )
-                elif not any(
-                    name == b":status" and value.startswith(b"1")
-                    for name, value in event.headers
-                ):
-                    # interim (1xx) responses come before the final headers
-                    state.headers_received = True
-        return events
 
     def close_connection(
         self,
@@ -196,11 +185,6 @@ class LayeredH3Connection(H3Connection):
             super().send_data(stream_id, b"", end_stream=True)
             state.send_ended = True
 
-    def get_next_available_stream_id(self, is_unidirectional: bool = False):
-        """Reserves and returns the next available stream ID."""
-
-        return self._mock.get_next_available_stream_id(is_unidirectional)
-
     def get_open_stream_ids(self) -> Iterable[int]:
         """Iterates over all non-special open streams"""
 
@@ -219,27 +203,34 @@ class LayeredH3Connection(H3Connection):
             return []
 
         elif isinstance(event, (QuicStreamReset, QuicStreamStopSending)):
-            self.close_stream(
-                event.stream_id,
-                event.error_code,
-                stop_send=isinstance(event, QuicStreamStopSending),
-            )
-            self._stream_state(event.stream_id).recv_ended = True
+            # Let aioquic know which direction the peer terminated. It closes the
+            # connection if this is a critical stream, and it reports nothing
+            # we need, since we report StreamClosed instead.
+            if isinstance(event, QuicStreamReset):
+                self.handle_event(StreamReset(event.error_code, event.stream_id))
+            else:
+                self.handle_event(
+                    StopSendingReceived(event.error_code, event.stream_id)
+                )
+            if self._closed or not (
+                stream_is_client_initiated(event.stream_id)
+                and not stream_is_unidirectional(event.stream_id)
+            ):
+                return []
+
+            # The peer gave up on the request, so we terminate what is still open.
+            self.terminate_request(event.stream_id, error_code=event.error_code)
             return [StreamClosed(event.stream_id, event.error_code)]
 
         # convert data events from the QUIC layer back to aioquic events
         elif isinstance(event, QuicStreamDataReceived):
-            # Discard contents if we have already sent STOP_SENDING on this stream.
-            if event.stream_id in self._closed_streams:
-                return []
+            # aioquic drops data on streams that were terminated
             if not stream_is_unidirectional(event.stream_id):
-                self._stream_state(event.stream_id).recv_ended = event.end_stream
-            # QPACK can also report a request stream's headers while handling its
-            # encoder stream, once they are no longer blocked
-            return self._report_trailers(
-                self.handle_event(
-                    StreamDataReceived(event.data, event.end_stream, event.stream_id)
-                )
+                state = self._stream_state(event.stream_id)
+                if event.end_stream:
+                    state.recv_ended = True
+            return self.handle_event(
+                StreamDataReceived(event.data, event.end_stream, event.stream_id)
             )
 
         # should never happen
@@ -252,22 +243,17 @@ class LayeredH3Connection(H3Connection):
         state = self._streams.get(stream_id)
         return state is not None and (state.headers_sent or state.send_ended)
 
-    def close_stream(
-        self, stream_id: int, error_code: int, stop_send: bool = True
-    ) -> None:
-        """Close a stream that hasn't been closed locally yet."""
-        if stream_id not in self._closed_streams:
-            self._closed_streams.add(stream_id)
-            self._stream_state(stream_id).send_ended = True
-            # https://www.rfc-editor.org/rfc/rfc9000.html#section-3.5-8
-            # An endpoint that wishes to terminate both directions of
-            # a bidirectional stream can terminate one direction by
-            # sending a RESET_STREAM frame, and it can encourage prompt
-            # termination in the opposite direction by sending a
-            # STOP_SENDING frame.
-            self._mock.reset_stream(stream_id=stream_id, error_code=error_code)
-            if stop_send:
-                self._mock.stop_send(stream_id=stream_id, error_code=error_code)
+    def reserve_stream_id(self) -> int:
+        """
+        Reserves and returns the ID of a new request stream, which no other call
+        returns, even if nothing was sent on the previous ones yet.
+        """
+
+        stream_id = max(
+            self._mock.get_next_available_stream_id(), self._next_reserved_stream_id
+        )
+        self._next_reserved_stream_id = stream_id + 4
+        return stream_id
 
     def send_data(self, stream_id: int, data: bytes, end_stream: bool = False) -> None:
         """Sends data over the given stream."""
@@ -278,10 +264,6 @@ class LayeredH3Connection(H3Connection):
             raise InvalidStreamStateError("DATA frame is not allowed in this state")
         super().send_data(stream_id, data, end_stream)
         state.send_ended = end_stream
-
-    def send_datagram(self, flow_id: int, data: bytes) -> None:
-        # supporting datagrams would require additional information from the underlying QUIC connection
-        raise NotImplementedError()  # pragma: no cover
 
     def send_headers(
         self, stream_id: int, headers: Headers, end_stream: bool = False
@@ -310,6 +292,20 @@ class LayeredH3Connection(H3Connection):
         super().send_headers(stream_id, trailers, end_stream=True)
         state.send_ended = True
 
+    def terminate_request(
+        self, stream_id: int, *, error_code: int | None = None
+    ) -> None:
+        """Terminates the directions of a request stream which are still open."""
+
+        try:
+            super().terminate_request(stream_id, error_code=error_code)
+        except InvalidStreamStateError:
+            # we reserved this stream but sent nothing on it, so nothing is open
+            pass
+        state = self._stream_state(stream_id)
+        state.send_ended = True
+        state.recv_ended = True
+
     def transmit(self) -> layer.CommandGenerator[None]:
         """Yields all pending commands for the upper QUIC layer."""
 
@@ -320,5 +316,4 @@ class LayeredH3Connection(H3Connection):
 __all__ = [
     "LayeredH3Connection",
     "StreamClosed",
-    "TrailersReceived",
 ]
