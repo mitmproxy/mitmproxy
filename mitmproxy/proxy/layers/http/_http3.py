@@ -8,6 +8,7 @@ from aioquic.h3.connection import ErrorCode as H3ErrorCode
 from aioquic.h3.events import DataReceived
 from aioquic.h3.events import GoAwayReceived
 from aioquic.h3.events import HeadersReceived
+from aioquic.h3.exceptions import InvalidConnectionStateError
 from aioquic.h3.exceptions import InvalidStreamStateError
 
 from . import ErrorCode
@@ -31,7 +32,6 @@ from ._http2 import parse_h2_request_headers
 from ._http2 import parse_h2_response_headers
 from ._http_h3 import LayeredH3Connection
 from ._http_h3 import StreamClosed
-from ._http_h3 import TrailersReceived
 from mitmproxy import connection
 from mitmproxy import http
 from mitmproxy import version
@@ -81,6 +81,19 @@ class Http3Connection(HttpConnection):
                         )
                     except ValueError as e:
                         yield from self.fail_unencodable_stream(event, e)
+                    except InvalidConnectionStateError as e:
+                        if not isinstance(event, RequestHeaders):
+                            raise
+                        # aioquic refuses to start a request after GOAWAY or once
+                        # the connection is closing, so nothing was sent for it.
+                        # Terminating it only marks it as done, so that it does not
+                        # fail again when the connection closes.
+                        self.h3_conn.terminate_request(event.stream_id)
+                        yield ReceiveHttp(
+                            self.ReceiveProtocolError(
+                                event.stream_id, str(e), self.ReceiveProtocolError.code
+                            )
+                        )
                 elif isinstance(event, (RequestTrailers, ResponseTrailers)):
                     try:
                         self.h3_conn.send_trailers(
@@ -122,11 +135,13 @@ class Http3Connection(HttpConnection):
                                 error_code = H3ErrorCode.H3_INTERNAL_ERROR
                             case other:  # pragma: no cover
                                 assert_never(other)
-                        self.h3_conn.close_stream(event.stream_id, error_code.value)
+                        self.h3_conn.terminate_request(
+                            event.stream_id, error_code=error_code.value
+                        )
                 else:  # pragma: no cover
                     raise AssertionError(f"Unexpected event: {event!r}")
 
-            except InvalidStreamStateError as e:
+            except (InvalidConnectionStateError, InvalidStreamStateError) as e:
                 # Http2Connection also ignores HttpEvents that violate the current stream state
                 yield commands.Log(f"Received {event!r} unexpectedly: {e}")
 
@@ -161,6 +176,14 @@ class Http3Connection(HttpConnection):
                         )
                     if h3_event.stream_ended:
                         yield ReceiveHttp(self.ReceiveEndOfMessage(h3_event.stream_id))
+                elif isinstance(h3_event, HeadersReceived) and h3_event.is_trailers:
+                    yield ReceiveHttp(
+                        self.ReceiveTrailers(
+                            h3_event.stream_id, http.Headers(h3_event.headers)
+                        )
+                    )
+                    if h3_event.stream_ended:
+                        yield ReceiveHttp(self.ReceiveEndOfMessage(h3_event.stream_id))
                 elif isinstance(h3_event, HeadersReceived):
                     try:
                         receive_event = self.parse_headers(h3_event)
@@ -187,19 +210,11 @@ class Http3Connection(HttpConnection):
                             yield ReceiveHttp(
                                 self.ReceiveEndOfMessage(h3_event.stream_id)
                             )
-                elif isinstance(h3_event, TrailersReceived):
-                    yield ReceiveHttp(
-                        self.ReceiveTrailers(
-                            h3_event.stream_id, http.Headers(h3_event.trailers)
-                        )
-                    )
-                    if h3_event.stream_ended:
-                        yield ReceiveHttp(self.ReceiveEndOfMessage(h3_event.stream_id))
                 elif isinstance(h3_event, GoAwayReceived):
                     # Unlike Http2Client, which closes the connection on GOAWAY, we keep it
                     # open so that requests the server has started to process complete.
-                    # We lack a mechanism to stop reusing a connection, so the server will
-                    # reject any later requests.
+                    # We lack a mechanism to stop reusing a connection, so aioquic refuses
+                    # any later requests, which then fail.
                     yield commands.Log(
                         f"HTTP/3 server is shutting down, it will not process "
                         f"stream {h3_event.stream_id} and above.",
@@ -259,8 +274,8 @@ class Http3Connection(HttpConnection):
             # Nothing has reached the client yet, so tell it what went wrong.
             self.send_error_response(event.stream_id, status_codes.BAD_GATEWAY, msg)
         else:
-            self.h3_conn.close_stream(
-                event.stream_id, H3ErrorCode.H3_INTERNAL_ERROR.value
+            self.h3_conn.terminate_request(
+                event.stream_id, error_code=H3ErrorCode.H3_INTERNAL_ERROR.value
             )
         yield from self.h3_conn.transmit()
         yield ReceiveHttp(
@@ -336,7 +351,7 @@ class Http3Client(Http3Connection):
         if isinstance(event, HttpEvent):
             ours = self.our_stream_id.get(event.stream_id, None)
             if ours is None:
-                ours = self.h3_conn.get_next_available_stream_id()
+                ours = self.h3_conn.reserve_stream_id()
                 self.our_stream_id[event.stream_id] = ours
                 self.their_stream_id[ours] = event.stream_id
             event.stream_id = ours
