@@ -86,6 +86,13 @@ class Test_Format(unittest.TestCase):
             self.assertEqual(v, tnetstring.loads(tnetstring.dumps(v)))
             self.assertEqual((v, b""), tnetstring.pop(memoryview(tnetstring.dumps(v))))
 
+    def test_error_on_invalid_lengths(self):
+        # lengths must not be negative or run past the end of the container
+        with self.assertRaises(ValueError):
+            tnetstring.loads(b"6:5:abc,]0:~")
+        with self.assertRaises(ValueError):
+            tnetstring.loads(b"-1:-1#")
+
     def test_roundtrip_big_integer(self):
         # Recent Python versions do not like ints above 4300 digits, https://github.com/python/cpython/issues/95778
         i1 = math.factorial(1557)
