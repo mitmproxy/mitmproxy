@@ -17,10 +17,12 @@ from ._events import RequestData
 from ._events import RequestEndOfMessage
 from ._events import RequestHeaders
 from ._events import RequestProtocolError
+from ._events import RequestTrailers
 from ._events import ResponseData
 from ._events import ResponseEndOfMessage
 from ._events import ResponseHeaders
 from ._events import ResponseProtocolError
+from ._events import ResponseTrailers
 from mitmproxy import http
 from mitmproxy import version
 from mitmproxy.connection import Connection
@@ -275,6 +277,11 @@ class Http1Server(Http1Connection):
                     self.conn, make_error_response(status, event.message)
                 )
             yield commands.CloseConnection(self.conn)
+        elif isinstance(event, ResponseTrailers):
+            # HTTP/1 clients cannot receive trailers (except as a chunked
+            # trailer section, which we do not emit). Trailers are optional
+            # metadata, so drop them instead of crashing the stream.
+            return
         else:
             raise AssertionError(f"Unexpected event: {event}")
 
@@ -391,6 +398,11 @@ class Http1Client(Http1Connection):
             elif http1.expected_http_body_size(self.request, self.response) == -1:
                 yield commands.CloseTcpConnection(self.conn, half_close=True)
             yield from self.mark_done(request=True)
+        elif isinstance(event, RequestTrailers):
+            # HTTP/1 servers cannot receive trailers (except as a chunked
+            # trailer section, which we do not emit). Trailers are optional
+            # metadata, so drop them instead of crashing the stream.
+            return
         else:
             raise AssertionError(f"Unexpected event: {event}")
 

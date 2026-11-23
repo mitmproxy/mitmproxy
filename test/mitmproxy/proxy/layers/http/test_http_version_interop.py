@@ -62,6 +62,104 @@ def h2_client(tctx: Context) -> tuple[h2.connection.H2Connection, Playbook]:
     return conn, playbook
 
 
+def test_h2_request_trailers_to_h1(tctx):
+    """h2 request trailers are dropped when the upstream speaks HTTP/1 (#8573)."""
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
+
+    conn, playbook = h2_client(tctx)
+
+    conn.send_headers(
+        1,
+        [
+            (b":method", b"POST"),
+            (b":scheme", b"http"),
+            (b":path", b"/"),
+            (b":authority", b"example.com"),
+            (b"content-length", b"5"),
+        ],
+    )
+    conn.send_data(1, b"hello")
+    conn.send_headers(1, [(b"x-trailer", b"t")], end_stream=True)
+    assert (
+        playbook
+        >> DataReceived(tctx.client, conn.data_to_send())
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(
+            server,
+            b"POST / HTTP/1.1\r\nHost: example.com\r\ncontent-length: 5\r\n\r\n",
+        )
+        << SendData(server, b"hello")
+    )
+    assert flow().request.trailers["x-trailer"] == "t"
+    assert playbook
+
+
+def test_h1_response_trailers_from_h2(tctx):
+    """h2 response trailers are dropped when the client speaks HTTP/1 (#8573)."""
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
+    tctx.options.http2_ping_keepalive = 0
+
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+
+    conf = h2.config.H2Configuration(client_side=False)
+    conn = h2.connection.H2Connection(conf)
+    conn.initiate_connection()
+
+    request = Placeholder(bytes)
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            b"POST http://example.com/ HTTP/1.1\r\nHost: example.com\r\n"
+            b"Content-Length: 5\r\n\r\nhello",
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply(None, side_effect=make_h2)
+        << SendData(server, request)
+    )
+    events = conn.receive_data(request())
+    assert event_types(events) == [
+        h2.events.RemoteSettingsChanged,
+        h2.events.WindowUpdated,
+        h2.events.RequestReceived,
+        h2.events.DataReceived,
+        h2.events.DataReceived,
+        h2.events.StreamEnded,
+    ]
+    # Body arrives as one data frame, then an empty data frame carrying END_STREAM.
+    assert events[3].data == b"hello"
+    assert events[4].data == b""
+
+    conn.send_headers(1, example_response_headers)
+    conn.send_data(1, b"Hello World!")
+    conn.send_headers(1, [(b"resp-trailer", b"v")], end_stream=True)
+    settings_ack = Placeholder(bytes)
+    assert (
+        playbook
+        >> DataReceived(server, conn.data_to_send())
+        << http.HttpResponseHeadersHook(flow)
+        << SendData(server, settings_ack)
+        >> reply(to=-2)
+        << http.HttpResponseHook(flow)
+        >> reply()
+        << SendData(tctx.client, b"HTTP/1.1 200 OK\r\n\r\nHello World!")
+        << CloseConnection(tctx.client)
+    )
+    assert flow().response.trailers["resp-trailer"] == "v"
+    assert settings_ack() == b"\x00\x00\x00\x04\x01\x00\x00\x00\x00"
+
+
 def test_h2_to_h1(tctx):
     """Test HTTP/2 -> HTTP/1 request translation"""
     server = Placeholder(Server)
