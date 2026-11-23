@@ -1,0 +1,125 @@
+[0m
+> build · glm-5.1
+[0m
+I need to examine the mitmproxy source code to give an informed verdict. Let me look at the relevant files.
+[0m✱ [0mGlob "**/*.py"[90m in . · 100 matches[0m
+[0m→ [0mRead mitmproxy/proxy/events.py
+[0m→ [0mRead mitmproxy/flow.py
+[0m→ [0mRead mitmproxy/addons/proxyserver.py
+Now let me look at the layer implementations to understand how `MessageInjected` subclasses are handled:
+[0m✗ [0mread failed
+[91m[1mError: [0mFile not found: /tmp/cypher-wt-1777492662/glm/mitmproxy/proxy/layers/tcp
+
+Did you mean one of these?
+/tmp/cypher-wt-1777492662/glm/mitmproxy/proxy/layers/tcp.py
+[0m✗ [0mread failed
+[91m[1mError: [0mFile not found: /tmp/cypher-wt-1777492662/glm/mitmproxy/proxy/layers/websocket
+
+Did you mean one of these?
+/tmp/cypher-wt-1777492662/glm/mitmproxy/proxy/layers/websocket.py
+[0m→ [0mRead mitmproxy/proxy/layers/http
+[0m→ [0mRead mitmproxy/proxy/layers/websocket.py
+[0m→ [0mRead mitmproxy/proxy/layers/tcp.py
+[0m→ [0mRead mitmproxy/proxy/layers/http/_base.py
+[0m→ [0mRead mitmproxy/proxy/layers/http/__init__.py
+[0m→ [0mRead mitmproxy/addons/core.py
+Now let me check view.py for the other kill call sites and the `@expect` utility:
+[0m✱ [0mGrep "\.kill\(\)"[90m in mitmproxy/addons · 6 matches[0m
+[0m→ [0mRead mitmproxy/proxy/layers/udp.py
+[0m→ [0mRead mitmproxy/proxy/utils.py
+Let me check the view.py kill sites and the tunnel layer for understanding layer stacking:
+[0m→ [0mRead mitmproxy/addons/view.py[90m [offset=420, limit=50][0m
+[0m→ [0mRead mitmproxy/addons/view.py[90m [offset=585, limit=30][0m
+[0m→ [0mRead mitmproxy/proxy/layer.py
+[0m→ [0mRead mitmproxy/proxy/tunnel.py
+Now I have a thorough understanding of the codebase. Let me formulate my verdict based on close reading of the actual implementation.
+[0m✱ [0mGlob "temp/plans/**/*"[90m in . · 0 matches[0m
+[0m
+[0m$ [0mmkdir -p /tmp/cypher-wt-1777492662/glm/temp/plans/questions/q-cypher-killinjected-arch
+[0m
+[0m← [0mWrite temp/plans/questions/q-cypher-killinjected-arch/glm.md
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/tmp/cypher-wt-1777492662/glm/mitmproxy/proxy/events.py">
+ERROR [108:5] "command" overrides symbol of same name in class "CommandCompleted"
+  Variable is mutable so its type is invariant
+    Override type "OpenConnection" is not the same as base type "Command"
+ERROR [115:5] "command" overrides symbol of same name in class "CommandCompleted"
+  Variable is mutable so its type is invariant
+    Override type "StartHook" is not the same as base type "Command"
+ERROR [138:5] "command" overrides symbol of same name in class "CommandCompleted"
+  Variable is mutable so its type is invariant
+    Override type "RequestWakeup" is not the same as base type "Command"
+</diagnostics>
+
+LSP errors detected in other files:
+<diagnostics file="/tmp/cypher-wt-1777492662/glm/mitmproxy/addons/proxyserver.py">
+ERROR [16:6] Import "wsproto.frame_protocol" could not be resolved
+ERROR [110:16] Argument of type "str | ProxyMode" cannot be assigned to parameter "key" of type "ProxyMode" in function "__getitem__"
+  Type "str | ProxyMode" is not assignable to type "ProxyMode"
+    "str" is not assignable to "ProxyMode"
+</diagnostics>
+
+LSP errors detected in other files:
+<diagnostics file="/tmp/cypher-wt-1777492662/glm/mitmproxy/proxy/layers/tcp.py">
+ERROR [87:38] Cannot assign to attribute "_handle_event" for class "TCPLayer*"
+  Type "(_: Unknown) -> CommandGenerator[None]" is not assignable to type "(event: Event) -> CommandGenerator[None]"
+    Parameter name mismatch: "event" versus "_"
+ERROR [91:21] Type "(self: Self@TCPLayer, _: Unknown) -> CommandGenerator[None]" is not assignable to declared type "(self: Self@Layer, event: Event) -> CommandGenerator[None]"
+  Type "(self: Self@TCPLayer, _: Unknown) -> CommandGenerator[None]" is not assignable to type "(self: Self@Layer, event: Event) -> CommandGenerator[None]"
+    "Layer*" is not assignable to "TCPLayer"
+    Parameter name mismatch: "event" versus "_"
+ERROR [128:38] Cannot assign to attribute "_handle_event" for class "TCPLayer*"
+  Type "(_: Unknown) -> CommandGenerator[None]" is not assignable to type "(event: Event) -> CommandGenerator[None]"
+    Parameter name mismatch: "event" versus "_"
+</diagnostics>
+
+LSP errors detected in other files:
+<diagnostics file="/tmp/cypher-wt-1777492662/glm/mitmproxy/proxy/layers/websocket.py">
+ERROR [5:8] Import "wsproto.extensions" could not be resolved
+ERROR [6:8] Import "wsproto.frame_protocol" could not be resolved
+ERROR [7:8] Import "wsproto.utilities" could not be resolved
+ERROR [8:6] Import "wsproto" could not be resolved
+ERROR [9:6] Import "wsproto.frame_protocol" could not be resolved
+ERROR [134:21] Type "(self: Self@WebsocketLayer, _: Unknown) -> CommandGenerator[None]" is not assignable to declared type "(self: Self@Layer, event: Event) -> CommandGenerator[None]"
+  Type "(self: Self@WebsocketLayer, _: Unknown) -> CommandGenerator[None]" is not assignable to type "(self: Self@Layer, event: Event) -> CommandGenerator[None]"
+    "Layer*" is not assignable to "WebsocketLayer"
+    Parameter name mismatch: "event" versus "_"
+ERROR [218:38] Cannot assign to attribute "_handle_event" for class "WebsocketLayer*"
+  Type "(_: Unknown) -> CommandGenerator[None]" is not assignable to type "(event: Event) -> CommandGenerator[None]"
+    Parameter name mismatch: "event" versus "_"
+</diagnostics>
+
+LSP errors detected in other files:
+<diagnostics file="/tmp/cypher-wt-1777492662/glm/mitmproxy/proxy/layers/udp.py">
+ERROR [86:38] Cannot assign to attribute "_handle_event" for class "UDPLayer*"
+  Type "(_: Unknown) -> CommandGenerator[None]" is not assignable to type "(event: Event) -> CommandGenerator[None]"
+    Parameter name mismatch: "event" versus "_"
+ERROR [90:21] Type "(self: Self@UDPLayer, _: Unknown) -> CommandGenerator[None]" is not assignable to declared type "(self: Self@Layer, event: Event) -> CommandGenerator[None]"
+  Type "(self: Self@UDPLayer, _: Unknown) -> CommandGenerator[None]" is not assignable to type "(self: Self@Layer, event: Event) -> CommandGenerator[None]"
+    "Layer*" is not assignable to "UDPLayer"
+    Parameter name mismatch: "event" versus "_"
+ERROR [122:34] Cannot assign to attribute "_handle_event" for class "UDPLayer*"
+  Type "(_: Unknown) -> CommandGenerator[None]" is not assignable to type "(event: Event) -> CommandGenerator[None]"
+    Parameter name mismatch: "event" versus "_"
+</diagnostics>
+[0m
+<!-- cypher-report-begin -->
+
+# GLM-5.1 verdict: KillInjected event architecture for mitmproxy
+
+Q1 (per-protocol vs generic): **B** — no payload to parameterize; subclasses add nothing.
+Q2 (emission point): **C** — mirrors inject.tcp/udp/websocket exactly.
+Q3 (mid-upgrade ownership): Event routes by connection ID via `inject_event`, then propagates down the active layer stack. `HttpStream.passthrough` forwards to child layer. `NextLayer` (undecided protocol) closes the connection directly. No per-type routing needed because the event is protocol-agnostic.
+Q4 (scope vs #5484): **Yes** — both issues share the same root cause (kill is state mutation only, never enters the proxy event stream); injecting the event fixes both.
+
+## OVERALL VERDICT
+
+Add a single `KillInjected(Event)` dataclass in `mitmproxy/proxy/events.py` with a `flow: flow.Flow` field — no `Generic[T]`, no per-protocol subclasses. The `Generic[T]` on `MessageInjected` exists because message payloads have protocol-specific types; kill has no payload, so subclassing is pure boilerplate that a maintainer would flag as unnecessary pattern cargo-culting.
+
+Emission follows the established `inject.*` command pattern: add `@command.command("inject.kill")` to `proxyserver.py` that calls `f.kill()` (state mutation) then creates a `KillInjected(flow)` and passes it to `self.inject_event(event)`. Rename `inject_event`'s type hint from `MessageInjected` to a union or base that includes `KillInjected`. Every existing call site (`core.py:flow.kill`, `view.py:remove`, `blocklist.py`, `serverplayback.py`, `disable_h2c.py`) switches to calling `inject.kill` instead of bare `f.kill()`.
+
+Each layer adds `KillInjected` to its `@expect` decorators: TCP and UDP alongside `XxxMessageInjected`; `HttpLayer._handle_event` routes it to the correct stream (same path as line 971's `MessageInjected` handling); `HttpStream` handles it in every active state by issuing close commands. For mid-upgrade flows, the event naturally reaches whichever layer is active — `NextLayer` gets it and closes the connection; `HttpStream.passthrough` forwards to the child layer. No special routing logic required beyond what the existing event propagation already provides.
+
+<!-- cypher-report-end -->

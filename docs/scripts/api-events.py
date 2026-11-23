@@ -197,6 +197,7 @@ with outfile.open("w") as f, contextlib.redirect_stdout(f):
             layer.NextLayerHook,
             hooks.UpdateHook,
             log.AddLogHook,
+            server_hooks.FlowKilledHook,
         ],
     )
 
