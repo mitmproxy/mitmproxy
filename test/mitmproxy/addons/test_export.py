@@ -85,7 +85,7 @@ class TestExportCurlCommand:
 
     def test_post(self, export_curl, post_request):
         post_request.request.content = b"nobinarysupport"
-        result = "curl -X POST http://address:22/path -d nobinarysupport"
+        result = "curl -X POST http://address:22/path --data-raw nobinarysupport"
         assert export_curl(post_request) == result
 
     def test_post_with_no_content_has_explicit_content_length_header(
@@ -103,7 +103,7 @@ class TestExportCurlCommand:
             export_curl(post_request)
 
     def test_patch(self, export_curl, patch_request):
-        result = """curl -H 'header: qvalue' -X PATCH 'http://address:22/path?query=param' -d content"""
+        result = """curl -H 'header: qvalue' -X PATCH 'http://address:22/path?query=param' --data-raw content"""
         assert export_curl(patch_request) == result
 
     def test_tcp(self, export_curl, tcp_flow):
@@ -119,17 +119,25 @@ class TestExportCurlCommand:
             req=tutils.treq(method=b"POST", headers=(), content=b"'&#")
         )
         command = export_curl(request)
-        assert shlex.split(command)[-2] == "-d"
+        assert shlex.split(command)[-2] == "--data-raw"
         assert shlex.split(command)[-1] == "'&#"
+
+    def test_body_starting_with_at_is_not_a_file(self, export_curl, post_request):
+        # curl's -d treats "@name" as "read the data from this file".
+        post_request.request.content = b"@secret.txt"
+        result = "curl -X POST http://address:22/path --data-raw @secret.txt"
+        assert export_curl(post_request) == result
 
     def test_expand_escaped(self, export_curl, post_request):
         post_request.request.content = b"foo\nbar"
-        result = "curl -X POST http://address:22/path -d \"$(printf 'foo\\x0abar')\""
+        result = (
+            "curl -X POST http://address:22/path --data-raw \"$(printf 'foo\\x0abar')\""
+        )
         assert export_curl(post_request) == result
 
     def test_no_expand_when_no_escaped(self, export_curl, post_request):
         post_request.request.content = b"foobar"
-        result = "curl -X POST http://address:22/path -d foobar"
+        result = "curl -X POST http://address:22/path --data-raw foobar"
         assert export_curl(post_request) == result
 
     def test_strip_unnecessary(self, export_curl, get_request):
