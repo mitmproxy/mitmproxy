@@ -1,3 +1,4 @@
+import zlib
 from unittest import mock
 
 import pytest
@@ -137,3 +138,84 @@ def test_zstd():
 
     # Uncompressed two frames should have the size of FRAME_SIZE * 2
     assert len(encoding.decode_zstd(two_frames)) == FRAME_SIZE * 2
+
+
+@pytest.mark.parametrize("encoder", ["gzip", "deflate", "br", "zstd"])
+def test_decoded_size_limit(monkeypatch, encoder):
+    monkeypatch.setattr(encoding, "MAX_DECODED_SIZE", 1024, raising=False)
+    compressed = encoding.custom_encode[encoder](b"x" * 1025)
+    with pytest.raises(ValueError, match="maximum size"):
+        encoding.decode(compressed, encoder)
+
+
+@pytest.mark.parametrize("encoder", ["gzip", "deflate", "br", "zstd"])
+def test_decoded_size_limit_exact(monkeypatch, encoder):
+    monkeypatch.setattr(encoding, "MAX_DECODED_SIZE", 1024, raising=False)
+    compressed = encoding.custom_encode[encoder](b"x" * 1024)
+    assert encoding.decode(compressed, encoder) == b"x" * 1024
+
+
+def test_decoded_size_limit_after_cache(monkeypatch):
+    compressed = encoding.encode_gzip(b"y" * 1536)
+    monkeypatch.setattr(encoding, "MAX_DECODED_SIZE", 2048, raising=False)
+    assert encoding.decode(compressed, "gzip") == b"y" * 1536
+    monkeypatch.setattr(encoding, "MAX_DECODED_SIZE", 1024)
+    with pytest.raises(ValueError, match="maximum size"):
+        encoding.decode(compressed, "gzip")
+
+
+def test_decoded_size_limit_after_encode_cache(monkeypatch):
+    monkeypatch.setattr(encoding, "MAX_DECODED_SIZE", 1024, raising=False)
+    compressed = encoding.encode(b"z" * 1536, "gzip")
+    with pytest.raises(ValueError, match="maximum size"):
+        encoding.decode(compressed, "gzip")
+
+
+def test_decoded_size_limit_raw_deflate(monkeypatch):
+    monkeypatch.setattr(encoding, "MAX_DECODED_SIZE", 1024)
+    compressor = zlib.compressobj(wbits=-15)
+    compressed = compressor.compress(b"r" * 1025) + compressor.flush()
+    with pytest.raises(ValueError, match="maximum size"):
+        encoding.decode_deflate(compressed)
+
+
+def test_decoded_size_limit_concatenated_zstd(monkeypatch):
+    monkeypatch.setattr(encoding, "MAX_DECODED_SIZE", 2047)
+    frame = encoding.encode_zstd(b"f" * 1024)
+    with pytest.raises(ValueError, match="maximum size"):
+        encoding.decode_zstd(frame + frame)
+
+
+def test_decoded_size_limit_high_ratio_brotli(monkeypatch):
+    monkeypatch.setattr(encoding, "MAX_DECODED_SIZE", 1024 * 1024)
+    compressed = encoding.encode_brotli(b"b" * (2 * 1024 * 1024))
+    with pytest.raises(ValueError, match="maximum size"):
+        encoding.decode_brotli(compressed)
+
+
+@pytest.mark.parametrize("encoder", ["gzip", "br", "zstd"])
+def test_unlimited_decoding(monkeypatch, encoder):
+    monkeypatch.setattr(encoding, "MAX_DECODED_SIZE", None)
+    content = b"unlimited" * 128
+    compressed = encoding.custom_encode[encoder](content)
+    assert encoding.custom_decode[encoder](compressed) == content
+
+
+@pytest.mark.parametrize("encoder", ["br", "zstd"])
+def test_incomplete_decoding(encoder):
+    compressed = encoding.custom_encode[encoder](b"incomplete" * 16)
+    with pytest.raises(ValueError, match="Incomplete"):
+        encoding.custom_decode[encoder](compressed[:-1])
+
+
+def test_stalled_brotli_decoder(monkeypatch):
+    class StalledDecompressor:
+        def can_accept_more_data(self):
+            return False
+
+        def process(self, data, output_buffer_limit):
+            return b""
+
+    monkeypatch.setattr(encoding.brotli, "Decompressor", StalledDecompressor)
+    with pytest.raises(ValueError, match="Incomplete brotli stream"):
+        encoding.decode_brotli(b"compressed")
