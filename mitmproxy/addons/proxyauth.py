@@ -22,6 +22,24 @@ from mitmproxy.utils import htpasswd
 REALM = "mitmproxy"
 
 
+# Modes where mitmproxy transparently intercepts traffic that was not
+# addressed to it as a proxy. Clients there never present proxy credentials,
+# so demanding proxy authentication can only break the flow: either with a
+# 401 for traffic that carries no proxy credentials at all, or by deleting
+# the origin server's Authorization header when it happens to match.
+# Proxy authentication is skipped for these modes.
+INTERCEPTED_MODES = (
+    mode_specs.TransparentMode,
+    mode_specs.LocalMode,
+    mode_specs.WireGuardMode,
+)
+
+
+def is_intercepted(f: http.HTTPFlow) -> bool:
+    """True if the flow was transparently intercepted rather than sent to mitmproxy as a proxy."""
+    return isinstance(f.client_conn.proxy_mode, INTERCEPTED_MODES)
+
+
 class ProxyAuth:
     validator: Validator | None = None
 
@@ -42,6 +60,10 @@ class ProxyAuth:
             "any" to accept any user/pass combination,
             "@path" to use an Apache htpasswd file,
             or "ldap[s]:url_server_ldap[:port]:dn_auth:password:dn_subtree[?search_filter_key=...]" for LDAP authentication.
+            Proxy authentication is only enforced for regular, upstream,
+            reverse and SOCKS5 modes. Transparently intercepted traffic
+            (transparent, local and WireGuard modes) passes through untouched,
+            because those clients never present proxy credentials.
             """,
         )
 
@@ -68,7 +90,7 @@ class ProxyAuth:
             self.authenticated[data.client_conn] = data.username, data.password
 
     def http_connect(self, f: http.HTTPFlow) -> None:
-        if self.validator and self.authenticate_http(f):
+        if self.validator and not is_intercepted(f) and self.authenticate_http(f):
             # Make a note that all further requests over this connection are ok.
             self.authenticated[f.client_conn] = f.metadata["proxyauth"]
 
@@ -78,6 +100,10 @@ class ProxyAuth:
             if f.client_conn in self.authenticated:
                 f.metadata["proxyauth"] = self.authenticated[f.client_conn]
             elif f.is_replay:
+                pass
+            elif is_intercepted(f):
+                # Transparently intercepted traffic never carries proxy
+                # credentials; leave the origin Authorization header alone.
                 pass
             else:
                 self.authenticate_http(f)
