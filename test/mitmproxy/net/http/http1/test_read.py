@@ -212,6 +212,16 @@ def test_read_request_line():
         b"/bar",
         b"HTTP/1.1",
     )
+    # Non-ASCII request targets are accepted.
+    assert t(b"GET http://foo:42/h\xc3\xa4llo HTTP/1.1") == (
+        "foo",
+        42,
+        b"GET",
+        b"http",
+        b"foo:42",
+        b"/h\xc3\xa4llo",
+        b"HTTP/1.1",
+    )
 
     with pytest.raises(ValueError):
         t(b"GET / WTF/1.1")
