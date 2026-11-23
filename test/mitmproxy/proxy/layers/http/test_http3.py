@@ -22,6 +22,7 @@ from mitmproxy.flow import Error
 from mitmproxy.http import Headers
 from mitmproxy.http import HTTPFlow
 from mitmproxy.http import Request
+from mitmproxy.http import Response
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import context
 from mitmproxy.proxy import events
@@ -398,10 +399,35 @@ def test_fail_without_header(tctx: context.Context):
         << cff.send_encoder()
         >> cff.receive_encoder()
         >> http.ResponseProtocolError(0, "first message", http.ErrorCode.KILL)
-        << cff.send_reset(ErrorCode.H3_INTERNAL_ERROR)
-        << cff.send_stop(ErrorCode.H3_INTERNAL_ERROR)
+        # the client never opened the stream, so there is nothing to terminate
+        << None
     )
     assert cff.is_done
+
+
+def test_response_after_connection_closed(tctx: context.Context):
+    """Responses are only logged once H3Connection has closed the connection."""
+    playbook = tutils.Playbook(layers.http.Http3Server(tctx))
+    cff = FrameFactory(tctx.client, is_client=True)
+    log_msg = tutils.Placeholder(str)
+    assert (
+        playbook
+        << cff.send_init()
+        >> cff.receive_init()
+        << cff.send_encoder()
+        >> cff.receive_encoder()
+        # SETTINGS may only be sent once on the control stream
+        >> cff.receive_settings()
+        << quic.CloseQuicConnection(
+            tctx.client,
+            error_code=ErrorCode.H3_FRAME_UNEXPECTED.value,
+            frame_type=None,
+            reason_phrase="SETTINGS have already been received",
+        )
+        >> http.ResponseHeaders(0, Response.make(200), end_stream=True)
+        << commands.Log(log_msg)
+    )
+    assert log_msg().endswith("Cannot send once the connection is closing")
 
 
 def test_invalid_header(tctx: context.Context):
@@ -704,6 +730,7 @@ def test_http3_client_aborts(tctx: context.Context, stream: str, when: str, how:
             playbook << commands.CloseConnection(server)
         playbook << (error_hook := http.HttpErrorHook(flow))
         if "RST" in how:
+            playbook << cff.send_decoder()  # for receive_reset
             playbook << cff.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
         playbook >> tutils.reply(to=error_hook)
 
@@ -762,6 +789,7 @@ def test_http3_client_aborts(tctx: context.Context, stream: str, when: str, how:
     playbook << commands.CloseConnection(server)
     playbook << (error_hook := http.HttpErrorHook(flow))
     if "RST" in how:
+        playbook << cff.send_decoder()  # for receive_reset
         playbook << cff.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
     playbook >> tutils.reply(to=error_hook)
     assert playbook
@@ -851,6 +879,7 @@ def test_cancel_then_server_disconnect(tctx: context.Context):
         >> cff.receive_reset(error_code=ErrorCode.H3_REQUEST_CANCELLED)
         << commands.CloseConnection(server)
         << (err_hook := http.HttpErrorHook(flow))
+        << cff.send_decoder()  # for receive_reset
         << cff.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
         >> tutils.reply(to=err_hook)
         >> events.ConnectionClosed(server)
@@ -892,6 +921,7 @@ def test_cancel_during_response_hook(tctx: context.Context):
         >> tutils.reply(to=reponse_headers)
         << (response := http.HttpResponseHook(flow))
         >> cff.receive_reset(error_code=ErrorCode.H3_REQUEST_CANCELLED)
+        << cff.send_decoder()  # for receive_reset
         << cff.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
         >> tutils.reply(to=response)
     )
@@ -990,8 +1020,8 @@ def test_kill_stream(tctx: context.Context):
         >> tutils.reply(to=request_header2, side_effect=kill)
         << http.HttpErrorHook(flow2)
         >> tutils.reply()
+        # the request has ended, so only the response is reset
         << cff.send_reset(ErrorCode.H3_INTERNAL_ERROR, stream_id=4)
-        << cff.send_stop(ErrorCode.H3_INTERNAL_ERROR, stream_id=4)
         >> tutils.reply(to=request_header1)
         << http.HttpRequestHook(flow1)
         >> tutils.reply()
@@ -1056,11 +1086,13 @@ def test_unencodable_request_headers(tctx: context.Context, where: str):
     )
     if where == "trailers":
         playbook << sff.send_headers(example_request_headers)
+    playbook << commands.Log(log_msg, WARNING)
+    if where == "trailers":
+        # nothing was sent for unencodable headers, so only trailers terminate
+        playbook << sff.send_reset(ErrorCode.H3_INTERNAL_ERROR)
+        playbook << sff.send_stop(ErrorCode.H3_INTERNAL_ERROR)
     assert (
         playbook
-        << commands.Log(log_msg, WARNING)
-        << sff.send_reset(ErrorCode.H3_INTERNAL_ERROR)
-        << sff.send_stop(ErrorCode.H3_INTERNAL_ERROR)
         << http.HttpErrorHook(flow)
         >> tutils.reply()
         << cff.send_headers(error_page_headers)
@@ -1126,7 +1158,6 @@ def test_unencodable_response_headers(tctx: context.Context, stream: str):
         (
             playbook
             # The server is still sending, so we stop it.
-            << sff.send_reset(ErrorCode.H3_INTERNAL_ERROR)
             << sff.send_stop(ErrorCode.H3_INTERNAL_ERROR)
             << (error := http.HttpErrorHook(flow))
             >> tutils.reply(to=error)
@@ -1147,19 +1178,25 @@ def test_unencodable_response_headers(tctx: context.Context, stream: str):
 
 @pytest.mark.parametrize("close_type", ["RESET_STREAM", "STOP_SENDING"])
 def test_receive_stop_sending(tctx: context.Context, close_type: str):
+    """A client which abandons a streamed request has it terminated upstream too."""
     playbook, cff = start_h3_proxy(tctx)
-    playbook.hooks = False
     flow = tutils.Placeholder(HTTPFlow)
     server = tutils.Placeholder(connection.Server)
     sff = FrameFactory(server, is_client=False)
+
+    def enable_request_streaming(flow: HTTPFlow):
+        flow.request.stream = True
+
     assert (
         playbook
-        >> cff.receive_headers(example_request_headers, end_stream=True)
-        << cff.send_decoder()
+        >> cff.receive_headers(example_request_headers)
+        << (request_headers := http.HttpRequestHeadersHook(flow))
+        << cff.send_decoder()  # for receive_headers
+        >> tutils.reply(to=request_headers, side_effect=enable_request_streaming)
         << commands.OpenConnection(server)
         >> tutils.reply(None, side_effect=make_h3)
         << sff.send_init()
-        << sff.send_headers(example_request_headers, end_stream=True)
+        << sff.send_headers(example_request_headers)
         >> sff.receive_init()
         << sff.send_encoder()
     )
@@ -1169,7 +1206,7 @@ def test_receive_stop_sending(tctx: context.Context, close_type: str):
     if close_type == "STOP_SENDING":
         close1, close2 = close2, close1
 
-    assert (
+    (
         playbook
         # Client now closes the stream.
         >> close1
@@ -1177,23 +1214,54 @@ def test_receive_stop_sending(tctx: context.Context, close_type: str):
         << sff.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
         << sff.send_stop(ErrorCode.H3_REQUEST_CANCELLED)
         << (err_hook := http.HttpErrorHook(flow))
-        # ...and the client stream.
-        << cff.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
-        << (
-            cff.send_stop(ErrorCode.H3_REQUEST_CANCELLED)
-            if close_type == "STOP_SENDING"
-            else None
-        )
+    )
+    if close_type == "RESET_STREAM":
+        # ...and reset our response, as the client ended its request.
+        playbook << cff.send_decoder()  # for receive_reset
+        playbook << cff.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
+    else:
+        # ...and stop the request, as the QUIC layer resets our response itself.
+        playbook << cff.send_stop(ErrorCode.H3_REQUEST_CANCELLED)
+    assert (
+        playbook
         >> tutils.reply(to=err_hook)
-        # These don't do anything anymore.
+        # These don't do anything anymore, apart from QPACK's stream cancellation.
         >> close2
-        << None
+        << (cff.send_decoder() if close_type == "STOP_SENDING" else None)
         >> sff.receive_reset(ErrorCode.H3_REQUEST_CANCELLED)
-        << None
-        >> sff.receive_stop(ErrorCode.H3_REQUEST_CANCELLED)
-        << None
+        << sff.send_decoder()  # for receive_reset
     )
     assert flow().error.msg == "stream closed by client (H3_REQUEST_CANCELLED)"
+
+
+@pytest.mark.parametrize("stream", ["control", "unknown"])
+def test_receive_reset_on_unidirectional_stream(tctx: context.Context, stream: str):
+    """A reset on a unidirectional stream closes no request, and the connection if critical."""
+    playbook, cff = start_h3_proxy(tctx)
+    if stream == "control":
+        assert (
+            playbook
+            >> cff.receive_reset(
+                ErrorCode.H3_NO_ERROR, stream_id=cff.local_stream_id[StreamType.CONTROL]
+            )
+            << quic.CloseQuicConnection(
+                tctx.client,
+                error_code=ErrorCode.H3_CLOSED_CRITICAL_STREAM.value,
+                frame_type=None,
+                reason_phrase="Resetting a critical stream is not allowed",
+            )
+        )
+    else:
+        assert (
+            playbook
+            # a stream of an unknown type, which is ignored
+            >> quic.QuicStreamDataReceived(
+                tctx.client, stream_id=14, data=encode_uint_var(0x21), end_stream=False
+            )
+            << None
+            >> cff.receive_reset(ErrorCode.H3_NO_ERROR, stream_id=14)
+            << None
+        )
 
 
 class TestClient:
@@ -1226,7 +1294,7 @@ class TestClient:
             >> http.RequestProtocolError(
                 1, "cancelled", code=http.ErrorCode.CLIENT_DISCONNECTED
             )
-            << frame_factory.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
+            # the request has ended, so only the response is stopped
             << frame_factory.send_stop(ErrorCode.H3_REQUEST_CANCELLED)
             >> frame_factory.receive_data(b"foo")
             << None
@@ -1353,6 +1421,81 @@ class TestClient:
         )
         assert resp().response.status_code == 200
         assert frame_factory.is_done
+
+    def test_request_after_goaway(self, tctx: context.Context):
+        """Requests fail without being sent once the server sent GOAWAY."""
+        frame_factory = FrameFactory(tctx.server, is_client=False)
+        playbook = tutils.Playbook(Http3Client(tctx))
+        req = Request.make("GET", "http://example.com/")
+        assert (
+            playbook
+            << frame_factory.send_init()
+            >> frame_factory.receive_init()
+            << frame_factory.send_encoder()
+            >> frame_factory.receive_encoder()
+            >> quic.QuicStreamDataReceived(
+                tctx.server,
+                frame_factory.local_stream_id[StreamType.CONTROL],
+                encode_frame(FrameType.GOAWAY, encode_uint_var(0)),
+                False,
+            )
+            << commands.Log(
+                "HTTP/3 server is shutting down, it will not process stream 0 and above.",
+                DEBUG,
+            )
+            >> http.RequestHeaders(1, req, end_stream=True)
+            << http.ReceiveHttp(
+                http.ResponseProtocolError(
+                    1,
+                    "Cannot start a request after receiving GOAWAY",
+                    http.ResponseProtocolError.code,
+                )
+            )
+            # the request does not fail again when the connection closes
+            >> quic.QuicConnectionClosed(
+                tctx.server,
+                error_code=ErrorCode.H3_NO_ERROR.value,
+                frame_type=None,
+                reason_phrase="peer closed connection",
+            )
+        )
+        assert frame_factory.is_done
+
+    def test_ignore_after_connection_closed(self, tctx: context.Context):
+        """Requests fail without being sent once H3Connection has closed the connection."""
+        frame_factory = FrameFactory(tctx.server, is_client=False)
+        playbook = tutils.Playbook(Http3Client(tctx))
+        req = Request.make("GET", "http://example.com/")
+        assert (
+            playbook
+            << frame_factory.send_init()
+            >> frame_factory.receive_init()
+            << frame_factory.send_encoder()
+            >> frame_factory.receive_encoder()
+            # SETTINGS may only be sent once on the control stream
+            >> frame_factory.receive_settings()
+            << quic.CloseQuicConnection(
+                tctx.server,
+                error_code=ErrorCode.H3_FRAME_UNEXPECTED.value,
+                frame_type=None,
+                reason_phrase="SETTINGS have already been received",
+            )
+            >> http.RequestHeaders(1, req, end_stream=True)
+            << http.ReceiveHttp(
+                http.ResponseProtocolError(
+                    1,
+                    "Cannot send once the connection is closing",
+                    http.ResponseProtocolError.code,
+                )
+            )
+            # the request does not fail again when the connection closes
+            >> quic.QuicConnectionClosed(
+                tctx.server,
+                error_code=ErrorCode.H3_NO_ERROR.value,
+                frame_type=None,
+                reason_phrase="peer closed connection",
+            )
+        )
 
     def test_ignore_after_stream_ended(self, tctx: context.Context):
         """aioquic forgets about streams once they have ended, we must not."""
