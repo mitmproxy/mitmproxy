@@ -8,6 +8,7 @@ from unittest import mock
 import pytest
 
 from mitmproxy import options
+from mitmproxy.connection import ConnectionState
 from mitmproxy.connection import Server
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import layer
@@ -104,3 +105,52 @@ async def test_no_reentrancy(capsys):
         Hook completed (must not happen before start is completed).
         """
     )
+
+
+@pytest.mark.parametrize("cancel_at", ("data_received", "connection_closed"))
+async def test_handle_connection_cleans_up_when_cancelled_during_server_event(
+    cancel_at: str,
+):
+    handler = MockConnectionHandler()
+    conn = Server(address=("server", 1234))
+    conn.state = ConnectionState.OPEN
+    reader = mock.MagicMock()
+    reader.read = mock.AsyncMock(
+        return_value=b"hello" if cancel_at == "data_received" else b""
+    )
+    writer = mock.MagicMock()
+
+    await handler._server_event_lock.acquire()
+    try:
+        io = server.ConnectionIO(reader=reader, writer=writer)
+        handler.transports[conn] = io
+        task = asyncio.create_task(handler.handle_connection(conn))
+        io.handler = task
+        await asyncio.sleep(0)
+        task.cancel()
+    finally:
+        handler._server_event_lock.release()
+
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    writer.close.assert_called_once()
+    assert conn not in handler.transports
+
+
+async def test_handle_connection_happy_path_closes_once():
+    handler = MockConnectionHandler()
+    conn = Server(address=("server", 1234))
+    conn.state = ConnectionState.CAN_READ
+    reader = mock.MagicMock()
+    reader.read = mock.AsyncMock(return_value=b"")
+    writer = mock.MagicMock()
+
+    io = server.ConnectionIO(reader=reader, writer=writer)
+    handler.transports[conn] = io
+    task = asyncio.create_task(handler.handle_connection(conn))
+    io.handler = task
+    await task
+
+    writer.close.assert_called_once()
+    assert conn not in handler.transports

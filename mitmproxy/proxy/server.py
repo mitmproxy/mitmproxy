@@ -271,6 +271,14 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         self.wakeup_timer.discard(task)
         await self.server_event(events.Wakeup(request))
 
+    def _release_transport(self, connection: Connection) -> None:
+        io = self.transports.pop(connection, None)
+        if io is not None and io.writer is not None:
+            try:
+                io.writer.close()
+            except OSError:
+                pass
+
     async def handle_connection(self, connection: Connection) -> None:
         """
         Handle a connection for its entire lifetime.
@@ -280,52 +288,46 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         cancelled = None
         reader = self.transports[connection].reader
         assert reader
-        while True:
-            try:
-                data = await reader.read(65535)
-                if not data:
-                    raise OSError("Connection closed by peer.")
-            except OSError:
-                break
-            except asyncio.CancelledError as e:
-                cancelled = e
-                break
-
-            await self.server_event(events.DataReceived(connection, data))
-
-            try:
-                await self.drain_writers()
-            except asyncio.CancelledError as e:
-                cancelled = e
-                break
-
-        if cancelled is None and connection.transport_protocol == "tcp":
-            # TCP connections can be half-closed.
-            connection.state &= ~ConnectionState.CAN_READ
-        else:
-            connection.state = ConnectionState.CLOSED
-
-        await self.server_event(events.ConnectionClosed(connection))
-
-        if connection.state is ConnectionState.CAN_WRITE:
-            # we may still use this connection to *send* stuff,
-            # even though the remote has closed their side of the connection.
-            # to make this work we keep this task running and wait for cancellation.
-            try:
-                await asyncio.Event().wait()
-            except asyncio.CancelledError as e:
-                cancelled = e
-
         try:
-            writer = self.transports[connection].writer
-            assert writer
-            writer.close()
-        except OSError:
-            pass
-        self.transports.pop(connection)
+            while True:
+                try:
+                    data = await reader.read(65535)
+                    if not data:
+                        raise OSError("Connection closed by peer.")
+                except OSError:
+                    break
+                except asyncio.CancelledError as e:
+                    cancelled = e
+                    break
 
-        if cancelled:
-            raise cancelled
+                try:
+                    await self.server_event(events.DataReceived(connection, data))
+                    await self.drain_writers()
+                except asyncio.CancelledError as e:
+                    cancelled = e
+                    break
+
+            if cancelled is None and connection.transport_protocol == "tcp":
+                # TCP connections can be half-closed.
+                connection.state &= ~ConnectionState.CAN_READ
+            else:
+                connection.state = ConnectionState.CLOSED
+
+            await self.server_event(events.ConnectionClosed(connection))
+
+            if connection.state is ConnectionState.CAN_WRITE:
+                # we may still use this connection to *send* stuff,
+                # even though the remote has closed their side of the connection.
+                # to make this work we keep this task running and wait for cancellation.
+                try:
+                    await asyncio.Event().wait()
+                except asyncio.CancelledError as e:
+                    cancelled = e
+
+            if cancelled:
+                raise cancelled
+        finally:
+            self._release_transport(connection)
 
     async def drain_writers(self):
         """
