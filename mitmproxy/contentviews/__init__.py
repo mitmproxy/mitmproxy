@@ -36,6 +36,7 @@ from ._view_multipart import multipart
 from ._view_query import query
 from ._view_raw import raw
 from ._view_socketio import socket_io
+from ._view_sse import sse
 from ._view_urlencoded import urlencoded
 from ._view_wbxml import wbxml
 from ._view_xml_html import xml_html
@@ -143,6 +144,7 @@ _views: list[Contentview] = [
     query,
     raw,
     socket_io,
+    sse,
     urlencoded,
     wbxml,
     xml_html,
