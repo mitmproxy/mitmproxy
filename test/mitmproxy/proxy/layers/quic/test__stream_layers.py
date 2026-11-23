@@ -1150,6 +1150,33 @@ class TestClientQuic:
         )
         assert client_layer.tunnel_state == tls.tunnel.TunnelState.ESTABLISHING
 
+    def test_clienthello_too_large(
+        self, tctx: context.Context, monkeypatch: pytest.MonkeyPatch
+    ):
+        monkeypatch.setattr(
+            "mitmproxy.proxy.layers.quic._stream_layers.MAX_CLIENT_HELLO_DATAGRAM_BYTES",
+            len(fragmented_client_hello1),
+        )
+        client_layer = ClientQuicLayer(tctx, time=time.time)
+        playbook = tutils.Playbook(client_layer)
+        buffered = len(fragmented_client_hello1) + len(fragmented_client_hello2)
+
+        assert (
+            playbook
+            >> events.Start()
+            >> events.DataReceived(tctx.client, fragmented_client_hello1)
+            >> events.DataReceived(tctx.client, fragmented_client_hello2)
+            << commands.Log(
+                f"Client QUIC handshake failed. Cannot parse ClientHello: Incomplete after {buffered} bytes "
+                f"(limit: {len(fragmented_client_hello1)} bytes).",
+                WARNING,
+            )
+            << tls.TlsFailedClientHook(tutils.Placeholder())
+            >> tutils.reply()
+            << commands.CloseConnection(tctx.client)
+        )
+        assert not client_layer.handshake_datagram_buf
+
     def test_tls_reset(self, tctx: context.Context):
         tctx.client.tls = True
         tctx.client.sni = "some"
