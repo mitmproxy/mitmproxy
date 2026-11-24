@@ -1,4 +1,5 @@
 import json
+import logging
 import pathlib
 from typing import Optional
 
@@ -21,7 +22,7 @@ class PortFile:
 
         datadir = pathlib.Path(ctx.options.datadir)
         if not datadir.is_dir():
-            ctx.log.warning("%s is not a directory", datadir)
+            logging.warning("%s is not a directory", datadir)
             return
 
         proxies = ctx.master.addons.get("proxyserver")
