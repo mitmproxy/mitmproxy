@@ -318,6 +318,10 @@ class TlsConfig:
 
         if server.sni is None:
             server.sni = client.sni or server.address[0]
+        if server.sni:
+            # RFC 6066 §3: TLS SNI hostnames must not include a trailing root dot.
+            # X.509 dNSName SANs also omit it, and OpenSSL rejects it in X509_VERIFY_PARAM_set1_host.
+            server.sni = server.sni.removesuffix(".")
 
         if not server.alpn_offers:
             if client.alpn_offers:
@@ -351,7 +355,7 @@ class TlsConfig:
             if os.path.isfile(client_certs):
                 client_cert = client_certs
             else:
-                server_name: str = server.sni or server.address[0]
+                server_name: str = server.sni or server.address[0].removesuffix(".")
                 p = os.path.join(client_certs, f"{server_name}.pem")
                 if os.path.isfile(p):
                     client_cert = p
@@ -466,6 +470,10 @@ class TlsConfig:
 
         if server.sni is None:
             server.sni = client.sni or server.address[0]
+        if server.sni:
+            # RFC 6066 §3: TLS SNI hostnames must not include a trailing root dot,
+            # and X.509 dNSName SANs omit it as well.
+            server.sni = server.sni.removesuffix(".")
 
         if not server.alpn_offers:
             if client.alpn_offers:
@@ -696,7 +704,7 @@ class TlsConfig:
         # enabled, clients would otherwise phone home to these hosts to
         # validate our certificates.
         if (ctx.options.emudhra or ctx.options.emudhra_old) and (
-            flow.request.host in _EMUDHRA_REVOCATION_HOSTS
+            flow.request.host.removesuffix(".") in _EMUDHRA_REVOCATION_HOSTS
         ):
             flow.kill()
 
@@ -706,6 +714,7 @@ def _ip_or_dns_name(val: str) -> x509.GeneralName:
     try:
         ip = ipaddress.ip_address(val)
     except ValueError:
-        return x509.DNSName(val.encode("idna").decode())
+        # RFC 5280 §4.2.1.6: dNSName SANs do not include a trailing root dot.
+        return x509.DNSName(val.removesuffix(".").encode("idna").decode())
     else:
         return x509.IPAddress(ip)

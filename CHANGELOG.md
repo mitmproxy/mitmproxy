@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+- Strip trailing root dots from hostnames for TLS/QUIC SNI, upstream certificate verification,
+  generated certificate SANs/CN, client certificate lookup, and `ignore_hosts`/`allow_hosts`/
+  `tcp_hosts`/`udp_hosts` matching. Previously, trailing-dot domains such as `https://example.com./`
+  failed upstream TLS/QUIC verification and produced trailing-dot certificate SANs.
 - Update aioquic to 1.9.0, which adds post-quantum key exchange and HelloRetryRequest support to
   QUIC. Cancelling an HTTP/3 request no longer cuts off a complete response the client has not
   acknowledged yet, and requests to an HTTP/3 server which sent GOAWAY fail straight away.
