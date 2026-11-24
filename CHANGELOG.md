@@ -10,6 +10,7 @@
 - Fix a file descriptor leak where upstream connections were not closed if their handler was
   cancelled while waiting to process an event, which could exhaust FDs on long-lived HTTP/2
   reverse-proxy connections.
+  ([#8643](https://github.com/mitmproxy/mitmproxy/pull/8643), @jtoledo3970)
 - Update aioquic to 1.9.0, which adds post-quantum key exchange and HelloRetryRequest support to
   QUIC. Cancelling an HTTP/3 request no longer cuts off a complete response the client has not
   acknowledged yet, and requests to an HTTP/3 server which sent GOAWAY fail straight away.
