@@ -53,7 +53,7 @@
             "host": "signal-metrics-collector-beta.s-onetag.com",
             "port": 443,
             "path": "/metrics",
-            "http_version": "HTTP/2",
+            "http_version": "HTTP/2.0",
             "headers": [
                 [
                     ":authority",
@@ -143,7 +143,7 @@
             "pretty_host": "signal-metrics-collector-beta.s-onetag.com"
         },
         "response": {
-            "http_version": "HTTP/2",
+            "http_version": "HTTP/2.0",
             "status_code": 200,
             "reason": "OK",
             "headers": [

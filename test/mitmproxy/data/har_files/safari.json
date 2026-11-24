@@ -53,7 +53,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/",
-            "http_version": "HTTP/2",
+            "http_version": "HTTP/2.0",
             "headers": [
                 [
                     "Accept",
@@ -95,7 +95,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/2",
+            "http_version": "HTTP/2.0",
             "status_code": 200,
             "reason": "OK",
             "headers": [
@@ -2463,7 +2463,7 @@
             "host": "mitmproxy.org",
             "port": 443,
             "path": "/data/github-stats.json",
-            "http_version": "HTTP/2",
+            "http_version": "HTTP/2.0",
             "headers": [
                 [
                     "User-Agent",
@@ -2501,7 +2501,7 @@
             "pretty_host": "mitmproxy.org"
         },
         "response": {
-            "http_version": "HTTP/2",
+            "http_version": "HTTP/2.0",
             "status_code": 200,
             "reason": "OK",
             "headers": [
