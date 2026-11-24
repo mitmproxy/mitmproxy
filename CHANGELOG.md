@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix a crash when `map_local`, `map_remote`, `modify_headers`, `modify_body` or `block_list`
+  gets an empty entry. It now shows the usual "Invalid number of parameters" error.
+  ([#8569](https://github.com/mitmproxy/mitmproxy/pull/8569), @qodelicious)
 - Update aioquic to 1.9.0, which adds post-quantum key exchange and HelloRetryRequest support to
   QUIC. Cancelling an HTTP/3 request no longer cuts off a complete response the client has not
   acknowledged yet, and requests to an HTTP/3 server which sent GOAWAY fail straight away.
