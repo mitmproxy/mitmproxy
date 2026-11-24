@@ -337,6 +337,8 @@ def test_saving(tmpdir):
         optmanager.load_paths(o, dst)
     with pytest.raises(exceptions.OptionsError):
         optmanager.save(o, dst)
+    # A failed save must not destroy the existing file.
+    assert dst.read_bytes() == b"\x01\x02\x03"
 
     with open(dst, "wb") as f:
         f.write(b"\xff\xff\xff")
