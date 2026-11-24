@@ -104,6 +104,12 @@ class WebAddon:
             "Preferred color theme for the mitmweb user interface.",
             choices=["system", "dark", "light"],
         )
+        loader.add_option(
+            "web_split_flowview",
+            bool,
+            False,
+            "Show the request and response of HTTP flows side by side in the flow details.",
+        )
 
     def running(self):
         if hasattr(ctx.options, "web_open_browser") and ctx.options.web_open_browser:
