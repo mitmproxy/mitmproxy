@@ -203,6 +203,27 @@ class TestTlsConfig:
                 ]
             )
 
+            # Trailing root dots in SNI and server address are stripped for SANs/CN.
+            ctx.client.sni = "🌈.sni.example."
+            ctx.server.address = ("server-address.example.", 443)
+            entry = ta.get_cert(ctx)
+            assert entry.cert.altnames == x509.GeneralNames(
+                [
+                    x509.DNSName("example.mitmproxy.org"),
+                    x509.DNSName("xn--og8h.sni.example"),
+                    x509.DNSName("server-address.example"),
+                ]
+            )
+            ctx.server.certificate_list = []
+            ctx.client.sni = None
+            entry = ta.get_cert(ctx)
+            assert entry.cert.altnames == x509.GeneralNames(
+                [
+                    x509.IPAddress(ipaddress.ip_address("127.0.0.1")),
+                    x509.DNSName("server-address.example"),
+                ]
+            )
+
             with open(tdata.path("mitmproxy/data/invalid-subject.pem"), "rb") as f:
                 ctx.server.certificate_list = [certs.Cert.from_pem(f.read())]
             with pytest.warns(UserWarning):
@@ -398,12 +419,15 @@ class TestTlsConfig:
             ta.quic_start_client(quic_tls_start)
             assert len(quic_tls_start.settings.certificate_chain) == 3
 
-    def test_tls_start_server_cannot_verify(self):
+    @pytest.mark.parametrize("sni", ["", "."])
+    def test_tls_start_server_cannot_verify(self, sni):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
             ctx = _ctx(tctx.options)
             ctx.server.address = ("example.mitmproxy.org", 443)
-            ctx.server.sni = ""  # explicitly opt out of using the address.
+            ctx.server.sni = (
+                sni  # explicitly opt out of using the address, or bare root dot.
+            )
 
             tls_start = tls.TlsData(ctx.server, context=ctx)
             with pytest.raises(
@@ -426,7 +450,9 @@ class TestTlsConfig:
             with pytest.raises(SSL.Error, match="certificate verify failed"):
                 assert self.do_handshake(tssl_client, tssl_server)
 
-    @pytest.mark.parametrize("hostname", ["example.mitmproxy.org", "192.0.2.42"])
+    @pytest.mark.parametrize(
+        "hostname", ["example.mitmproxy.org", "example.mitmproxy.org.", "192.0.2.42"]
+    )
     def test_tls_start_server_verify_ok(self, hostname, tdata):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
@@ -441,16 +467,49 @@ class TestTlsConfig:
 
             tls_start = tls.TlsData(ctx.server, context=ctx)
             ta.tls_start_server(tls_start)
+            assert ctx.server.sni == hostname.removesuffix(".")
             tssl_client = tls_start.ssl_conn
 
             # assert that a preexisting ssl_conn is not overwritten
             ta.tls_start_server(tls_start)
             assert tssl_client is tls_start.ssl_conn
 
-            tssl_server = test_tls.SSLTest(server_side=True, sni=hostname.encode())
+            tssl_server = test_tls.SSLTest(
+                server_side=True, sni=hostname.removesuffix(".").encode()
+            )
             assert self.do_handshake(tssl_client, tssl_server)
 
-    @pytest.mark.parametrize("hostname", ["example.mitmproxy.org", "192.0.2.42"])
+    @pytest.mark.parametrize("source", ["client_sni", "server_sni"])
+    def test_tls_start_server_trailing_dot_sni(self, source, tdata):
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            ctx = _ctx(tctx.options)
+            ctx.server.address = ("192.0.2.1", 443)
+            if source == "client_sni":
+                ctx.client.sni = "example.mitmproxy.org."
+            else:
+                ctx.server.sni = "example.mitmproxy.org."
+            tctx.configure(
+                ta,
+                ssl_verify_upstream_trusted_ca=tdata.path(
+                    "mitmproxy/net/data/verificationcerts/trusted-root.crt"
+                ),
+            )
+
+            tls_start = tls.TlsData(ctx.server, context=ctx)
+            ta.tls_start_server(tls_start)
+            assert ctx.server.sni == "example.mitmproxy.org"
+            if source == "client_sni":
+                # Keep the raw wire value on client.sni for inspection.
+                assert ctx.client.sni == "example.mitmproxy.org."
+            tssl_server = test_tls.SSLTest(
+                server_side=True, sni=b"example.mitmproxy.org"
+            )
+            assert self.do_handshake(tls_start.ssl_conn, tssl_server)
+
+    @pytest.mark.parametrize(
+        "hostname", ["example.mitmproxy.org", "example.mitmproxy.org.", "192.0.2.42"]
+    )
     def test_quic_start_server_verify_ok(self, hostname, tdata):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
@@ -465,16 +524,19 @@ class TestTlsConfig:
 
             tls_start = quic.QuicTlsData(ctx.server, context=ctx)
             ta.quic_start_server(tls_start)
+            assert ctx.server.sni == hostname.removesuffix(".")
             settings_client = tls_start.settings
             settings_client.alpn_protocols = ["h3"]
-            tssl_client = test_quic.SSLTest(settings=settings_client)
+            tssl_client = test_quic.SSLTest(
+                settings=settings_client, sni=ctx.server.sni
+            )
 
             # assert that a preexisting ssl_conn is not overwritten
             ta.quic_start_server(tls_start)
             assert settings_client is tls_start.settings
 
             tssl_server = test_quic.SSLTest(
-                server_side=True, sni=hostname.encode(), alpn=["h3"]
+                server_side=True, sni=hostname.removesuffix("."), alpn=["h3"]
             )
             assert self.quic_do_handshake(tssl_client, tssl_server)
 
@@ -569,17 +631,21 @@ class TestTlsConfig:
             assert tls_start.ssl_conn.get_app_data()["client_alpn"] == b"http/1.1"
 
     @pytest.mark.parametrize(
-        "client_certs",
+        "client_certs,hostname",
         [
-            "mitmproxy/net/data/verificationcerts/trusted-leaf.pem",
-            "mitmproxy/net/data/verificationcerts/",
+            (
+                "mitmproxy/net/data/verificationcerts/trusted-leaf.pem",
+                "example.mitmproxy.org",
+            ),
+            ("mitmproxy/net/data/verificationcerts/", "example.mitmproxy.org"),
+            ("mitmproxy/net/data/verificationcerts/", "example.mitmproxy.org."),
         ],
     )
-    def test_client_cert_file(self, tdata, client_certs):
+    def test_client_cert_file(self, tdata, client_certs, hostname):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
             ctx = _ctx(tctx.options)
-            ctx.server.address = ("example.mitmproxy.org", 443)
+            ctx.server.address = (hostname, 443)
             tctx.configure(
                 ta,
                 client_certs=tdata.path(client_certs),
@@ -661,11 +727,12 @@ class TestTlsConfig:
             tctx.configure(ta, emudhra=True)
             ta.configure(["confdir"])
 
-            # Revocation lookups for the eMudhra chain are blocked.
+            # Revocation lookups for the eMudhra chain are blocked (including trailing-dot FQDNs).
             for host in tlsconfig._EMUDHRA_REVOCATION_HOSTS:
-                f = tflow.tflow(req=tflow.treq(host=host))
-                ta.request(f)
-                assert f.error
+                for h in (host, f"{host}."):
+                    f = tflow.tflow(req=tflow.treq(host=h))
+                    ta.request(f)
+                    assert f.error
 
             # The magic CRL endpoint is still served, not blocked.
             f = tflow.tflow(req=tflow.treq(host="crl.emsign.com", path=ta.crl_path()))

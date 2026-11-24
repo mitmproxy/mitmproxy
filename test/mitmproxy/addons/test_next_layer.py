@@ -395,6 +395,43 @@ class TestNextLayer:
                 True,
                 id="allow+ignore: allowed but ignored",
             ),
+            # trailing dot domains
+            pytest.param(
+                [r"^example\.com:443$"],
+                [],
+                "tcp",
+                "example.com.",
+                b"",
+                True,
+                id="trailing dot: address",
+            ),
+            pytest.param(
+                [r"^example\.com:443$"],
+                [],
+                "tcp",
+                "192.0.2.1",
+                b"GET / HTTP/1.1\r\nHost: example.com.\r\n\r\n",
+                True,
+                id="trailing dot: http host header",
+            ),
+            pytest.param(
+                [r"^example\.com:443$"],
+                [],
+                "tcp",
+                "192.0.2.1",
+                b"GET / HTTP/1.1\r\nHost: example.com.:443\r\n\r\n",
+                True,
+                id="trailing dot: http host header with port",
+            ),
+            pytest.param(
+                [],
+                [r"^example\.com:443$"],
+                "tcp",
+                "example.com.",
+                b"",
+                False,
+                id="trailing dot: allow address",
+            ),
         ],
     )
     def test_ignore_connection(
@@ -433,6 +470,30 @@ class TestNextLayer:
                     nl._ignore_connection(ctx, data_client, b"")
             else:
                 assert nl._ignore_connection(ctx, data_client, b"") is result
+
+    def test_trailing_dot_sni_and_hosts(self):
+        nl = NextLayer()
+        with taddons.context(nl) as tctx:
+            ctx = Context(
+                Client(
+                    peername=("192.168.0.42", 51234),
+                    sockname=("0.0.0.0", 8080),
+                    sni="example.com.",
+                ),
+                tctx.options,
+            )
+            ctx.server.address = ("192.0.2.1", 443)
+            tctx.configure(
+                nl,
+                ignore_hosts=[r"^example\.com:443$"],
+                tcp_hosts=[r"^example\.com$"],
+            )
+            assert nl._ignore_connection(ctx, b"", b"") is True
+            assert nl._is_destination_in_hosts(ctx, nl.tcp_hosts) is True
+
+            ctx.client.sni = None
+            ctx.server.address = ("example.com.", 443)
+            assert nl._is_destination_in_hosts(ctx, nl.tcp_hosts) is True
 
     def test_show_ignored_hosts(self, monkeypatch):
         nl = NextLayer()

@@ -222,22 +222,26 @@ class NextLayer:
             hostnames.append(f"{host}:{port}")
         if context.server.address:
             host, port, *_ = context.server.address
-            hostnames.append(f"{host}:{port}")
+            hostnames.append(f"{host.removesuffix('.')}:{port}")
 
             # We also want to check for TLS SNI and HTTP host headers, but in order to ignore connections based on that
             # they must have a destination address. If they don't, we don't know how to establish an upstream connection
             # if we ignore.
             if host_header := self._get_host_header(context, data_client, data_server):
-                if not re.search(r":\d+$", host_header):
-                    host_header = f"{host_header}:{port}"
+                if m := re.search(r":(\d+)$", host_header):
+                    host_header = (
+                        f"{host_header[: m.start()].removesuffix('.')}:{m.group(1)}"
+                    )
+                else:
+                    host_header = f"{host_header.removesuffix('.')}:{port}"
                 hostnames.append(host_header)
             if (
                 client_hello := self._get_client_hello(context, data_client)
             ) and client_hello.sni:
-                hostnames.append(f"{client_hello.sni}:{port}")
+                hostnames.append(f"{client_hello.sni.removesuffix('.')}:{port}")
             if context.client.sni:
                 # Hostname may be allowed, TLS is already established, and we have another next layer decision.
-                hostnames.append(f"{context.client.sni}:{port}")
+                hostnames.append(f"{context.client.sni.removesuffix('.')}:{port}")
 
         if not hostnames:
             return False
@@ -428,8 +432,11 @@ class NextLayer:
     @staticmethod
     def _is_destination_in_hosts(context: Context, hosts: Iterable[re.Pattern]) -> bool:
         return any(
-            (context.server.address and rex.search(context.server.address[0]))
-            or (context.client.sni and rex.search(context.client.sni))
+            (
+                context.server.address
+                and rex.search(context.server.address[0].removesuffix("."))
+            )
+            or (context.client.sni and rex.search(context.client.sni.removesuffix(".")))
             for rex in hosts
         )
 
