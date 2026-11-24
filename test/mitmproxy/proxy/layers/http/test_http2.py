@@ -1426,9 +1426,11 @@ def test_forward_empty_data_frame(tctx):
     )
 
 
-h2_supports_draining = hasattr(h2.connection.H2ConnectionStateMachine(), "draining")
-requires_h2_draining = pytest.mark.skipif(
-    not h2_supports_draining, reason="h2 without graceful GOAWAY support"
+h2_supports_graceful_shutdown = hasattr(
+    h2.connection.H2Connection, "is_in_graceful_shutdown"
+)
+requires_h2_graceful_shutdown = pytest.mark.skipif(
+    not h2_supports_graceful_shutdown, reason="h2 without graceful shutdown support"
 )
 
 
@@ -1456,7 +1458,7 @@ def start_h2_request(
     return initial
 
 
-@requires_h2_draining
+@requires_h2_graceful_shutdown
 def test_graceful_goaway_completes_open_stream(tctx):
     """
     A server's graceful GOAWAY, followed by a PING (RFC 9113 two-stage shutdown),
@@ -1530,7 +1532,7 @@ def finish_response(tctx, cff, sff, playbook, flow, server, stream_id=1):
     )
 
 
-@requires_h2_draining
+@requires_h2_graceful_shutdown
 def test_graceful_goaway_idle_connection(tctx):
     """A server retires an idle connection: we acknowledge the PING, send GOAWAY and close."""
     playbook, cff = start_h2_client(tctx)
@@ -1555,7 +1557,7 @@ def test_graceful_goaway_idle_connection(tctx):
     )
 
 
-@requires_h2_draining
+@requires_h2_graceful_shutdown
 def test_graceful_goaway_new_request_uses_new_connection(tctx):
     """While a connection drains, a new request opens a new server connection."""
     playbook, cff = start_h2_client(tctx)
@@ -1605,7 +1607,7 @@ def test_goaway_with_error_closes_connection(tctx):
     assert "HTTP/2 connection closed" in flow().error.msg
 
 
-@requires_h2_draining
+@requires_h2_graceful_shutdown
 def test_graceful_goaway_fails_unprocessed_streams(tctx):
     """
     Streams above the GOAWAY's last stream id were never processed by the server:
@@ -1683,7 +1685,7 @@ def test_graceful_goaway_fails_unprocessed_streams(tctx):
     assert flow1().error is None
 
 
-@requires_h2_draining
+@requires_h2_graceful_shutdown
 def test_graceful_goaway_client_layer(tctx):
     """
     Http2Client signals the drain to the HTTP layer, refuses a stream that got the
@@ -1718,7 +1720,7 @@ def test_graceful_goaway_client_layer(tctx):
     assert "GOAWAY" in refused().message
 
 
-@requires_h2_draining
+@requires_h2_graceful_shutdown
 def test_graceful_goaway_fails_queued_streams(tctx):
     """Requests waiting for a free stream fail when the connection starts draining."""
     playbook, cff = start_h2_client(tctx)
@@ -1762,7 +1764,7 @@ def test_graceful_goaway_fails_queued_streams(tctx):
     assert b"shutting down (GOAWAY)" in body
 
 
-@requires_h2_draining
+@requires_h2_graceful_shutdown
 class TestGracefulGoAwayClient:
     """Http2Client while a server connection drains (direct layer tests)."""
 
@@ -2049,7 +2051,7 @@ class TestGracefulGoAwayClient:
         )
 
 
-@requires_h2_draining
+@requires_h2_graceful_shutdown
 def test_graceful_goaway_from_client(tctx):
     """A client's graceful GOAWAY lets its pending response finish; then we close."""
     playbook, cff = start_h2_client(tctx)
@@ -2084,7 +2086,7 @@ def test_graceful_goaway_from_client(tctx):
     assert flow().response.text == "ok"
 
 
-@requires_h2_draining
+@requires_h2_graceful_shutdown
 def test_graceful_goaway_from_client_buffered_response(tctx):
     """A response held back by the client's flow control still completes after its graceful GOAWAY."""
     from mitmproxy.proxy.layers.http._base import DrainHttpConnection
@@ -2134,7 +2136,7 @@ def test_graceful_goaway_from_client_buffered_response(tctx):
     assert goaway.error_code == ErrorCodes.NO_ERROR and goaway.last_stream_id == 1
 
 
-@requires_h2_draining
+@requires_h2_graceful_shutdown
 def test_graceful_goaway_from_client_headers_only(tctx):
     """A headers-only response (end_stream=True) closes a draining client connection immediately."""
     from mitmproxy.proxy.layers.http._base import DrainHttpConnection

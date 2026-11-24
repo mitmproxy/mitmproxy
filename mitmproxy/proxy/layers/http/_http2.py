@@ -78,7 +78,8 @@ class Http2Connection(HttpConnection):
     draining: bool = False
     """
     The peer sent a graceful GOAWAY: open streams complete, then we close.
-    Requires an h2 version with graceful shutdown support (state_machine.draining).
+    Requires an h2 version with graceful shutdown support
+    (H2Connection.is_in_graceful_shutdown).
     """
     retired: set[int]
     """Streams that drain() failed because the peer never processed them."""
@@ -103,12 +104,12 @@ class Http2Connection(HttpConnection):
 
     def connection_closed(self) -> bool:
         """
-        Check if the HTTP/2 connection accepts no more frames. A connection
-        that drains after a graceful GOAWAY is CLOSED for new streams only.
+        Check if the HTTP/2 connection accepts no more frames. A connection in
+        graceful shutdown after GOAWAY(NO_ERROR) is CLOSED for new streams only.
         """
-        state_machine = self.h2_conn.state_machine
-        return state_machine.state is h2.connection.ConnectionState.CLOSED and not (
-            getattr(state_machine, "draining", False)
+        return (
+            self.h2_conn.state_machine.state is h2.connection.ConnectionState.CLOSED
+            and not getattr(self.h2_conn, "is_in_graceful_shutdown", False)
         )
 
     def is_closed(self, stream_id: int) -> bool:
@@ -309,7 +310,7 @@ class Http2Connection(HttpConnection):
             return True
         elif isinstance(event, h2.events.ConnectionTerminated):
             graceful = event.error_code == h2.errors.ErrorCodes.NO_ERROR and getattr(
-                self.h2_conn.state_machine, "draining", False
+                self.h2_conn, "is_in_graceful_shutdown", False
             )
             if not graceful:
                 yield from self.close_connection(f"HTTP/2 connection closed: {event!r}")

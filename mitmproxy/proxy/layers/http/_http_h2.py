@@ -141,8 +141,8 @@ class BufferedH2Connection(h2.connection.H2Connection):
                 self.stream_buffers.pop(event.stream_id, None)
                 self.stream_trailers.pop(event.stream_id, None)
             elif isinstance(event, h2.events.ConnectionTerminated):
-                # After a graceful GOAWAY, open streams still drain: keep their buffered data.
-                if not getattr(self.state_machine, "draining", False):
+                # During graceful shutdown, open streams still complete: keep their buffered data.
+                if not getattr(self, "is_in_graceful_shutdown", False):
                     self.stream_buffers.clear()
                     self.stream_trailers.clear()
             ret.append(event)
