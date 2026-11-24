@@ -76,6 +76,20 @@ def test_unparse():
     assert url.unparse("https", "foo.com", 80, "") == "https://foo.com:80"
     assert url.unparse("https", "foo.com", 443, "") == "https://foo.com"
     assert url.unparse(b"http", b"foo.com", 99, b"") == b"http://foo.com:99"
+    # IPv6: brackets required in URI host component (RFC 3986 §3.2.2)
+    assert url.unparse("http", "::1", 8080, "/path") == "http://[::1]:8080/path"
+    assert url.unparse("http", "::1", 80, "/") == "http://[::1]/"
+    assert url.unparse(b"https", b"2001:db8::1", 443, b"/") == b"https://[2001:db8::1]/"
+    # parse → unparse roundtrip for IPv6 URLs
+    assert (
+        url.unparse(
+            *[
+                x.decode() if isinstance(x, bytes) else x
+                for x in url.parse("http://[::1]:8080/path")
+            ]
+        )
+        == "http://[::1]:8080/path"
+    )
 
 
 # We ignore the byte 126: '~' because of an incompatibility in Python 3.6 and 3.7
@@ -164,6 +178,15 @@ def test_unquote():
 
 def test_hostport():
     assert url.hostport(b"https", b"foo.com", 8080) == b"foo.com:8080"
+    # default port — no port suffix
+    assert url.hostport("http", "foo.com", 80) == "foo.com"
+    assert url.hostport(b"https", b"foo.com", 443) == b"foo.com"
+    # IPv6: must be bracketed per RFC 3986 §3.2.2
+    assert url.hostport("http", "::1", 8080) == "[::1]:8080"
+    assert url.hostport(b"http", b"::1", 8080) == b"[::1]:8080"
+    # IPv6 at default port — bracketed but no port suffix
+    assert url.hostport("http", "::1", 80) == "[::1]"
+    assert url.hostport(b"https", b"2001:db8::1", 443) == b"[2001:db8::1]"
 
 
 def test_default_port():
