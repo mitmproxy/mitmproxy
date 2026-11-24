@@ -1,0 +1,170 @@
+[
+    {
+        "id": "hardcoded_for_test",
+        "intercepted": false,
+        "is_replay": null,
+        "type": "http",
+        "modified": false,
+        "marked": "",
+        "comment": "",
+        "timestamp_created": 0,
+        "client_conn": {
+            "id": "hardcoded_for_test",
+            "peername": [
+                "127.0.0.1",
+                0
+            ],
+            "sockname": [
+                "127.0.0.1",
+                0
+            ],
+            "tls_established": false,
+            "cert": null,
+            "sni": null,
+            "cipher": null,
+            "alpn": null,
+            "tls_version": null,
+            "timestamp_start": 1794441600.0,
+            "timestamp_tls_setup": null,
+            "timestamp_end": 1794441600.0
+        },
+        "server_conn": {
+            "id": "hardcoded_for_test",
+            "peername": null,
+            "sockname": null,
+            "address": null,
+            "tls_established": false,
+            "cert": null,
+            "sni": null,
+            "cipher": null,
+            "alpn": null,
+            "tls_version": null,
+            "timestamp_start": null,
+            "timestamp_tcp_setup": null,
+            "timestamp_tls_setup": null,
+            "timestamp_end": null
+        },
+        "request": {
+            "method": "GET",
+            "scheme": "https",
+            "host": "example.com",
+            "port": 443,
+            "path": "/dcb",
+            "http_version": "HTTP/1.1",
+            "headers": [
+                [
+                    "content-length",
+                    "0"
+                ]
+            ],
+            "contentLength": 0,
+            "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "timestamp_start": 1794441600.0,
+            "timestamp_end": 1794441600.0,
+            "pretty_host": "example.com"
+        },
+        "response": {
+            "http_version": "HTTP/1.1",
+            "status_code": 200,
+            "reason": "OK",
+            "headers": [
+                [
+                    "content-type",
+                    "text/plain"
+                ],
+                [
+                    "content-length",
+                    "5"
+                ]
+            ],
+            "contentLength": 5,
+            "contentHash": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+            "timestamp_start": 1794441600.0,
+            "timestamp_end": 1794441600.0
+        }
+    },
+    {
+        "id": "hardcoded_for_test",
+        "intercepted": false,
+        "is_replay": null,
+        "type": "http",
+        "modified": false,
+        "marked": "",
+        "comment": "",
+        "timestamp_created": 0,
+        "client_conn": {
+            "id": "hardcoded_for_test",
+            "peername": [
+                "127.0.0.1",
+                0
+            ],
+            "sockname": [
+                "127.0.0.1",
+                0
+            ],
+            "tls_established": false,
+            "cert": null,
+            "sni": null,
+            "cipher": null,
+            "alpn": null,
+            "tls_version": null,
+            "timestamp_start": 1794441600.0,
+            "timestamp_tls_setup": null,
+            "timestamp_end": 1794441600.0
+        },
+        "server_conn": {
+            "id": "hardcoded_for_test",
+            "peername": null,
+            "sockname": null,
+            "address": null,
+            "tls_established": false,
+            "cert": null,
+            "sni": null,
+            "cipher": null,
+            "alpn": null,
+            "tls_version": null,
+            "timestamp_start": null,
+            "timestamp_tcp_setup": null,
+            "timestamp_tls_setup": null,
+            "timestamp_end": null
+        },
+        "request": {
+            "method": "GET",
+            "scheme": "https",
+            "host": "example.com",
+            "port": 443,
+            "path": "/utf-8",
+            "http_version": "HTTP/1.1",
+            "headers": [
+                [
+                    "content-length",
+                    "0"
+                ]
+            ],
+            "contentLength": 0,
+            "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "timestamp_start": 1794441600.0,
+            "timestamp_end": 1794441600.0,
+            "pretty_host": "example.com"
+        },
+        "response": {
+            "http_version": "HTTP/1.1",
+            "status_code": 200,
+            "reason": "OK",
+            "headers": [
+                [
+                    "content-type",
+                    "text/plain"
+                ],
+                [
+                    "content-length",
+                    "5"
+                ]
+            ],
+            "contentLength": 5,
+            "contentHash": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+            "timestamp_start": 1794441600.0,
+            "timestamp_end": 1794441600.0
+        }
+    }
+]
