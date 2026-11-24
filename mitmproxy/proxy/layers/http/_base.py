@@ -40,6 +40,17 @@ class ReceiveHttp(HttpCommand):
         return f"Receive({self.event})"
 
 
+@dataclass
+class DrainHttpConnection(HttpCommand):
+    """
+    Signal to the HTTP layer that a connection is shutting down gracefully:
+    streams that are already open will complete, but new streams must use
+    another connection (for example after an HTTP/2 GOAWAY with NO_ERROR).
+    """
+
+    connection: Connection
+
+
 def format_error(status_code: int, message: str) -> bytes:
     reason = http.status_codes.RESPONSES.get(status_code, "Unknown")
     return (

@@ -12,6 +12,7 @@ from ...context import Context
 from ...mode_specs import ReverseMode
 from ...mode_specs import UpstreamMode
 from ..quic import QuicStreamEvent
+from ._base import DrainHttpConnection
 from ._base import HttpCommand
 from ._base import HttpConnection
 from ._base import ReceiveHttp
@@ -935,6 +936,8 @@ class HttpLayer(layer.Layer):
     waiting_for_establishment: collections.defaultdict[
         Connection, list[GetHttpConnection]
     ]
+    draining: set[Connection]
+    """Connections that finish their open streams but must not be reused for new ones."""
 
     def __init__(self, context: Context, mode: HTTPMode):
         super().__init__(context)
@@ -944,6 +947,7 @@ class HttpLayer(layer.Layer):
         self.streams = {}
         self.command_sources = {}
         self.connections = {}
+        self.draining = set()
 
     def __repr__(self):
         return f"HttpLayer({self.mode.name}, conns: {len(self.connections)})"
@@ -1051,8 +1055,13 @@ class HttpLayer(layer.Layer):
                 yield from self.get_connection(command)
             elif isinstance(command, RegisterHttpConnection):
                 yield from self.register_connection(command)
+            elif isinstance(command, DrainHttpConnection):
+                self.draining.add(command.connection)
             elif isinstance(command, commands.OpenConnection):
                 self.connections[command.connection] = child
+                yield command
+            elif isinstance(command, commands.CloseConnection):
+                self.draining.discard(command.connection)
                 yield command
             elif isinstance(command, commands.Command):
                 yield command
@@ -1070,7 +1079,10 @@ class HttpLayer(layer.Layer):
         # Do we already have a connection we can re-use?
         if reuse:
             for connection in self.connections:
-                connection_suitable = event.connection_spec_matches(connection)
+                connection_suitable = (
+                    event.connection_spec_matches(connection)
+                    and connection not in self.draining
+                )
                 if connection_suitable:
                     if connection in self.waiting_for_establishment:
                         self.waiting_for_establishment[connection].append(event)
