@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix options-editor help showing the wrong key bindings and closing the editor.
+  ([#8428](https://github.com/mitmproxy/mitmproxy/pull/8428), @twelfthlabor)
 - Update aioquic to 1.9.0, which adds post-quantum key exchange and HelloRetryRequest support to
   QUIC. Cancelling an HTTP/3 request no longer cuts off a complete response the client has not
   acknowledged yet, and requests to an HTTP/3 server which sent GOAWAY fail straight away.
