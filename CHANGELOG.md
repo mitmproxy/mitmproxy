@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix sizes and durations right below a unit boundary being shown as e.g. `1024k`, `1000ms` or `10.00s`
+  instead of `1.0m`, `1.00s` and `10.0s`.
+  ([#8498](https://github.com/mitmproxy/mitmproxy/pull/8498), @qodelicious)
 - Update aioquic to 1.9.0, which adds post-quantum key exchange and HelloRetryRequest support to
   QUIC. Cancelling an HTTP/3 request no longer cuts off a complete response the client has not
   acknowledged yet, and requests to an HTTP/3 server which sent GOAWAY fail straight away.
