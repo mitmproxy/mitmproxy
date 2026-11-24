@@ -162,6 +162,28 @@ def test_escape_special_areas():
 
 
 @pytest.mark.parametrize(
+    "data",
+    [
+        # would be mistaken for an escaped "*" otherwise
+        '\ue02a "\ue02a"',
+        'foo "b*r\ue02a" b*z\ue02a',
+        # the escape character itself, and the range escaped characters are moved to
+        "\ue000",
+        '\ue000\ue100 "\ue000\ue100*" \ue12a\ue000\ue12a',
+        "".join(chr(x) for x in range(0xE000, 0xE200)),
+    ],
+)
+def test_escape_special_areas_private_use_characters(data):
+    esc = strutils.escape_special_areas(data, ESCAPE_QUOTES, "*")
+    assert strutils.unescape_special_areas(esc) == data
+
+
+def test_escape_special_areas_private_use_characters_are_distinguishable():
+    esc = strutils.escape_special_areas('\ue02a "*"', ESCAPE_QUOTES, "*")
+    assert esc == '\ue000\ue12a "\ue02a"'
+
+
+@pytest.mark.parametrize(
     "content,n,expected",
     [
         ("foo\nbar\nbaz", 1, "foo\n"),
