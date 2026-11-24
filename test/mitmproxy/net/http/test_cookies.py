@@ -267,6 +267,11 @@ def test_refresh_cookie():
     assert cookies.refresh_set_cookie_header(c, 60) == ""
 
 
+def test_refresh_cookie_far_future():
+    c = "id=1; Expires=Fri, 31 Dec 9999 23:59:59 GMT; Path=/"
+    assert cookies.refresh_set_cookie_header(c, 60) == c
+
+
 @mock.patch("time.time")
 def test_get_expiration_ts(*args):
     # Freeze time

@@ -321,7 +321,12 @@ def refresh_set_cookie_header(c: str, delta: int) -> str:
             e = email.utils.parsedate_tz(attrs["expires"])
             if e:
                 f = email.utils.mktime_tz(e) + delta
-                attrs.set_all("expires", [email.utils.formatdate(f, usegmt=True)])
+                try:
+                    expires = email.utils.formatdate(f, usegmt=True)
+                except (OSError, OverflowError, ValueError):
+                    # Out of range for this platform (e.g. year 10000), keep the original value.
+                    continue
+                attrs.set_all("expires", [expires])
             else:
                 # This can happen when the expires tag is invalid.
                 # reddit.com sends a an expires tag like this: "Thu, 31 Dec
