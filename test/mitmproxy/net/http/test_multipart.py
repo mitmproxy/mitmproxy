@@ -52,3 +52,13 @@ def test_encode():
     assert result == b""
 
     assert multipart.encode_multipart("", data) == b""
+
+
+def test_encode_boundary_special_chars():
+    # RFC 2046 allows characters like "=" in the boundary, it must be used as is.
+    ct = "multipart/form-data; boundary=----=_Part_0"
+    data = [(b"file", b"shell.jpg"), (b"file_size", b"1000")]
+    content = multipart.encode_multipart(ct, data)
+    assert content.startswith(b"------=_Part_0\r\n")
+    assert content.endswith(b"\r\n------=_Part_0--\r\n")
+    assert multipart.decode_multipart(ct, content) == data
