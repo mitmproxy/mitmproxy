@@ -970,6 +970,34 @@ def test_upstream_proxy_ipv6(tctx):
     assert server().address == ("proxy", 8080)
 
 
+@pytest.mark.parametrize("authority", [b"example.com", b"[2001:db8::1]:8080"])
+@pytest.mark.parametrize("absolute_form", [True, False])
+def test_upstream_proxy_set_by_addon(tctx, authority, absolute_form):
+    """Test that plaintext requests sent to an upstream proxy in regular mode don't use CONNECT."""
+    server = Placeholder(Server)
+    request = b"GET %s HTTP/1.1\r\nHost: %s\r\n\r\n"
+    absolute_target = b"http://%s/" % authority
+
+    def set_upstream_proxy(flow: HTTPFlow):
+        flow.server_conn.via = ("http", ("proxy", 8080))
+
+    assert (
+        Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+        >> DataReceived(
+            tctx.client,
+            request % (absolute_target if absolute_form else b"/", authority),
+        )
+        << http.HttpRequestHook(Placeholder())
+        >> reply(side_effect=set_upstream_proxy)
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(server, request % (absolute_target, authority))
+        >> DataReceived(server, b"HTTP/1.1 204 No Content\r\n\r\n")
+        << SendData(tctx.client, b"HTTP/1.1 204 No Content\r\n\r\n")
+    )
+    assert server().address == ("proxy", 8080)
+
+
 @pytest.mark.parametrize("mode", ["regular", "upstream"])
 @pytest.mark.parametrize("close_first", ["client", "server"])
 def test_http_proxy_tcp(tctx, mode, close_first):
