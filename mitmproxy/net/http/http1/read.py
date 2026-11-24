@@ -188,8 +188,9 @@ def _read_request_line(
             authority, _, path_ = rest.partition(b"/")
             path = b"/" + path_
             host, port = url.parse_authority(authority, check=True)
-            port = port or url.default_port(scheme)
-            if not port:
+            if port is None:
+                port = url.default_port(scheme)
+            if port is None:
                 raise ValueError
             # TODO: we can probably get rid of this check?
             url.parse(target)
