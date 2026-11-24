@@ -285,21 +285,20 @@ class ServerPlayback:
                     response.refresh()
                 f.response = response
                 f.is_replay = "response"
-            elif (
-                ctx.options.server_replay_kill_extra
-                or ctx.options.server_replay_extra == "kill"
-            ):
-                logging.warning(
-                    "server_playback: killed non-replay request {}".format(
-                        f.request.url
-                    )
+                return
+        if (
+            ctx.options.server_replay_kill_extra
+            or ctx.options.server_replay_extra == "kill"
+        ):
+            logging.warning(
+                "server_playback: killed non-replay request {}".format(f.request.url)
+            )
+            f.kill()
+        elif ctx.options.server_replay_extra != "forward":
+            logging.warning(
+                "server_playback: returned {} non-replay request {}".format(
+                    ctx.options.server_replay_extra, f.request.url
                 )
-                f.kill()
-            elif ctx.options.server_replay_extra != "forward":
-                logging.warning(
-                    "server_playback: returned {} non-replay request {}".format(
-                        ctx.options.server_replay_extra, f.request.url
-                    )
-                )
-                f.response = http.Response.make(int(ctx.options.server_replay_extra))
-                f.is_replay = "response"
+            )
+            f.response = http.Response.make(int(ctx.options.server_replay_extra))
+            f.is_replay = "response"
