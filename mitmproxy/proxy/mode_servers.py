@@ -18,7 +18,6 @@ import json
 import logging
 import os
 import socket
-import sys
 import textwrap
 import typing
 from abc import ABCMeta
@@ -29,6 +28,7 @@ from typing import cast
 from typing import ClassVar
 from typing import Generic
 from typing import get_args
+from typing import Self
 from typing import TYPE_CHECKING
 from typing import TypeVar
 
@@ -46,11 +46,6 @@ from mitmproxy.proxy import server
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layer import Layer
 from mitmproxy.utils import human
-
-if sys.version_info < (3, 11):
-    from typing_extensions import Self  # pragma: no cover
-else:
-    from typing import Self
 
 if TYPE_CHECKING:
     from mitmproxy.master import Master
