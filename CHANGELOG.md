@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- mitmweb: Use relative URLs when saving flows so subpath deployments work properly.
 - Update aioquic to 1.9.0, which adds post-quantum key exchange and HelloRetryRequest support to
   QUIC. Cancelling an HTTP/3 request no longer cuts off a complete response the client has not
   acknowledged yet, and requests to an HTTP/3 server which sent GOAWAY fail straight away.

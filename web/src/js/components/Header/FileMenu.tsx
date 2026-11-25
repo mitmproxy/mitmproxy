@@ -32,12 +32,16 @@ export default React.memo(function FileMenu() {
                     }}
                 />
             </li>
-            <MenuItem onClick={() => location.replace("/flows/dump")}>
+            <MenuItem onClick={() => location.replace("./flows/dump")}>
                 <Icon name="save" />
                 &nbsp;Save
             </MenuItem>
             <MenuItem
-                onClick={() => location.replace("/flows/dump?filter=" + filter)}
+                onClick={() =>
+                    location.replace(
+                        "./flows/dump?filter=" + encodeURIComponent(filter),
+                    )
+                }
             >
                 <Icon name="save" />
                 &nbsp;Save filtered
