@@ -10,6 +10,7 @@
 - Console: enforce character cutoff (`content_view_lines_cutoff * 80`) and linear-time line
   wrapping in `FlowView` so large single-line payloads (such as base64-encoded images in JSON)
   render immediately without hanging the TUI.
+  ([#8646](https://github.com/mitmproxy/mitmproxy/pull/8646), @whysooraj)
 - Update aioquic to 1.9.0, which adds post-quantum key exchange and HelloRetryRequest support to
   QUIC. Cancelling an HTTP/3 request no longer cuts off a complete response the client has not
   acknowledged yet, and requests to an HTTP/3 server which sent GOAWAY fail straight away.
