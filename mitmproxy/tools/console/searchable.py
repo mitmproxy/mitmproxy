@@ -7,7 +7,7 @@ class Highlight(urwid.AttrMap):
     def __init__(self, t):
         urwid.AttrMap.__init__(
             self,
-            urwid.Text(t.text),
+            urwid.Text(t.text, wrap=t.wrap, layout=t.layout),
             "focusfield",
         )
         self.backup = t
