@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+- Windows installer: use a stable Add/Remove Programs registry key across versions and remove the
+  previous versioned ARP entry on upgrade, so upgrades no longer leave duplicate installed-app
+  listings and winget can detect the installed version.
+  ([#6888](https://github.com/mitmproxy/mitmproxy/issues/6888))
 - Update aioquic to 1.9.0, which adds post-quantum key exchange and HelloRetryRequest support to
   QUIC. Cancelling an HTTP/3 request no longer cuts off a complete response the client has not
   acknowledged yet, and requests to an HTTP/3 server which sent GOAWAY fail straight away.
