@@ -1,7 +1,9 @@
 import sys
 from functools import lru_cache
+from typing import Literal
 
 import urwid
+import urwid.text_layout
 
 import mitmproxy.flow
 import mitmproxy.tools.console.master
@@ -19,6 +21,55 @@ from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import searchable
 from mitmproxy.tools.console import tabs
 from mitmproxy.utils import strutils
+
+_CHARS_PER_LINE = 80
+
+
+class _LinearTextLayout(urwid.StandardTextLayout):
+    """
+    urwid's StandardTextLayout calls calc_width(text, idx, nl_pos) on every
+    wrapped row, which is O(N^2) on very long lines (e.g., minified JSON or
+    base64 blobs). For wrap="any", wrap each line in O(N) using calc_text_pos.
+    """
+
+    def calculate_text_segments(
+        self,
+        text: str | bytes,
+        width: int,
+        wrap: Literal["any", "space", "clip", "ellipsis"] | urwid.WrapMode,
+    ) -> list[list[tuple[int, int, int | bytes] | tuple[int, int | None]]]:
+        if wrap != "any":
+            return super().calculate_text_segments(text, width, wrap)
+
+        nl: str | bytes = b"\n" if isinstance(text, bytes) else "\n"
+        segments: list[list[tuple[int, int, int | bytes] | tuple[int, int | None]]] = []
+        idx = 0
+        nl_pos = -1
+        text_len = len(text)
+        while idx <= text_len:
+            if idx > nl_pos:
+                nl_pos = text.find(nl, idx)  # type: ignore[arg-type]
+                if nl_pos == -1:
+                    nl_pos = text_len
+            pos, screen_columns = urwid.calc_text_pos(text, idx, nl_pos, width)
+            if pos == nl_pos:
+                segments.append(
+                    [(0, nl_pos)]
+                    if screen_columns == 0
+                    else [(screen_columns, idx, nl_pos), (0, nl_pos)]
+                )
+                idx = nl_pos + 1
+            elif pos == idx:
+                raise urwid.text_layout.CanNotDisplayText(
+                    "Wide character will not fit in 1-column width"
+                )
+            else:
+                segments.append([(screen_columns, idx, pos)])
+                idx = pos
+        return segments
+
+
+_CONTENT_TEXT_LAYOUT = _LinearTextLayout()
 
 
 class FlowViewHeader(urwid.WidgetWrap):
@@ -229,7 +280,9 @@ class FlowDetails(tabs.Tabs):
                 marker = self.FROM_CLIENT_MARKER
             else:
                 marker = self.TO_CLIENT_MARKER
-            widget_lines.append(urwid.Text([marker, *chunks]))
+            widget_lines.append(
+                urwid.Text([marker, *chunks], wrap="any", layout=_CONTENT_TEXT_LAYOUT)
+            )
 
         if flow.websocket.closed_by_client is not None:
             widget_lines.append(
@@ -288,7 +341,9 @@ class FlowDetails(tabs.Tabs):
                 language=pretty.syntax_highlight,
             )
 
-            widget_lines.append(urwid.Text([marker, *chunks]))
+            widget_lines.append(
+                urwid.Text([marker, *chunks], wrap="any", layout=_CONTENT_TEXT_LAYOUT)
+            )
 
         if flow.intercepted:
             markup = widget_lines[-1].get_text()[0]
@@ -348,13 +403,16 @@ class FlowDetails(tabs.Tabs):
 
         pretty = contentviews.prettify_message(message, self.flow, viewmode)
         cut_off = strutils.cut_after_n_lines(pretty.text, max_lines)
+        max_chars = max_lines * _CHARS_PER_LINE
+        if len(cut_off) > max_chars:
+            cut_off = cut_off[:max_chars]
 
         chunks = mitmproxy_rs.syntax_highlight.highlight(
             cut_off,
             language=pretty.syntax_highlight,
         )
 
-        text_objects = [urwid.Text(chunks)]
+        text_objects = [urwid.Text(chunks, wrap="any", layout=_CONTENT_TEXT_LAYOUT)]
         if len(cut_off) < len(pretty.text):
             text_objects.append(
                 urwid.Text(
