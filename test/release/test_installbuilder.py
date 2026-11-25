@@ -42,17 +42,14 @@ def test_upgrade_cleans_legacy_versioned_arp_keys():
         deleted_keys
     )
 
-    # Cleanup must only run when reusing an existing installdir (parallel installs elsewhere).
+    # Cleanup must only run when reusing an existing installdir (unattended-safe).
     assert any(
         (rule.get("condition") or rule.findtext("condition")) == "exists"
         and (rule.get("path") or rule.findtext("path")) == "${installdir}"
         for rule in ready.iter("fileTest")
     ), "ARP cleanup must be gated on ${installdir} already existing"
 
-    finds = list(ready.iter("registryFind"))
-    assert finds, "expected InstallLocation sweep via registryFind"
-    assert any(
-        find.findtext("keyPattern") == "${project.fullName} *"
-        and find.findtext("namePattern") == "InstallLocation"
-        for find in finds
-    ), ET.tostring(finds[0], encoding="unicode")
+    # registryFind+foreach is unsafe here: Uninstall key names contain spaces and
+    # InstallBuilder foreach splits on spaces.
+    assert not list(ready.iter("registryFind"))
+    assert not list(ready.iter("foreach"))
