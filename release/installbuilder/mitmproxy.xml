@@ -95,6 +95,60 @@
     <saveRelativePaths>1</saveRelativePaths>
     <vendor>mitmproxy.org</vendor>
     <windowsExecutableIcon>logo.ico</windowsExecutableIcon>
+    <!--
+      Default windowsARPRegistryPrefix is "${fullName} ${version}", which creates a new
+      Add/Remove Programs (ARP) entry on every upgrade and breaks winget upgrade detection.
+      Keep a version-independent key so upgrades overwrite the same ARP / ProductCode entry.
+      See https://github.com/mitmproxy/mitmproxy/issues/6888
+    -->
+    <windowsARPRegistryPrefix>${project.fullName}</windowsARPRegistryPrefix>
+    <readyToInstallActionList>
+        <!--
+          Stay in installationType=normal so the uninstaller and Start Menu are recreated,
+          but clear stale versioned ARP keys that previous installers left behind when the
+          same installdir is reused. Parallel installs in other directories are left alone.
+          Do not use registryFind+foreach: Uninstall key names contain spaces and
+          InstallBuilder foreach splits on spaces.
+        -->
+        <actionGroup>
+            <actionList>
+                <registryGet>
+                    <key>HKEY_LOCAL_MACHINE\Software\${project.windowsSoftwareRegistryPrefix}</key>
+                    <name>Version</name>
+                    <variable>oldVersion</variable>
+                </registryGet>
+                <registryDelete>
+                    <key>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${project.fullName} ${oldVersion}</key>
+                    <ruleList>
+                        <compareText>
+                            <logic>does_not_equal</logic>
+                            <text>${oldVersion}</text>
+                            <value></value>
+                        </compareText>
+                    </ruleList>
+                </registryDelete>
+                <registryDelete>
+                    <key>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Management\ARPCache\${project.fullName} ${oldVersion}</key>
+                    <ruleList>
+                        <compareText>
+                            <logic>does_not_equal</logic>
+                            <text>${oldVersion}</text>
+                            <value></value>
+                        </compareText>
+                    </ruleList>
+                </registryDelete>
+            </actionList>
+            <ruleList>
+                <platformTest type="windows"/>
+                <!--
+                  Gate on the target directory existing so unattended upgrades (which may
+                  skip installdir page actions) still clean ARP, while fresh installs and
+                  parallel installs into a new directory are left alone.
+                -->
+                <fileTest condition="exists" path="${installdir}"/>
+            </ruleList>
+        </actionGroup>
+    </readyToInstallActionList>
     <finalPageActionList>
         <runProgram>
             <program>cmd</program>
@@ -118,7 +172,6 @@
             <width>40</width>
             <postShowPageActionList>
                 <!-- This will skip the readytoinstall page -->
-
                 <setInstallerVariable name="next_page" value="installation"/>
             </postShowPageActionList>
             <preShowPageActionList>
