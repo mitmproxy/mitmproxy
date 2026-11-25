@@ -28,7 +28,9 @@ def test_windows_arp_registry_prefix_is_version_independent():
 def test_upgrade_cleans_legacy_versioned_arp_keys():
     root = _project_root()
     ready = root.find("readyToInstallActionList")
-    assert ready is not None, "readyToInstallActionList required to clear legacy ARP keys"
+    assert ready is not None, (
+        "readyToInstallActionList required to clear legacy ARP keys"
+    )
 
     deleted_keys = [
         action.findtext("key")
@@ -38,9 +40,9 @@ def test_upgrade_cleans_legacy_versioned_arp_keys():
     assert any(
         "Uninstall\\${project.fullName} ${oldVersion}" in key for key in deleted_keys
     ), deleted_keys
-    assert any("ARPCache\\${project.fullName} ${oldVersion}" in key for key in deleted_keys), (
-        deleted_keys
-    )
+    assert any(
+        "ARPCache\\${project.fullName} ${oldVersion}" in key for key in deleted_keys
+    ), deleted_keys
 
     # Cleanup must only run when reusing an existing installdir (unattended-safe).
     assert any(
