@@ -525,9 +525,31 @@ textarea {
     border-right: 0;
 }
 
-.input-group .input:last-child {
+.input-group .input-group-addon:first-child + .input {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
+}
+
+.input-clear-button() {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    border: 0;
+    border-radius: 3px;
+    background: transparent;
+    color: var(--mitmweb-fg-muted);
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+        color: var(--mitmweb-fg-strong);
+    }
 }
 
 .popover {
