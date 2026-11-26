@@ -9,6 +9,7 @@ from collections.abc import MutableMapping
 from typing import Optional
 
 import ldap3
+from ldap3.core.exceptions import LDAPException
 
 from mitmproxy import connection
 from mitmproxy import ctx
@@ -232,8 +233,13 @@ class Ldap(Validator):
             self.dn_subtree,
             self.filter_key,
         ) = self.parse_spec(proxyauth)
-        server = ldap3.Server(url, port=port, use_ssl=use_ssl)
-        conn = ldap3.Connection(server, ldap_user, ldap_pass, auto_bind=True)
+        try:
+            server = ldap3.Server(url, port=port, use_ssl=use_ssl)
+            conn = ldap3.Connection(server, ldap_user, ldap_pass, auto_bind=True)
+        except LDAPException as e:
+            raise exceptions.OptionsError(
+                f"Could not connect to LDAP server: {e}"
+            ) from e
         self.conn = conn
         self.server = server
 

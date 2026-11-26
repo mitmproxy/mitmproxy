@@ -3,6 +3,7 @@ from unittest import mock
 
 import ldap3
 import pytest
+from ldap3.core.exceptions import LDAPSocketOpenError
 
 from mitmproxy import exceptions
 from mitmproxy.addons import proxyauth
@@ -223,6 +224,23 @@ class TestProxyAuth:
                 exceptions.OptionsError, match="Could not open htpasswd file"
             ):
                 ctx.configure(pa, proxyauth=f"@{p}")
+
+    def test_ldap_connection_error(self, monkeypatch):
+        monkeypatch.setattr(ldap3, "Server", mock.MagicMock())
+        monkeypatch.setattr(
+            ldap3,
+            "Connection",
+            mock.MagicMock(side_effect=LDAPSocketOpenError("connection refused")),
+        )
+
+        pa = proxyauth.ProxyAuth()
+        with taddons.context(pa) as ctx:
+            with pytest.raises(
+                exceptions.OptionsError, match="Could not connect to LDAP server"
+            ):
+                ctx.configure(
+                    pa, proxyauth="ldap:localhost:cn=default:password:ou=application"
+                )
 
     def test_handlers(self):
         up = proxyauth.ProxyAuth()
