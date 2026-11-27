@@ -422,6 +422,8 @@ class LocalRedirectorInstance(ServerInstance[mode_specs.LocalMode]):
     """The local redirector daemon. Will be started once and then reused for all future instances."""
     _instance: ClassVar[LocalRedirectorInstance | None] = None
     """The current LocalRedirectorInstance. Will be unset again if an instance is stopped."""
+    _starting: ClassVar[bool] = False
+    """Whether a redirector startup is currently in flight."""
     listen_addrs = ()
 
     @property
@@ -440,7 +442,8 @@ class LocalRedirectorInstance(ServerInstance[mode_specs.LocalMode]):
             await cls._instance.handle_stream(stream)
 
     async def _start(self) -> None:
-        if self._instance:
+        cls = self.__class__
+        if self._instance or cls._starting:
             raise RuntimeError("Cannot spawn more than one local redirector.")
 
         if self.mode.data:
@@ -448,19 +451,20 @@ class LocalRedirectorInstance(ServerInstance[mode_specs.LocalMode]):
         else:
             spec = f"!{os.getpid()}"
 
-        cls = self.__class__
-        cls._instance = self  # assign before awaiting to avoid races
-        if cls._server is None:
-            try:
+        # Do not assign _instance before awaiting: is_running must stay False
+        # until the redirector is actually capturing. Concurrent starts are
+        # rejected using the _starting flag instead.
+        cls._starting = True
+        try:
+            if cls._server is None:
                 cls._server = await mitmproxy_rs.local.start_local_redirector(
                     cls.redirector_handle_stream,
                     cls.redirector_handle_stream,
                 )
-            except Exception:
-                cls._instance = None
-                raise
-
-        cls._server.set_intercept(spec)
+            cls._server.set_intercept(spec)
+        finally:
+            cls._starting = False
+        cls._instance = self
 
     async def _stop(self) -> None:
         assert self._instance

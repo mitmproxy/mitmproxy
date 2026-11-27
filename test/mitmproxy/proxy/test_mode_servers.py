@@ -484,6 +484,7 @@ def patched_local_redirector(monkeypatch):
     # make sure _server and _instance are restored after this test
     monkeypatch.setattr(LocalRedirectorInstance, "_server", None)
     monkeypatch.setattr(LocalRedirectorInstance, "_instance", None)
+    monkeypatch.setattr(LocalRedirectorInstance, "_starting", False)
     return start_local_redirector
 
 
@@ -531,6 +532,62 @@ async def test_multiple_local_redirectors(patched_local_redirector):
             RuntimeError, match="Cannot spawn more than one local redirector"
         ):
             await inst2.start()
+
+
+async def test_local_redirector_not_running_during_startup(patched_local_redirector):
+    """is_running must stay False until redirector startup has completed.
+
+    On macOS, redirector startup includes the system extension approval prompt
+    and a control channel handshake, during which addons must not be told that
+    traffic is already being captured. See issue #8632.
+    """
+    startup_started = asyncio.Event()
+    startup_finished = asyncio.Event()
+
+    async def slow_startup(*args):
+        startup_started.set()
+        await startup_finished.wait()
+        return Mock()
+
+    patched_local_redirector.side_effect = slow_startup
+
+    with taddons.context():
+        inst = ServerInstance.make("local", MagicMock())
+        assert not inst.is_running
+
+        task = asyncio.ensure_future(inst.start())
+        await startup_started.wait()
+
+        # startup is still in flight, the redirector is not capturing yet:
+        assert not inst.is_running
+        assert inst.to_json()["is_running"] is False
+
+        # the concurrent-start guard still applies during startup:
+        inst2 = ServerInstance.make(f"local:wget", MagicMock())
+        with pytest.raises(
+            RuntimeError, match="Cannot spawn more than one local redirector"
+        ):
+            await inst2.start()
+
+        startup_finished.set()
+        await task
+        assert inst.is_running
+        assert inst.to_json()["is_running"] is True
+
+
+async def test_local_redirector_start_after_startup_err(patched_local_redirector):
+    """A failed startup must release the concurrent-start guard again."""
+    patched_local_redirector.side_effect = RuntimeError("Local redirector error")
+
+    with taddons.context():
+        inst = ServerInstance.make(f"local", MagicMock())
+        with pytest.raises(RuntimeError):
+            await inst.start()
+        assert not inst.is_running
+
+        patched_local_redirector.side_effect = None
+        await inst.start()
+        assert inst.is_running
 
 
 async def test_always_uses_current_instance(patched_local_redirector, monkeypatch):
