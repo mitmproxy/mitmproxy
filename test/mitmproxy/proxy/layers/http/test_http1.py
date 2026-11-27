@@ -9,9 +9,11 @@ from mitmproxy.proxy.layers.http import ReceiveHttp
 from mitmproxy.proxy.layers.http import RequestData
 from mitmproxy.proxy.layers.http import RequestEndOfMessage
 from mitmproxy.proxy.layers.http import RequestHeaders
+from mitmproxy.proxy.layers.http import RequestTrailers
 from mitmproxy.proxy.layers.http import ResponseData
 from mitmproxy.proxy.layers.http import ResponseEndOfMessage
 from mitmproxy.proxy.layers.http import ResponseHeaders
+from mitmproxy.proxy.layers.http import ResponseTrailers
 from test.mitmproxy.proxy.tutils import Placeholder
 from test.mitmproxy.proxy.tutils import Playbook
 
@@ -110,6 +112,37 @@ class TestServer:
             << ReceiveHttp(Placeholder(RequestHeaders))
             << ReceiveHttp(RequestEndOfMessage(3))
         )
+
+    @pytest.mark.parametrize("chunked", [True, False])
+    def test_response_trailers(self, tctx, chunked):
+        """Trailers from an HTTP/2 or HTTP/3 peer are dropped instead of raising AssertionError."""
+        resp = http.Response.make(200)
+        del resp.headers["content-length"]
+        if chunked:
+            resp.headers["transfer-encoding"] = "chunked"
+        else:
+            resp.headers["content-length"] = "3"
+        playbook = (
+            Playbook(Http1Server(tctx))
+            >> DataReceived(
+                tctx.client,
+                b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n",
+            )
+            << ReceiveHttp(Placeholder(RequestHeaders))
+            << ReceiveHttp(RequestEndOfMessage(1))
+            >> ResponseHeaders(1, resp)
+            << SendData(tctx.client, Placeholder(bytes))
+            >> ResponseData(1, b"abc")
+        )
+        if chunked:
+            playbook << SendData(tctx.client, b"3\r\nabc\r\n")
+        else:
+            playbook << SendData(tctx.client, b"abc")
+        playbook >> ResponseTrailers(1, http.Headers(trailer="value"))
+        playbook >> ResponseEndOfMessage(1)
+        if chunked:
+            playbook << SendData(tctx.client, b"0\r\n\r\n")
+        assert playbook
 
 
 class TestClient:
@@ -230,3 +263,28 @@ class TestClient:
             >> RequestHeaders(3, req, True)
             << SendData(tctx.server, Placeholder(bytes))
         )
+
+    @pytest.mark.parametrize("chunked", [True, False])
+    def test_request_trailers(self, tctx, chunked):
+        """Trailers from an HTTP/2 or HTTP/3 peer are dropped instead of raising AssertionError."""
+        req = http.Request.make("POST", "http://example.com/")
+        del req.headers["content-length"]
+        if chunked:
+            req.headers["transfer-encoding"] = "chunked"
+        else:
+            req.headers["content-length"] = "3"
+        playbook = (
+            Playbook(Http1Client(tctx))
+            >> RequestHeaders(1, req, False)
+            << SendData(tctx.server, Placeholder(bytes))
+            >> RequestData(1, b"abc")
+        )
+        if chunked:
+            playbook << SendData(tctx.server, b"3\r\nabc\r\n")
+        else:
+            playbook << SendData(tctx.server, b"abc")
+        playbook >> RequestTrailers(1, http.Headers(trailer="value"))
+        playbook >> RequestEndOfMessage(1)
+        if chunked:
+            playbook << SendData(tctx.server, b"0\r\n\r\n")
+        assert playbook
